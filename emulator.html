@@ -1,0 +1,957 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>GBA Station</title>
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #13131a;
+    --surface2: #1c1c28;
+    --surface3: #252535;
+    --accent: #7c6af7;
+    --accent2: #a78bfa;
+    --accent-glow: rgba(124,106,247,0.25);
+    --text: #f0f0f5;
+    --text-muted: #8888aa;
+    --text-dim: #555570;
+    --border: rgba(255,255,255,0.07);
+    --border-accent: rgba(124,106,247,0.4);
+    --green: #34d399;
+    --red: #f87171;
+    --card-w: 140px;
+    --card-h: 200px;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    height: 100%; background: var(--bg); color: var(--text);
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    overflow: hidden; -webkit-tap-highlight-color: transparent;
+  }
+
+  /* ── SCROLLBAR ── */
+  ::-webkit-scrollbar { width: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--surface3); border-radius: 99px; }
+
+  /* ══════════════ HEADER ══════════════ */
+  #header {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 50;
+    height: 60px;
+    background: rgba(10,10,15,0.85);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 24px;
+  }
+
+  .logo {
+    display: flex; align-items: center; gap: 10px;
+    font-weight: 700; font-size: 1.1rem; letter-spacing: 0.5px;
+  }
+  .logo-icon {
+    width: 32px; height: 32px; border-radius: 8px;
+    background: linear-gradient(135deg, var(--accent), #c084fc);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 17px;
+  }
+  .logo span { color: var(--accent2); }
+
+  .header-right { display: flex; align-items: center; gap: 10px; }
+
+  #game-count-badge {
+    font-size: 12px; color: var(--text-muted);
+    background: var(--surface2); border: 1px solid var(--border);
+    padding: 4px 12px; border-radius: 99px;
+  }
+
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 8px 16px; border-radius: 8px; font-size: 13px;
+    font-weight: 600; cursor: pointer; border: none; transition: all 0.15s;
+  }
+  .btn-ghost {
+    background: var(--surface2); color: var(--text-muted);
+    border: 1px solid var(--border);
+  }
+  .btn-ghost:hover { background: var(--surface3); color: var(--text); border-color: var(--border-accent); }
+
+  .btn-primary {
+    background: var(--accent); color: #fff;
+    box-shadow: 0 0 18px var(--accent-glow);
+  }
+  .btn-primary:hover { background: var(--accent2); box-shadow: 0 0 28px var(--accent-glow); }
+
+  /* ══════════════ LIBRARY ══════════════ */
+  #library-view {
+    position: fixed; inset: 0; padding-top: 60px;
+    overflow-y: auto;
+  }
+
+  #search-bar-wrap {
+    padding: 24px 24px 0;
+    max-width: 500px;
+  }
+  #search-bar-wrap input {
+    width: 100%; padding: 10px 16px; font-size: 14px;
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 8px; color: var(--text); outline: none;
+    transition: border-color 0.15s;
+  }
+  #search-bar-wrap input:focus { border-color: var(--border-accent); }
+  #search-bar-wrap input::placeholder { color: var(--text-dim); }
+
+  #section-title {
+    padding: 20px 24px 12px;
+    font-size: 12px; font-weight: 600; letter-spacing: 1.5px;
+    color: var(--text-muted); text-transform: uppercase;
+  }
+
+  #game-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(var(--card-w), 1fr));
+    gap: 16px; padding: 0 24px 40px;
+  }
+
+  /* ── GAME CARD ── */
+  .game-card {
+    background: var(--surface); border-radius: 12px;
+    border: 1px solid var(--border); cursor: pointer; overflow: hidden;
+    transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+    position: relative;
+  }
+  .game-card:hover {
+    transform: translateY(-4px);
+    border-color: var(--border-accent);
+    box-shadow: 0 12px 32px rgba(0,0,0,0.5), 0 0 0 1px var(--accent-glow);
+  }
+  .game-card:active { transform: translateY(-2px) scale(0.98); }
+
+  .card-cover {
+    width: 100%; height: var(--card-h); object-fit: cover;
+    display: block; background: var(--surface2);
+  }
+
+  .card-body { padding: 10px 10px 12px; }
+  .card-title {
+    font-size: 12px; font-weight: 600; color: var(--text);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    margin-bottom: 2px;
+  }
+  .card-tag {
+    font-size: 10px; color: var(--text-dim);
+    background: var(--surface3); padding: 2px 6px; border-radius: 4px;
+    display: inline-block;
+  }
+
+  .card-play-overlay {
+    position: absolute; inset: 0;
+    background: rgba(10,10,15,0.55);
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; transition: opacity 0.2s; border-radius: 12px;
+  }
+  .game-card:hover .card-play-overlay { opacity: 1; }
+
+  .play-btn-circle {
+    width: 48px; height: 48px; border-radius: 50%;
+    background: var(--accent);
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 0 24px var(--accent-glow);
+    transition: transform 0.15s;
+  }
+  .play-btn-circle:hover { transform: scale(1.1); }
+  .play-btn-circle svg { margin-left: 3px; }
+
+  .card-delete {
+    position: absolute; top: 6px; right: 6px;
+    width: 24px; height: 24px; border-radius: 50%;
+    background: rgba(10,10,15,0.8); border: 1px solid var(--border);
+    cursor: pointer; display: none; align-items: center; justify-content: center;
+    font-size: 12px; color: var(--red); transition: background 0.15s;
+  }
+  .game-card:hover .card-delete { display: flex; }
+  .card-delete:hover { background: rgba(248,113,113,0.2); }
+
+  /* EMPTY STATE */
+  #empty-state {
+    display: none; flex-direction: column; align-items: center; justify-content: center;
+    padding: 80px 24px; text-align: center; gap: 12px;
+    color: var(--text-muted);
+  }
+  #empty-state .empty-icon { font-size: 48px; opacity: 0.4; }
+  #empty-state h3 { font-size: 16px; font-weight: 500; }
+  #empty-state p { font-size: 13px; color: var(--text-dim); max-width: 280px; }
+
+  /* ══════════════ EMULATOR VIEW ══════════════ */
+  #emulator-view {
+    display: none; position: fixed; inset: 0; z-index: 100;
+    background: #000; flex-direction: column;
+  }
+
+  /* Emulator header */
+  #emu-header {
+    height: 48px; background: rgba(0,0,0,0.9); backdrop-filter: blur(8px);
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 16px; flex-shrink: 0;
+  }
+  #emu-game-title { font-size: 13px; font-weight: 600; color: var(--text); }
+  #emu-controls-row { display: flex; align-items: center; gap: 8px; }
+
+  #toggle-overlay-btn {
+    font-size: 11px; padding: 5px 12px; border-radius: 6px;
+    background: var(--surface2); border: 1px solid var(--border);
+    color: var(--text-muted); cursor: pointer; transition: all 0.15s;
+  }
+  #toggle-overlay-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+  #toggle-overlay-btn:hover { border-color: var(--border-accent); }
+
+  #close-emu-btn {
+    width: 32px; height: 32px; border-radius: 6px;
+    background: var(--surface2); border: 1px solid var(--border);
+    color: var(--red); cursor: pointer; font-size: 18px;
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.15s;
+  }
+  #close-emu-btn:hover { background: rgba(248,113,113,0.15); }
+
+  /* Canvas area */
+  #canvas-wrap {
+    flex: 1; display: flex; align-items: center; justify-content: center;
+    position: relative; overflow: hidden;
+  }
+
+  #emulator-canvas {
+    max-width: 100%; max-height: 100%;
+    image-rendering: pixelated;
+    display: block;
+  }
+
+  /* EmulatorJS container */
+  #emulator-container {
+    width: 100%; height: 100%;
+    position: absolute; inset: 0;
+  }
+
+  /* ── MOBILE OVERLAY ── */
+  #mobile-overlay {
+    position: absolute; inset: 0;
+    pointer-events: none;
+    display: flex; flex-direction: column; justify-content: flex-end;
+    padding: 12px 16px 20px;
+    z-index: 10;
+  }
+  #mobile-overlay.hidden { display: none; }
+
+  .overlay-row {
+    display: flex; justify-content: space-between; align-items: center;
+    width: 100%;
+  }
+
+  /* D-Pad */
+  .dpad {
+    display: grid; grid-template-columns: repeat(3, 44px); grid-template-rows: repeat(3, 44px);
+    gap: 2px;
+    pointer-events: all;
+  }
+  .dpad-btn {
+    background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.18);
+    border-radius: 8px; display: flex; align-items: center; justify-content: center;
+    font-size: 18px; cursor: pointer; user-select: none;
+    transition: background 0.08s;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+  .dpad-btn:active, .dpad-btn.pressed { background: rgba(124,106,247,0.45); }
+  .dpad-btn.empty { background: transparent; border-color: transparent; pointer-events: none; }
+  .dpad-btn.center { background: rgba(255,255,255,0.06); cursor: default; pointer-events: none; }
+
+  /* Action buttons (A B) */
+  .action-btns {
+    display: grid; grid-template-columns: 44px 44px; grid-template-rows: 44px 44px;
+    gap: 6px; pointer-events: all;
+  }
+  .action-btn {
+    border-radius: 50%;
+    border: 2px solid; display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 700; cursor: pointer; user-select: none;
+    transition: all 0.08s; -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+  .action-btn.btn-a { background: rgba(248,113,113,0.2); border-color: rgba(248,113,113,0.6); color: #fca5a5; }
+  .action-btn.btn-b { background: rgba(52,211,153,0.2); border-color: rgba(52,211,153,0.6); color: #6ee7b7; }
+  .action-btn.btn-l { background: rgba(124,106,247,0.2); border-color: rgba(124,106,247,0.6); color: var(--accent2); border-radius: 8px; }
+  .action-btn.btn-r { background: rgba(251,191,36,0.2); border-color: rgba(251,191,36,0.6); color: #fde68a; border-radius: 8px; }
+  .action-btn:active, .action-btn.pressed { filter: brightness(1.4); transform: scale(0.92); }
+
+  /* Center controls (Select, Start) */
+  .center-btns {
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+    pointer-events: all;
+  }
+  .meta-btn {
+    padding: 6px 16px; border-radius: 99px; font-size: 10px; font-weight: 700;
+    letter-spacing: 1px; text-transform: uppercase;
+    background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
+    color: rgba(255,255,255,0.7); cursor: pointer; user-select: none;
+    -webkit-tap-highlight-color: transparent; touch-action: manipulation;
+  }
+  .meta-btn:active, .meta-btn.pressed { background: rgba(124,106,247,0.35); color: #fff; }
+
+  /* Shoulder row */
+  .shoulder-row {
+    display: flex; justify-content: space-between;
+    margin-bottom: 12px; pointer-events: all;
+  }
+  .shoulder-btn {
+    width: 64px; height: 32px; border-radius: 6px;
+    background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.18);
+    color: rgba(255,255,255,0.8); font-size: 12px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; user-select: none;
+    -webkit-tap-highlight-color: transparent; touch-action: manipulation;
+  }
+  .shoulder-btn:active, .shoulder-btn.pressed { background: rgba(124,106,247,0.4); }
+
+  /* ══════════════ ADD GAME MODAL ══════════════ */
+  #modal-backdrop {
+    display: none; position: fixed; inset: 0; z-index: 200;
+    background: rgba(0,0,0,0.75); backdrop-filter: blur(6px);
+    align-items: center; justify-content: center;
+  }
+
+  #add-modal {
+    background: var(--surface); border: 1px solid var(--border-accent);
+    border-radius: 16px; padding: 28px; width: min(380px, 90vw);
+    position: relative;
+  }
+
+  #add-modal h2 {
+    font-size: 18px; font-weight: 700; color: var(--accent2); margin-bottom: 22px;
+    display: flex; align-items: center; gap: 8px;
+  }
+
+  .form-group { margin-bottom: 16px; }
+  .form-group label {
+    display: block; font-size: 11px; font-weight: 600;
+    letter-spacing: 1px; text-transform: uppercase;
+    color: var(--text-muted); margin-bottom: 6px;
+  }
+  .form-group input[type="text"] {
+    width: 100%; padding: 10px 14px; background: var(--surface2);
+    border: 1px solid var(--border); border-radius: 8px;
+    color: var(--text); font-size: 14px; outline: none;
+    transition: border-color 0.15s;
+  }
+  .form-group input[type="text"]:focus { border-color: var(--border-accent); }
+
+  .file-input-wrap {
+    position: relative; border: 1px dashed var(--border);
+    border-radius: 8px; padding: 16px; text-align: center;
+    cursor: pointer; transition: border-color 0.15s, background 0.15s;
+    background: var(--surface2);
+  }
+  .file-input-wrap:hover { border-color: var(--border-accent); background: rgba(124,106,247,0.05); }
+  .file-input-wrap input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+  .file-input-wrap .file-label { font-size: 12px; color: var(--text-muted); pointer-events: none; }
+  .file-input-wrap .file-selected { font-size: 12px; color: var(--green); pointer-events: none; display: none; }
+
+  /* Cover preview in modal */
+  #cover-preview {
+    width: 80px; height: 112px; border-radius: 8px; object-fit: cover;
+    border: 1px solid var(--border); display: none; margin: 0 auto 12px;
+  }
+
+  .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 24px; }
+
+  /* TOAST */
+  #toast {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(20px);
+    background: var(--surface3); border: 1px solid var(--border-accent);
+    color: var(--text); padding: 10px 20px; border-radius: 8px; font-size: 13px;
+    z-index: 999; opacity: 0; transition: all 0.3s; pointer-events: none; white-space: nowrap;
+  }
+  #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  #toast.error { border-color: rgba(248,113,113,0.5); color: var(--red); }
+
+  /* Loading state in emulator */
+  #emu-loading {
+    position: absolute; inset: 0; background: #000;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 16px; z-index: 5;
+  }
+  #emu-loading.hidden { display: none; }
+  .spinner {
+    width: 40px; height: 40px; border-radius: 50%;
+    border: 3px solid var(--surface3);
+    border-top-color: var(--accent);
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  #emu-loading p { font-size: 13px; color: var(--text-muted); }
+
+  /* Responsive */
+  @media (max-width: 480px) {
+    :root { --card-w: 120px; --card-h: 170px; }
+    #game-grid { padding: 0 12px 40px; gap: 12px; }
+    #search-bar-wrap { padding: 16px 12px 0; }
+    #section-title { padding: 16px 12px 10px; }
+    #header { padding: 0 16px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ══ HEADER ══ -->
+<header id="header">
+  <div class="logo">
+    <div class="logo-icon">🎮</div>
+    <span>GBA</span>&nbsp;Station
+  </div>
+  <div class="header-right">
+    <span id="game-count-badge">0 jogos</span>
+    <button class="btn btn-primary" id="btn-add">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1v12M1 7h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      Adicionar ROM
+    </button>
+  </div>
+</header>
+
+<!-- ══ LIBRARY ══ -->
+<div id="library-view">
+  <div id="search-bar-wrap">
+    <input type="text" id="search-input" placeholder="Buscar jogo...">
+  </div>
+  <div id="section-title">Biblioteca</div>
+  <div id="game-grid"></div>
+  <div id="empty-state">
+    <div class="empty-icon">📦</div>
+    <h3>Biblioteca vazia</h3>
+    <p>Clique em "Adicionar ROM" para começar a sua coleção GBA.</p>
+  </div>
+</div>
+
+<!-- ══ EMULATOR VIEW ══ -->
+<div id="emulator-view">
+  <div id="emu-header">
+    <div id="emu-game-title">—</div>
+    <div id="emu-controls-row">
+      <button id="toggle-overlay-btn" class="active">🕹 Controles</button>
+      <button id="close-emu-btn" title="Sair">✕</button>
+    </div>
+  </div>
+
+  <div id="canvas-wrap">
+    <div id="emu-loading">
+      <div class="spinner"></div>
+      <p id="emu-loading-text">Carregando ROM...</p>
+    </div>
+    <div id="emulator-container"></div>
+
+    <!-- Mobile overlay controls -->
+    <div id="mobile-overlay">
+      <!-- Shoulder buttons -->
+      <div class="shoulder-row">
+        <div class="shoulder-btn" data-key="KeyQ" data-gba="L">L</div>
+        <div class="shoulder-btn" data-key="KeyE" data-gba="R">R</div>
+      </div>
+
+      <!-- Main row: D-pad | center | action -->
+      <div class="overlay-row" style="align-items: flex-end;">
+
+        <!-- D-Pad -->
+        <div class="dpad">
+          <div class="dpad-btn empty"></div>
+          <div class="dpad-btn" data-key="ArrowUp" data-gba="UP">▲</div>
+          <div class="dpad-btn empty"></div>
+
+          <div class="dpad-btn" data-key="ArrowLeft" data-gba="LEFT">◀</div>
+          <div class="dpad-btn center"></div>
+          <div class="dpad-btn" data-key="ArrowRight" data-gba="RIGHT">▶</div>
+
+          <div class="dpad-btn empty"></div>
+          <div class="dpad-btn" data-key="ArrowDown" data-gba="DOWN">▼</div>
+          <div class="dpad-btn empty"></div>
+        </div>
+
+        <!-- Select / Start -->
+        <div class="center-btns">
+          <div class="meta-btn" data-key="ShiftLeft" data-gba="SELECT">Select</div>
+          <div class="meta-btn" data-key="Enter" data-gba="START">Start</div>
+        </div>
+
+        <!-- A / B -->
+        <div class="action-btns">
+          <div></div>
+          <div class="action-btn btn-a" data-key="KeyZ" data-gba="A" style="grid-column:2; grid-row:1">A</div>
+          <div class="action-btn btn-b" data-key="KeyX" data-gba="B" style="grid-column:1; grid-row:2">B</div>
+          <div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ ADD GAME MODAL ══ -->
+<div id="modal-backdrop">
+  <div id="add-modal">
+    <h2>
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="2" y="2" width="16" height="16" rx="3" stroke="currentColor" stroke-width="1.5"/><path d="M10 6v8M6 10h8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      Novo Jogo
+    </h2>
+
+    <div class="form-group">
+      <label>Nome do Jogo</label>
+      <input type="text" id="inp-name" placeholder="Ex: Pokémon Emerald">
+    </div>
+
+    <div class="form-group">
+      <label>Arquivo ROM (.gba)</label>
+      <div class="file-input-wrap" id="rom-wrap">
+        <input type="file" id="inp-rom" accept=".gba,.gb,.gbc,.zip">
+        <span class="file-label">Clique para selecionar .gba</span>
+        <span class="file-selected" id="rom-selected">✓ Arquivo selecionado</span>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>Capa do Jogo</label>
+      <img id="cover-preview" src="" alt="">
+      <div class="file-input-wrap" id="cover-wrap">
+        <input type="file" id="inp-cover" accept="image/*">
+        <span class="file-label">Clique para selecionar imagem</span>
+        <span class="file-selected" id="cover-selected">✓ Imagem selecionada</span>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="btn-cancel">Cancelar</button>
+      <button class="btn btn-primary" id="btn-save">Salvar Jogo</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<!-- EmulatorJS -->
+<script>
+/* ═══════════════════════════════
+   GBA STATION — App Logic
+═══════════════════════════════ */
+
+let games = [];
+let overlayVisible = true;
+let currentRomData = null;
+let emuJS = null;
+
+const DB_NAME = 'gba_station';
+const STORE = 'games';
+let db;
+
+/* ── IndexedDB ── */
+function openDB() {
+  return new Promise((res, rej) => {
+    const req = indexedDB.open(DB_NAME, 2);
+    req.onupgradeneeded = e => {
+      const d = e.target.result;
+      if (!d.objectStoreNames.contains(STORE))
+        d.createObjectStore(STORE, { keyPath: 'id', autoIncrement: true });
+    };
+    req.onsuccess = e => { db = e.target.result; res(db); };
+    req.onerror = rej;
+  });
+}
+
+function dbGetAll() {
+  return new Promise((res, rej) => {
+    const tx = db.transaction(STORE, 'readonly');
+    const req = tx.objectStore(STORE).getAll();
+    req.onsuccess = e => res(e.target.result);
+    req.onerror = rej;
+  });
+}
+
+function dbAdd(game) {
+  return new Promise((res, rej) => {
+    const tx = db.transaction(STORE, 'readwrite');
+    const req = tx.objectStore(STORE).add(game);
+    req.onsuccess = e => res(e.target.result);
+    req.onerror = rej;
+  });
+}
+
+function dbDelete(id) {
+  return new Promise((res, rej) => {
+    const tx = db.transaction(STORE, 'readwrite');
+    tx.objectStore(STORE).delete(id);
+    tx.oncomplete = res; tx.onerror = rej;
+  });
+}
+
+/* ── Render Library ── */
+function renderLibrary(filter = '') {
+  const grid = document.getElementById('game-grid');
+  const empty = document.getElementById('empty-state');
+  const badge = document.getElementById('game-count-badge');
+
+  const filtered = filter
+    ? games.filter(g => g.name.toLowerCase().includes(filter.toLowerCase()))
+    : games;
+
+  badge.textContent = `${games.length} jogo${games.length !== 1 ? 's' : ''}`;
+  grid.innerHTML = '';
+
+  if (filtered.length === 0) {
+    empty.style.display = 'flex';
+    grid.style.display = 'none';
+  } else {
+    empty.style.display = 'none';
+    grid.style.display = 'grid';
+
+    filtered.forEach(game => {
+      const card = document.createElement('div');
+      card.className = 'game-card';
+      card.setAttribute('data-id', game.id);
+
+      const coverSrc = game.cover || 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="140" height="200" viewBox="0 0 140 200"><rect fill="%231c1c28" width="140" height="200"/><text x="70" y="105" text-anchor="middle" fill="%23555570" font-size="32">🎮</text></svg>';
+
+      card.innerHTML = `
+        <img class="card-cover" src="${coverSrc}" alt="${game.name}" loading="lazy"
+          onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22140%22 height=%22200%22><rect fill=%22%231c1c28%22 width=%22140%22 height=%22200%22/><text x=%2270%22 y=%22105%22 text-anchor=%22middle%22 fill=%22%23555570%22 font-size=%2232%22>🎮</text></svg>'">
+        <div class="card-body">
+          <div class="card-title">${game.name}</div>
+          <span class="card-tag">GBA</span>
+        </div>
+        <div class="card-play-overlay">
+          <div class="play-btn-circle">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="white"><path d="M6 3.5l9 5.5-9 5.5V3.5z"/></svg>
+          </div>
+        </div>
+        <div class="card-delete" title="Remover">✕</div>
+      `;
+
+      card.querySelector('.card-delete').addEventListener('click', async e => {
+        e.stopPropagation();
+        await dbDelete(game.id);
+        games = games.filter(g => g.id !== game.id);
+        renderLibrary(document.getElementById('search-input').value);
+        showToast('Jogo removido');
+      });
+
+      card.addEventListener('click', () => launchGame(game));
+      grid.appendChild(card);
+    });
+  }
+}
+
+/* ── Launch Game ── */
+function launchGame(game) {
+  const emuView = document.getElementById('emulator-view');
+  const libView = document.getElementById('library-view');
+  const header = document.getElementById('header');
+  const loading = document.getElementById('emu-loading');
+  const loadText = document.getElementById('emu-loading-text');
+  const container = document.getElementById('emulator-container');
+  const titleEl = document.getElementById('emu-game-title');
+
+  titleEl.textContent = game.name;
+  loading.classList.remove('hidden');
+  loadText.textContent = `Carregando ${game.name}...`;
+  container.innerHTML = '';
+
+  header.style.display = 'none';
+  libView.style.display = 'none';
+  emuView.style.display = 'flex';
+
+  // Determine core
+  const ext = game.romName ? game.romName.split('.').pop().toLowerCase() : 'gba';
+  let core = 'mgba';
+  if (ext === 'gb') core = 'gambatte';
+  else if (ext === 'gbc') core = 'gambatte';
+
+  const romBlob = new Blob([game.romData], { type: 'application/octet-stream' });
+  const romUrl = URL.createObjectURL(romBlob);
+
+  // Use EmulatorJS
+  window.EJS_player = '#emulator-container';
+  window.EJS_gameName = game.name;
+  window.EJS_biosUrl = '';
+  window.EJS_core = core;
+  window.EJS_pathtodata = 'https://cdn.emulatorjs.org/stable/data/';
+  window.EJS_gameUrl = romUrl;
+  window.EJS_startOnLoaded = true;
+  window.EJS_color = '#7c6af7';
+  window.EJS_backgroundColor = '#0a0a0f';
+  window.EJS_VirtualGamepadSettings = { disabled: true };
+  window.EJS_Buttons = {
+    playPause: false, restart: true, mute: true, settings: true,
+    fullscreen: true, saveState: true, loadState: true,
+    screenRecord: false, gamepad: false, cheat: false, volume: true,
+    saveSavFiles: true
+  };
+
+  window.EJS_onGameStart = () => {
+    loading.classList.add('hidden');
+    URL.revokeObjectURL(romUrl);
+  };
+
+  // Load EmulatorJS dynamically
+  const existingScript = document.getElementById('emulatorjs-script');
+  if (existingScript) existingScript.remove();
+
+  const script = document.createElement('script');
+  script.id = 'emulatorjs-script';
+  script.src = 'https://cdn.emulatorjs.org/stable/data/loader.js';
+  script.onload = () => { /* EmulatorJS auto-inits */ };
+  script.onerror = () => {
+    loading.classList.add('hidden');
+    container.innerHTML = `<div style="color:#f87171;text-align:center;padding:40px;font-size:14px;">
+      Falha ao carregar o emulador.<br>Verifique sua conexão com a internet.
+    </div>`;
+  };
+  document.head.appendChild(script);
+
+  // Fallback: hide loading after 15s
+  setTimeout(() => loading.classList.add('hidden'), 15000);
+}
+
+/* ── Close Emulator ── */
+function closeEmulator() {
+  const emuView = document.getElementById('emulator-view');
+  const libView = document.getElementById('library-view');
+  const header = document.getElementById('header');
+  const container = document.getElementById('emulator-container');
+
+  container.innerHTML = '';
+  const s = document.getElementById('emulatorjs-script');
+  if (s) s.remove();
+
+  // Clean EJS globals
+  ['EJS_player','EJS_gameName','EJS_core','EJS_gameUrl','EJS_pathtodata',
+   'EJS_startOnLoaded','EJS_onGameStart','EJS_color','EJS_backgroundColor'].forEach(k => {
+    try { delete window[k]; } catch(e) {}
+  });
+
+  emuView.style.display = 'none';
+  libView.style.display = '';
+  header.style.display = '';
+}
+
+/* ── Overlay Controls ── */
+function setupOverlayControls() {
+  const overlay = document.getElementById('mobile-overlay');
+  const toggleBtn = document.getElementById('toggle-overlay-btn');
+
+  toggleBtn.addEventListener('click', () => {
+    overlayVisible = !overlayVisible;
+    overlay.classList.toggle('hidden', !overlayVisible);
+    toggleBtn.classList.toggle('active', overlayVisible);
+    toggleBtn.textContent = overlayVisible ? '🕹 Controles' : '🚫 Controles';
+  });
+
+  // Map GBA key codes for EmulatorJS keyboard simulation
+  const gbaKeyMap = {
+    'ArrowUp': 38, 'ArrowDown': 40, 'ArrowLeft': 37, 'ArrowRight': 39,
+    'KeyZ': 90, 'KeyX': 88, 'Enter': 13, 'ShiftLeft': 16,
+    'KeyQ': 81, 'KeyE': 69
+  };
+
+  const dispatchKey = (keyCode, type) => {
+    const evt = new KeyboardEvent(type, {
+      keyCode, which: keyCode, bubbles: true, cancelable: true
+    });
+    document.dispatchEvent(evt);
+    window.dispatchEvent(evt);
+    const canvas = document.querySelector('#emulator-container canvas');
+    if (canvas) canvas.dispatchEvent(evt);
+  };
+
+  const allBtns = overlay.querySelectorAll('[data-key]');
+  allBtns.forEach(btn => {
+    const key = btn.getAttribute('data-key');
+    const code = gbaKeyMap[key] || 0;
+
+    const pressDown = (e) => {
+      e.preventDefault();
+      btn.classList.add('pressed');
+      if (code) dispatchKey(code, 'keydown');
+    };
+    const pressUp = (e) => {
+      e.preventDefault();
+      btn.classList.remove('pressed');
+      if (code) dispatchKey(code, 'keyup');
+    };
+
+    btn.addEventListener('touchstart', pressDown, { passive: false });
+    btn.addEventListener('touchend', pressUp, { passive: false });
+    btn.addEventListener('mousedown', pressDown);
+    btn.addEventListener('mouseup', pressUp);
+    btn.addEventListener('mouseleave', pressUp);
+  });
+}
+
+/* ── Modal ── */
+function setupModal() {
+  const backdrop = document.getElementById('modal-backdrop');
+  const inpName  = document.getElementById('inp-name');
+  const inpRom   = document.getElementById('inp-rom');
+  const inpCover = document.getElementById('inp-cover');
+  const romWrap  = document.getElementById('rom-wrap');
+  const coverWrap= document.getElementById('cover-wrap');
+  const romSel   = document.getElementById('rom-selected');
+  const coverSel = document.getElementById('cover-selected');
+  const coverPrev= document.getElementById('cover-preview');
+
+  document.getElementById('btn-add').onclick = () => {
+    backdrop.style.display = 'flex';
+  };
+  document.getElementById('btn-cancel').onclick = () => {
+    backdrop.style.display = 'none';
+    resetModal();
+  };
+  backdrop.addEventListener('click', e => {
+    if (e.target === backdrop) { backdrop.style.display = 'none'; resetModal(); }
+  });
+
+  inpRom.addEventListener('change', () => {
+    if (inpRom.files[0]) {
+      romSel.style.display = 'block';
+      romSel.textContent = `✓ ${inpRom.files[0].name}`;
+      romWrap.querySelector('.file-label').style.display = 'none';
+      if (!inpName.value) {
+        inpName.value = inpRom.files[0].name.replace(/\.[^.]+$/, '').replace(/[_\-]/g, ' ');
+      }
+    }
+  });
+
+  inpCover.addEventListener('change', () => {
+    if (inpCover.files[0]) {
+      coverSel.style.display = 'block';
+      coverSel.textContent = `✓ ${inpCover.files[0].name}`;
+      coverWrap.querySelector('.file-label').style.display = 'none';
+      const reader = new FileReader();
+      reader.onload = e => {
+        coverPrev.src = e.target.result;
+        coverPrev.style.display = 'block';
+      };
+      reader.readAsDataURL(inpCover.files[0]);
+    }
+  });
+
+  document.getElementById('btn-save').onclick = async () => {
+    const name  = inpName.value.trim();
+    const romF  = inpRom.files[0];
+    const coverF= inpCover.files[0];
+
+    if (!name || !romF) {
+      showToast('Informe o nome e selecione a ROM', true); return;
+    }
+
+    const btn = document.getElementById('btn-save');
+    btn.textContent = 'Salvando...'; btn.disabled = true;
+
+    try {
+      const romData = await readFileAsBuffer(romF);
+      let coverDataUrl = null;
+      if (coverF) coverDataUrl = await readFileAsDataURL(coverF);
+
+      const game = {
+        name, cover: coverDataUrl, romData,
+        romName: romF.name, addedAt: Date.now()
+      };
+
+      const id = await dbAdd(game);
+      game.id = id;
+      games.push(game);
+      renderLibrary(document.getElementById('search-input').value);
+      backdrop.style.display = 'none';
+      resetModal();
+      showToast(`"${name}" adicionado!`);
+    } catch(e) {
+      showToast('Erro ao salvar o jogo', true);
+    } finally {
+      btn.textContent = 'Salvar Jogo'; btn.disabled = false;
+    }
+  };
+}
+
+function resetModal() {
+  document.getElementById('inp-name').value = '';
+  document.getElementById('inp-rom').value = '';
+  document.getElementById('inp-cover').value = '';
+  document.getElementById('rom-selected').style.display = 'none';
+  document.getElementById('cover-selected').style.display = 'none';
+  document.getElementById('cover-preview').style.display = 'none';
+  document.getElementById('rom-wrap').querySelector('.file-label').style.display = '';
+  document.getElementById('cover-wrap').querySelector('.file-label').style.display = '';
+}
+
+function readFileAsBuffer(file) {
+  return new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload = e => res(e.target.result);
+    r.onerror = rej;
+    r.readAsArrayBuffer(file);
+  });
+}
+
+function readFileAsDataURL(file) {
+  return new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload = e => res(e.target.result);
+    r.onerror = rej;
+    r.readAsDataURL(file);
+  });
+}
+
+/* ── Toast ── */
+function showToast(msg, isError = false) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'show' + (isError ? ' error' : '');
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.className = '', 3000);
+}
+
+/* ── Keyboard events (desktop) ── */
+function setupKeyboard() {
+  document.addEventListener('keydown', e => {
+    if (document.getElementById('emulator-view').style.display === 'flex') {
+      if (e.key === 'Escape') closeEmulator();
+    }
+  });
+}
+
+/* ── Init ── */
+async function init() {
+  await openDB();
+  games = await dbGetAll();
+  renderLibrary();
+
+  document.getElementById('close-emu-btn').onclick = closeEmulator;
+  document.getElementById('search-input').addEventListener('input', e => {
+    renderLibrary(e.target.value);
+  });
+
+  setupModal();
+  setupOverlayControls();
+  setupKeyboard();
+
+  // Auto-detect mobile → show overlay hint
+  const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+  if (!isMobile) {
+    overlayVisible = false;
+    document.getElementById('mobile-overlay').classList.add('hidden');
+    document.getElementById('toggle-overlay-btn').classList.remove('active');
+    document.getElementById('toggle-overlay-btn').textContent = '🚫 Controles';
+  }
+}
+
+init();
+</script>
+</body>
+</html>
