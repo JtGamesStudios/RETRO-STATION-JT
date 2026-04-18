@@ -374,60 +374,173 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
 .spinner{width:38px;height:38px;border-radius:50%;border:3px solid var(--surface3);border-top-color:var(--accent);animation:sp .7s linear infinite}
 #emu-loading p{font-size:12px;color:var(--text-muted);font-weight:500}
 
-/* ═══ WELCOME LIBRARY MODAL ═══ */
-#welcome-backdrop{position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.92);backdrop-filter:blur(18px);display:none;align-items:center;justify-content:center;animation:wFadeIn .4s ease}
-@keyframes wFadeIn{from{opacity:0}to{opacity:1}}
-#welcome-modal{background:var(--surface);border:1px solid var(--border-accent);border-radius:22px;width:min(580px,94vw);max-height:92vh;overflow-y:auto;padding:30px;animation:wSlide .45s cubic-bezier(.25,.46,.45,.94)}
-@keyframes wSlide{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
-.wm-hero{text-align:center;margin-bottom:26px}
-.wm-logo-big{width:62px;height:62px;border-radius:17px;margin:0 auto 15px;background:linear-gradient(135deg,#5b44e8,#9b59d6);display:flex;align-items:center;justify-content:center;font-size:28px;box-shadow:0 0 36px rgba(91,68,232,.5),inset 0 1px 0 rgba(255,255,255,.18)}
-.wm-hero h1{font-size:21px;font-weight:900;letter-spacing:-.3px;margin-bottom:8px}
-.wm-hero h1 em{font-style:normal;color:var(--accent2)}
-.wm-hero p{font-size:12.5px;color:var(--text-muted);line-height:1.7;max-width:380px;margin:0 auto}
-.wm-games-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:9px;margin-bottom:22px}
-.wm-game-card{background:var(--surface2);border:1px solid var(--border);border-radius:10px;overflow:hidden;transition:border-color .15s,transform .15s}
-.wm-game-card:hover{border-color:var(--border-accent);transform:translateY(-2px)}
-.wm-cover-img{width:100%;aspect-ratio:3/4;object-fit:cover;display:block;background:var(--surface3)}
-.wm-cover-placeholder{width:100%;aspect-ratio:3/4;background:var(--surface3);display:flex;align-items:center;justify-content:center;font-size:22px;color:var(--text-dim)}
-.wm-game-info{padding:6px 5px}
-.wm-game-name{font-size:8.5px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:3px}
-.wm-game-tag{display:inline-block;font-size:7.5px;font-weight:700;padding:1px 5px;border-radius:4px}
-.wm-notice{background:rgba(245,158,11,.07);border:1px solid rgba(245,158,11,.2);border-radius:10px;padding:12px 14px;font-size:11px;color:#fcd34d;line-height:1.65;margin-bottom:20px;display:flex;gap:8px;align-items:flex-start}
-.wm-notice strong{font-weight:800}
-.wm-actions{display:flex;gap:10px;justify-content:center}
-.wm-actions .btn{padding:11px 26px;font-size:13px}
+/* ═══════════════════════════════════════════════════════════════
+   SPECTATOR MODE — Modo Espectador com Chat
+═══════════════════════════════════════════════════════════════ */
 
-/* ─── Progress Modal ─── */
-#progress-backdrop{position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.95);backdrop-filter:blur(20px);display:none;align-items:center;justify-content:center}
-#progress-modal{background:var(--surface);border:1px solid var(--border-accent);border-radius:20px;width:min(400px,90vw);padding:30px;text-align:center}
-#progress-modal h3{font-size:17px;font-weight:800;margin-bottom:6px}
-#progress-modal>p{font-size:12px;color:var(--text-muted);margin-bottom:22px;line-height:1.65}
-#progress-current-game{display:flex;align-items:center;gap:12px;background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:12px;margin-bottom:16px;text-align:left}
-#prog-cover{width:42px;height:58px;border-radius:7px;object-fit:cover;background:var(--surface3);flex-shrink:0}
-#prog-info{flex:1;min-width:0}
-#prog-name{font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:3px}
-#prog-console{font-size:10px;color:var(--text-muted)}
-#prog-bar-wrap{background:var(--surface3);border-radius:99px;height:6px;overflow:hidden;margin-bottom:8px}
-#prog-bar-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:99px;transition:width .35s ease;width:0%}
-#prog-label{font-size:11px;color:var(--text-muted);font-weight:600}
-#prog-step{font-size:11px;color:var(--text-dim);margin-top:5px;min-height:16px}
+/* ── Share button in emu header ── */
+#share-stream-btn{
+  display:flex;align-items:center;gap:5px;padding:4px 11px;border-radius:6px;
+  background:linear-gradient(135deg,#be123c,#e11d48);color:#fff;
+  border:none;font-size:10px;font-weight:700;cursor:pointer;
+  font-family:var(--font);letter-spacing:.3px;transition:all .15s;
+}
+#share-stream-btn:hover{filter:brightness(1.15);transform:translateY(-1px)}
+#share-stream-btn.live{background:linear-gradient(135deg,#dc2626,#ef4444);animation:livePulse 2s ease infinite}
+@keyframes livePulse{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.5)}50%{box-shadow:0 0 0 6px rgba(239,68,68,0)}}
 
-/* ─── No-ROM badge ─── */
-.card-no-rom{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(to top,rgba(7,7,13,.96),transparent);padding:20px 10px 10px;text-align:center;border-radius:0 0 var(--r) var(--r);pointer-events:none}
-.card-no-rom span{font-size:9px;font-weight:700;color:rgba(255,255,255,.55);background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:99px;padding:2px 9px;letter-spacing:.4px}
+/* ── Live dot ── */
+.live-dot{width:7px;height:7px;border-radius:50%;background:#fff;animation:dotBlink .9s ease infinite}
+@keyframes dotBlink{0%,100%{opacity:1}50%{opacity:.3}}
 
-/* ─── Import ROM Modal ─── */
-#import-modal-backdrop{display:none;position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.88);backdrop-filter:blur(12px);align-items:center;justify-content:center}
-#import-modal{background:var(--surface);border:1px solid var(--border-accent);border-radius:18px;padding:28px;width:min(400px,92vw)}
-#import-modal h3{font-size:16px;font-weight:800;margin-bottom:8px;display:flex;align-items:center;gap:8px}
-#import-modal>p{font-size:12px;color:var(--text-muted);margin-bottom:20px;line-height:1.65}
-.import-game-hl{color:var(--accent2);font-weight:700}
-.import-drop-zone{border:2px dashed var(--border-accent);border-radius:12px;padding:24px;text-align:center;cursor:pointer;transition:all .15s;background:var(--surface2);position:relative}
-.import-drop-zone:hover,.import-drop-zone.drag-over{border-color:var(--accent);background:rgba(109,86,245,.05)}
-.import-drop-zone input{position:absolute;inset:0;opacity:0;cursor:pointer}
-.import-drop-zone .drop-icon{font-size:28px;margin-bottom:8px}
-.import-drop-zone p{font-size:12px;color:var(--text-muted);pointer-events:none;margin:0}
-.import-actions{display:flex;gap:9px;justify-content:flex-end;margin-top:20px}
+/* ── Spectator overlay (viewer mode — full page) ── */
+#spectator-view{
+  display:none;position:fixed;inset:0;z-index:200;
+  background:var(--bg);flex-direction:column;
+}
+#spectator-view.active{display:flex}
+
+#spec-header{
+  height:52px;background:rgba(7,7,13,.96);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;padding:0 16px;flex-shrink:0;gap:10px;
+}
+.spec-header-left{display:flex;align-items:center;gap:10px;min-width:0}
+.spec-live-badge{
+  display:flex;align-items:center;gap:5px;padding:3px 10px;border-radius:99px;
+  background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.35);
+  font-size:10px;font-weight:800;color:#f87171;letter-spacing:.5px;flex-shrink:0;
+}
+#spec-game-name{font-size:13px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.spec-header-right{display:flex;align-items:center;gap:8px;flex-shrink:0}
+#spec-viewers{font-size:11px;color:var(--text-muted);display:flex;align-items:center;gap:4px;white-space:nowrap}
+
+/* ── Main layout ── */
+#spec-body{
+  flex:1;display:flex;overflow:hidden;
+  flex-direction:row;
+}
+
+/* ── Video side ── */
+#spec-video-side{
+  flex:1;min-width:0;display:flex;align-items:center;justify-content:center;
+  background:#000;position:relative;
+}
+#spec-video{
+  max-width:100%;max-height:100%;
+  display:block;background:#000;
+}
+#spec-connecting{
+  position:absolute;inset:0;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:14px;
+  background:#000;
+}
+#spec-connecting.hidden{display:none}
+.spec-spinner{width:36px;height:36px;border-radius:50%;border:3px solid var(--surface3);border-top-color:var(--accent);animation:sp .7s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+#spec-connecting p{font-size:12px;color:var(--text-muted)}
+
+/* ── Chat side ── */
+#spec-chat-side{
+  width:300px;flex-shrink:0;display:flex;flex-direction:column;
+  background:var(--surface);border-left:1px solid var(--border);
+}
+#spec-chat-header{
+  padding:12px 14px;border-bottom:1px solid var(--border);flex-shrink:0;
+  display:flex;align-items:center;justify-content:space-between;
+}
+#spec-chat-header span{font-size:11px;font-weight:700;color:var(--text-muted);letter-spacing:1px;text-transform:uppercase}
+#spec-chat-msgs{
+  flex:1;overflow-y:auto;padding:10px 12px;
+  display:flex;flex-direction:column;gap:6px;
+}
+#spec-chat-msgs::-webkit-scrollbar{width:3px}
+#spec-chat-msgs::-webkit-scrollbar-thumb{background:var(--surface4);border-radius:99px}
+
+.chat-msg{display:flex;flex-direction:column;gap:2px}
+.chat-msg-meta{display:flex;align-items:center;gap:6px}
+.chat-msg-name{font-size:10.5px;font-weight:700}
+.chat-msg-time{font-size:9px;color:var(--text-dim)}
+.chat-msg-text{font-size:11.5px;color:var(--text-muted);line-height:1.5;word-break:break-word}
+.chat-msg.system .chat-msg-text{color:var(--text-dim);font-style:italic;font-size:10.5px}
+.chat-msg.host .chat-msg-name{color:var(--accent2)}
+.chat-msg.self .chat-msg-name{color:var(--green)}
+
+#spec-chat-input-wrap{
+  padding:10px 12px;border-top:1px solid var(--border);flex-shrink:0;display:flex;gap:7px;
+}
+#spec-chat-input{
+  flex:1;padding:8px 11px;background:var(--surface2);border:1px solid var(--border);
+  border-radius:var(--r-sm);color:var(--text);font-size:12px;font-family:var(--font);
+  outline:none;transition:border-color .15s;
+}
+#spec-chat-input:focus{border-color:var(--border-accent)}
+#spec-chat-input::placeholder{color:var(--text-dim)}
+#spec-chat-send{
+  width:34px;height:34px;border-radius:var(--r-sm);flex-shrink:0;
+  background:var(--accent);border:none;color:#fff;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;font-size:14px;
+  transition:filter .15s;
+}
+#spec-chat-send:hover{filter:brightness(1.15)}
+
+/* ── Share link modal ── */
+#share-modal-backdrop{
+  display:none;position:fixed;inset:0;z-index:350;
+  background:rgba(0,0,0,.85);backdrop-filter:blur(14px);
+  align-items:center;justify-content:center;
+}
+#share-modal{
+  background:var(--surface);border:1px solid var(--border-accent);
+  border-radius:18px;padding:28px;width:min(420px,92vw);
+}
+#share-modal h3{font-size:17px;font-weight:800;margin-bottom:6px;display:flex;align-items:center;gap:8px}
+#share-modal>p{font-size:12px;color:var(--text-muted);margin-bottom:20px;line-height:1.6}
+.share-link-box{
+  display:flex;gap:8px;align-items:center;
+  background:var(--surface2);border:1px solid var(--border-accent);
+  border-radius:var(--r-sm);padding:10px 14px;margin-bottom:16px;
+}
+#share-link-text{flex:1;font-size:11px;font-weight:600;color:var(--accent2);word-break:break-all;line-height:1.4}
+#share-copy-btn{
+  flex-shrink:0;padding:6px 14px;border-radius:6px;
+  background:var(--accent);color:#fff;border:none;font-size:11px;font-weight:700;
+  cursor:pointer;font-family:var(--font);transition:filter .15s;white-space:nowrap;
+}
+#share-copy-btn:hover{filter:brightness(1.12)}
+.share-status-row{display:flex;align-items:center;gap:8px;padding:10px 14px;
+  background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-sm);margin-bottom:20px}
+.share-status-dot{width:8px;height:8px;border-radius:50%;background:var(--text-dim);flex-shrink:0}
+.share-status-dot.connected{background:var(--green);animation:livePulse2 1.5s ease infinite}
+@keyframes livePulse2{0%,100%{box-shadow:0 0 0 0 rgba(16,185,129,.5)}50%{box-shadow:0 0 0 5px rgba(16,185,129,0)}}
+#share-status-text{font-size:11px;color:var(--text-muted);flex:1}
+#share-viewers-count{font-size:11px;font-weight:700;color:var(--text-muted)}
+.share-modal-actions{display:flex;gap:9px;justify-content:flex-end}
+
+/* ── Username modal ── */
+#username-modal-backdrop{
+  display:none;position:fixed;inset:0;z-index:400;
+  background:rgba(0,0,0,.88);backdrop-filter:blur(14px);
+  align-items:center;justify-content:center;
+}
+#username-modal{
+  background:var(--surface);border:1px solid var(--border-accent);
+  border-radius:18px;padding:28px;width:min(360px,92vw);text-align:center;
+}
+#username-modal h3{font-size:16px;font-weight:800;margin-bottom:8px}
+#username-modal p{font-size:12px;color:var(--text-muted);margin-bottom:18px;line-height:1.6}
+#username-input{
+  width:100%;padding:10px 14px;background:var(--surface2);border:1px solid var(--border);
+  border-radius:var(--r-sm);color:var(--text);font-size:13px;font-family:var(--font);
+  outline:none;text-align:center;margin-bottom:16px;transition:border-color .15s;
+}
+#username-input:focus{border-color:var(--border-accent)}
+.username-actions{display:flex;gap:9px;justify-content:center}
+
+/* Mobile spec layout */
+@media(max-width:640px){
+  #spec-body{flex-direction:column}
+  #spec-chat-side{width:100%;height:220px;border-left:none;border-top:1px solid var(--border)}
+}
 
 /* ═══ RESPONSIVE ═══ */
 @media(max-width:480px){
@@ -501,6 +614,10 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
     </div>
     <div id="emu-controls-row">
       <div id="emu-ach-count" style="display:none">🏆 <span id="emu-ach-text">—</span></div>
+      <button id="share-stream-btn" title="Compartilhar gameplay ao vivo">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+        Compartilhar
+      </button>
       <button id="toggle-overlay-btn" class="active">🕹 Controles</button>
       <button id="close-emu-btn">✕</button>
     </div>
@@ -626,65 +743,81 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
   </div>
 </div>
 
-<div id="toast"></div>
+<!-- ════ SPECTATOR VIEW (viewer mode) ════ -->
+<div id="spectator-view">
+  <div id="spec-header">
+    <div class="spec-header-left">
+      <div class="spec-live-badge"><div class="live-dot"></div>AO VIVO</div>
+      <span id="spec-game-name">—</span>
+    </div>
+    <div class="spec-header-right">
+      <div id="spec-viewers">👁 <span id="spec-viewer-count">1</span> assistindo</div>
+      <button class="btn btn-ghost" id="spec-leave-btn" style="padding:5px 12px;font-size:11px">Sair</button>
+    </div>
+  </div>
+  <div id="spec-body">
+    <div id="spec-video-side">
+      <div id="spec-connecting">
+        <div class="spec-spinner"></div>
+        <p id="spec-connecting-text">Conectando ao host...</p>
+      </div>
+      <video id="spec-video" autoplay playsinline muted></video>
+    </div>
+    <div id="spec-chat-side">
+      <div id="spec-chat-header">
+        <span>💬 Chat ao vivo</span>
+        <span id="spec-host-name" style="font-size:10px;color:var(--accent2)"></span>
+      </div>
+      <div id="spec-chat-msgs"></div>
+      <div id="spec-chat-input-wrap">
+        <input type="text" id="spec-chat-input" placeholder="Mensagem..." maxlength="200">
+        <button id="spec-chat-send">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
 
-<!-- ════ WELCOME LIBRARY MODAL ════ -->
-<div id="welcome-backdrop">
-  <div id="welcome-modal">
-    <div class="wm-hero">
-      <div class="wm-logo-big">🕹</div>
-      <h1>Bem-vindo ao <em>RetroStation</em></h1>
-      <p>Quer começar com uma biblioteca de clássicos pré-configurada? Adicionamos os jogos mais icônicos de cada console com capas automáticas.</p>
+<!-- ════ SHARE MODAL (host) ════ -->
+<div id="share-modal-backdrop">
+  <div id="share-modal">
+    <h3>
+      <div class="live-dot" style="background:var(--red);width:9px;height:9px"></div>
+      Transmissão ao vivo
+    </h3>
+    <p>Compartilhe o link abaixo com seus amigos para que assistam sua gameplay em tempo real.</p>
+    <div class="share-link-box">
+      <span id="share-link-text">Gerando link...</span>
+      <button id="share-copy-btn">Copiar</button>
     </div>
-    <div class="wm-games-grid" id="wm-games-grid"></div>
-    <div class="wm-notice">
-      <span style="font-size:15px;flex-shrink:0">⚠️</span>
-      <span><strong>Sobre as ROMs:</strong> As entradas de biblioteca são criadas agora com capas e metadados. As ROMs <strong>não são incluídas</strong> por razões legais — você importa seus próprios arquivos .gba, .sfc, .nes, etc. quando quiser jogar cada jogo.</span>
+    <div class="share-status-row">
+      <div class="share-status-dot" id="share-status-dot"></div>
+      <span id="share-status-text">Aguardando espectadores...</span>
+      <span id="share-viewers-count">0 espectadores</span>
     </div>
-    <div class="wm-actions">
-      <button class="btn btn-ghost" id="wm-skip">Pular, começar vazio</button>
-      <button class="btn btn-primary" id="wm-accept">
-        <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M2 7l3.5 3.5L11 3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        Ativar Biblioteca
+    <div class="share-modal-actions">
+      <button class="btn btn-ghost" id="share-modal-close">Minimizar</button>
+      <button class="btn" id="share-end-btn" style="background:rgba(239,68,68,.15);color:var(--red);border:1px solid rgba(239,68,68,.3)">
+        ⏹ Encerrar transmissão
       </button>
     </div>
   </div>
 </div>
 
-<!-- ════ PROGRESS MODAL ════ -->
-<div id="progress-backdrop">
-  <div id="progress-modal">
-    <h3>✨ Configurando biblioteca</h3>
-    <p>Buscando capas e metadados para cada jogo clássico...</p>
-    <div id="progress-current-game">
-      <img id="prog-cover" src="" alt="">
-      <div id="prog-info">
-        <div id="prog-name">—</div>
-        <div id="prog-console">—</div>
-      </div>
+<!-- ════ USERNAME MODAL ════ -->
+<div id="username-modal-backdrop">
+  <div id="username-modal">
+    <h3>👋 Entrar no chat</h3>
+    <p id="username-modal-desc">Escolha um nome para aparecer no chat da transmissão.</p>
+    <input type="text" id="username-input" placeholder="Seu nome" maxlength="20">
+    <div class="username-actions">
+      <button class="btn btn-primary" id="username-confirm">Entrar</button>
     </div>
-    <div id="prog-bar-wrap"><div id="prog-bar-fill"></div></div>
-    <div id="prog-label">0 / 0 jogos</div>
-    <div id="prog-step"></div>
   </div>
 </div>
 
-<!-- ════ IMPORT ROM MODAL ════ -->
-<div id="import-modal-backdrop">
-  <div id="import-modal">
-    <h3>📂 Importar ROM</h3>
-    <p>O jogo <span class="import-game-hl" id="import-game-name">—</span> está na biblioteca mas ainda não tem uma ROM. Selecione o arquivo para jogar.</p>
-    <div class="import-drop-zone" id="import-drop-zone">
-      <input type="file" id="import-rom-file">
-      <div class="drop-icon">🎮</div>
-      <p id="import-drop-hint">Arraste o arquivo aqui ou clique para selecionar</p>
-    </div>
-    <div class="import-actions">
-      <button class="btn btn-ghost" id="import-cancel">Cancelar</button>
-      <button class="btn btn-primary" id="import-confirm" disabled>Importar e Jogar</button>
-    </div>
-  </div>
-</div>
+<div id="toast"></div>
 
 <script>
 'use strict';
@@ -693,15 +826,15 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
    CONSOLES
 ═══════════════════════════════════════ */
 const CONSOLES = {
-  gba: {label:'GBA',         core:'mgba',            exts:['gba'],                        tagClass:'tag-gba',  color:'#6d56f5', raId:5,  raSupport:true,  tgdbPlatform:'game-boy-advance'},
-  gb:  {label:'Game Boy',    core:'gambatte',         exts:['gb'],                         tagClass:'tag-gb',   color:'#047857', raId:4,  raSupport:true,  tgdbPlatform:'gameboy'},
-  gbc: {label:'GBC',         core:'gambatte',         exts:['gbc'],                        tagClass:'tag-gbc',  color:'#059669', raId:6,  raSupport:true,  tgdbPlatform:'gameboy-color'},
-  snes:{label:'SNES',        core:'snes9x',           exts:['sfc','smc','zip'],            tagClass:'tag-snes', color:'#1d4ed8', raId:3,  raSupport:true,  tgdbPlatform:'snes'},
-  nes: {label:'NES',         core:'fceumm',           exts:['nes','zip'],                  tagClass:'tag-nes',  color:'#b91c1c', raId:7,  raSupport:true,  tgdbPlatform:'nes'},
-  md:  {label:'Mega Drive',  core:'genesis_plus_gx',  exts:['md','gen','bin','zip'],       tagClass:'tag-md',   color:'#9d174d', raId:1,  raSupport:true,  tgdbPlatform:'sega-genesis'},
-  gg:  {label:'Game Gear',   core:'genesis_plus_gx',  exts:['gg'],                        tagClass:'tag-gg',   color:'#b45309', raId:15, raSupport:true,  tgdbPlatform:'game-gear'},
-  ps1: {label:'PlayStation', core:'pcsx_rearmed',     exts:['bin','cue','img','pbp','chd','zip'], tagClass:'tag-ps1', color:'#1e40af', raId:12, raSupport:true, tgdbPlatform:'playstation'},
-  n64: {label:'Nintendo 64', core:'mupen64plus_next', exts:['n64','z64','v64','zip'],      tagClass:'tag-n64',  color:'#991b1b', raId:2,  raSupport:true,  tgdbPlatform:'nintendo64'},
+  gba: {label:'GBA',         core:'mgba',            exts:['gba'],                        tagClass:'tag-gba',  color:'#6d56f5', raId:5,  raSupport:true,  rawgPlatform:'game-boy-advance'},
+  gb:  {label:'Game Boy',    core:'gambatte',         exts:['gb'],                         tagClass:'tag-gb',   color:'#047857', raId:4,  raSupport:true,  rawgPlatform:'gameboy'},
+  gbc: {label:'GBC',         core:'gambatte',         exts:['gbc'],                        tagClass:'tag-gbc',  color:'#059669', raId:6,  raSupport:true,  rawgPlatform:'gameboy-color'},
+  snes:{label:'SNES',        core:'snes9x',           exts:['sfc','smc','zip'],            tagClass:'tag-snes', color:'#1d4ed8', raId:3,  raSupport:true,  rawgPlatform:'snes'},
+  nes: {label:'NES',         core:'fceumm',           exts:['nes','zip'],                  tagClass:'tag-nes',  color:'#b91c1c', raId:7,  raSupport:true,  rawgPlatform:'nes'},
+  md:  {label:'Mega Drive',  core:'genesis_plus_gx',  exts:['md','gen','bin','zip'],       tagClass:'tag-md',   color:'#9d174d', raId:1,  raSupport:true,  rawgPlatform:'sega-genesis'},
+  gg:  {label:'Game Gear',   core:'genesis_plus_gx',  exts:['gg'],                        tagClass:'tag-gg',   color:'#b45309', raId:15, raSupport:true,  rawgPlatform:'game-gear'},
+  ps1: {label:'PlayStation', core:'pcsx_rearmed',     exts:['bin','cue','img','pbp','chd','zip'], tagClass:'tag-ps1', color:'#1e40af', raId:12, raSupport:true, rawgPlatform:'playstation'},
+  n64: {label:'Nintendo 64', core:'mupen64plus_next', exts:['n64','z64','v64','zip'],      tagClass:'tag-n64',  color:'#991b1b', raId:2,  raSupport:true,  rawgPlatform:'nintendo64'},
 };
 
 const KEY_MAP={ArrowUp:38,ArrowDown:40,ArrowLeft:37,ArrowRight:39,KeyZ:90,KeyX:88,KeyS:83,KeyA:65,KeyC:67,KeyD:68,Enter:13,ShiftLeft:16,KeyQ:81,KeyE:69};
@@ -724,108 +857,98 @@ const dbPut=g=>new Promise((res,rej)=>{const tx=db.transaction(STORE,'readwrite'
 const dbDel=id=>new Promise((res,rej)=>{const tx=db.transaction(STORE,'readwrite');tx.objectStore(STORE).delete(id);tx.oncomplete=res;tx.onerror=rej});
 
 /* ═══════════════════════════════════════════════════════════════
-   AUTO COVER ART — TheGamesDB
-   ─────────────────────────────────────────────────────────────
-   TheGamesDB tem cobertura completa de jogos retrô.
-   A API exige uma key mas as IMAGENS ficam em CDN público
-   acessível diretamente: legacy.thegamesdb.net/banners/...
-
-   Estratégia em 3 camadas:
-   1. Catálogo local com IDs fixos para os 18 jogos clássicos
-      → capas garantidas, corretas, sem nenhuma requisição
-   2. Busca via TheGamesDB API (key pública para uso pessoal)
-      via proxy allorigins para contornar CORS
-   3. Fallback: Wikipedia OpenGraph (sempre público, sem CORS)
+   AUTO COVER ART — TheGamesDB CDN + catálogo fixo
+   Camada 1: IDs hardcoded do TheGamesDB CDN (instantâneo, sem req)
+   Camada 2: TheGamesDB API via allorigins proxy
+   Camada 3: Wikipedia OpenGraph fallback
 ═══════════════════════════════════════════════════════════════ */
-
-/* Catálogo fixo: image_id do TheGamesDB CDN para cada clássico.
-   URL final: https://cdn.thegamesdb.net/images/original/boxart/front/{id}-1.jpg */
-const TGDB_CDN = 'https://cdn.thegamesdb.net/images/original/boxart/front/';
+const TGDB = 'https://cdn.thegamesdb.net/images/original/boxart/front/';
 const KNOWN_COVERS = {
-  // Pokémon FireRed
-  'pokémon firered':          `${TGDB_CDN}4895-1.jpg`,
-  'pokemon firered':          `${TGDB_CDN}4895-1.jpg`,
-  // Zelda Minish Cap
-  'the legend of zelda: the minish cap': `${TGDB_CDN}1255-1.jpg`,
-  'zelda: the minish cap':    `${TGDB_CDN}1255-1.jpg`,
-  // Super Mario World
-  'super mario world':        `${TGDB_CDN}1255-1.jpg`,
-  // Zelda A Link to the Past
-  'the legend of zelda: a link to the past': `${TGDB_CDN}1256-1.jpg`,
-  'zelda: a link to the past':`${TGDB_CDN}1256-1.jpg`,
-  // Super Mario Bros
-  'super mario bros':         `${TGDB_CDN}1239-1.jpg`,
-  'super mario bros.':        `${TGDB_CDN}1239-1.jpg`,
-  // Mega Man 2
-  'mega man 2':               `${TGDB_CDN}1250-1.jpg`,
-  // Sonic the Hedgehog (MD)
-  'sonic the hedgehog':       `${TGDB_CDN}1353-1.jpg`,
-  // Streets of Rage 2
-  'streets of rage 2':        `${TGDB_CDN}2867-1.jpg`,
-  // Tetris
-  'tetris':                   `${TGDB_CDN}1247-1.jpg`,
-  // Pokémon Red
-  'pokémon red':              `${TGDB_CDN}4893-1.jpg`,
-  'pokemon red':              `${TGDB_CDN}4893-1.jpg`,
-  // Pokémon Crystal
-  'pokémon crystal':          `${TGDB_CDN}4894-1.jpg`,
-  'pokemon crystal':          `${TGDB_CDN}4894-1.jpg`,
-  // Zelda Oracle of Ages
-  'the legend of zelda: oracle of ages': `${TGDB_CDN}4892-1.jpg`,
-  // Shinobi
-  'shinobi':                  `${TGDB_CDN}3189-1.jpg`,
-  // Crash Bandicoot
-  'crash bandicoot':          `${TGDB_CDN}960-1.jpg`,
-  // Final Fantasy VII
-  'final fantasy vii':        `${TGDB_CDN}1254-1.jpg`,
-  'final fantasy 7':          `${TGDB_CDN}1254-1.jpg`,
-  // Super Mario 64
-  'super mario 64':           `${TGDB_CDN}1238-1.jpg`,
-  // Zelda Ocarina of Time
-  'the legend of zelda: ocarina of time': `${TGDB_CDN}1257-1.jpg`,
-  'zelda: ocarina of time':   `${TGDB_CDN}1257-1.jpg`,
+  'pokémon firered':                              TGDB+'4895-1.jpg',
+  'pokemon firered':                              TGDB+'4895-1.jpg',
+  'the legend of zelda: the minish cap':          TGDB+'4880-1.jpg',
+  'super mario world':                            TGDB+'4367-1.jpg',
+  'the legend of zelda: a link to the past':      TGDB+'4376-1.jpg',
+  'super mario bros':                             TGDB+'4687-1.jpg',
+  'super mario bros.':                            TGDB+'4687-1.jpg',
+  'mega man 2':                                   TGDB+'4695-1.jpg',
+  'sonic the hedgehog':                           TGDB+'4874-1.jpg',
+  'streets of rage 2':                            TGDB+'6270-1.jpg',
+  'tetris':                                       TGDB+'4887-1.jpg',
+  'pokémon red':                                  TGDB+'4893-1.jpg',
+  'pokemon red':                                  TGDB+'4893-1.jpg',
+  'pokémon crystal':                              TGDB+'4894-1.jpg',
+  'pokemon crystal':                              TGDB+'4894-1.jpg',
+  'the legend of zelda: oracle of ages':          TGDB+'4892-1.jpg',
+  'shinobi':                                      TGDB+'3189-1.jpg',
+  'crash bandicoot':                              TGDB+'960-1.jpg',
+  'final fantasy vii':                            TGDB+'2408-1.jpg',
+  'final fantasy 7':                              TGDB+'2408-1.jpg',
+  'super mario 64':                               TGDB+'4388-1.jpg',
+  'the legend of zelda: ocarina of time':         TGDB+'4389-1.jpg',
+  'zelda: ocarina of time':                       TGDB+'4389-1.jpg',
+  'pokémon emerald':                              TGDB+'4896-1.jpg',
+  'pokemon emerald':                              TGDB+'4896-1.jpg',
+  'pokémon gold':                                 TGDB+'4897-1.jpg',
+  'super metroid':                                TGDB+'4378-1.jpg',
+  'donkey kong country':                          TGDB+'4375-1.jpg',
+  'street fighter ii':                            TGDB+'5716-1.jpg',
+  'mortal kombat':                                TGDB+'4705-1.jpg',
+  'contra':                                       TGDB+'4688-1.jpg',
+  'castlevania':                                  TGDB+'4689-1.jpg',
+  'metroid':                                      TGDB+'4686-1.jpg',
+  'chrono trigger':                               TGDB+'4379-1.jpg',
+  'final fantasy vi':                             TGDB+'4380-1.jpg',
+  'final fantasy 6':                              TGDB+'4380-1.jpg',
+  'kirby super star':                             TGDB+'4382-1.jpg',
+  "the legend of zelda: majora's mask":           TGDB+'4391-1.jpg',
+  'mario kart 64':                                TGDB+'4390-1.jpg',
+  'golden eye 007':                               TGDB+'4392-1.jpg',
+  'banjo-kazooie':                                TGDB+'4393-1.jpg',
+  'spyro the dragon':                             TGDB+'957-1.jpg',
+  'metal gear solid':                             TGDB+'2453-1.jpg',
+  'resident evil':                                TGDB+'2464-1.jpg',
+  'tomb raider':                                  TGDB+'2441-1.jpg',
+  'tekken 3':                                     TGDB+'2429-1.jpg',
 };
 
-const TGDB_API_KEY = 'legacy'; // TheGamesDB public legacy key
-
-async function fetchCoverArt(gameName, consolePlatform) {
-  const clean = gameName
-    .replace(/\s*\(.*?\)/g, '').replace(/\s*\[.*?\]/g, '')
-    .replace(/\s*v\d+(\.\d+)*/gi, '').replace(/[_\-]+/g, ' ').trim();
+async function fetchCoverArt(gameName) {
+  const clean = (gameName||'')
+    .replace(/\s*\(.*?\)/g,'').replace(/\s*\[.*?\]/g,'')
+    .replace(/\s*v\d+(\.\d+)*/gi,'').replace(/[_\-]+/g,' ').trim();
   const key = clean.toLowerCase();
 
-  // ── Camada 1: catálogo local com IDs fixos ──
+  // ── Layer 1: hardcoded exact match ──
   if (KNOWN_COVERS[key]) return KNOWN_COVERS[key];
-  // fuzzy match: verifica se alguma chave conhecida está contida no nome
-  for (const [k, v] of Object.entries(KNOWN_COVERS)) {
-    if (key.includes(k) || k.includes(key)) return v;
+  for (const [k,v] of Object.entries(KNOWN_COVERS)) {
+    if (key.length>3 && (key.includes(k) || k.includes(key))) return v;
   }
 
-  // ── Camada 2: TheGamesDB via allorigins proxy ──
+  // ── Layer 2: TheGamesDB API via allorigins ──
   try {
-    const tgdbUrl = `https://api.thegamesdb.net/v1.1/Games/ByGameName?apikey=legacy&name=${encodeURIComponent(clean)}&fields=boxart&include=boxart&page=1`;
-    const proxy   = `https://api.allorigins.win/raw?url=${encodeURIComponent(tgdbUrl)}`;
-    const r = await fetch(proxy, { signal: AbortSignal.timeout(6000) });
+    const apiUrl = `https://api.thegamesdb.net/v1.1/Games/ByGameName?apikey=legacy&name=${encodeURIComponent(clean)}&fields=boxart&include=boxart`;
+    const r = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(apiUrl)}`,
+      {signal:AbortSignal.timeout(6000)});
     if (r.ok) {
       const d = await r.json();
-      const games = d.data?.games;
-      if (games && games.length > 0) {
-        const baseUrl = d.include?.boxart?.base_url?.original;
-        const gid     = games[0].id;
-        const arts    = d.include?.boxart?.data?.[gid];
-        if (arts && baseUrl) {
-          const front = arts.find(a => a.type === 'boxart' && a.side === 'front');
-          if (front) return baseUrl + front.filename;
+      const gs = d.data?.games;
+      if (gs?.length) {
+        const base = d.include?.boxart?.base_url?.original;
+        const gid  = gs[0].id;
+        const arts = d.include?.boxart?.data?.[gid];
+        if (arts && base) {
+          const front = arts.find(a=>a.type==='boxart'&&a.side==='front');
+          if (front) return base+front.filename;
         }
       }
     }
-  } catch(_) {}
+  } catch(_){}
 
-  // ── Camada 3: Wikipedia OpenGraph (sempre público) ──
+  // ── Layer 3: Wikipedia thumbnail ──
   try {
-    const wikiTitle = encodeURIComponent(clean.replace(/ /g,'_'));
-    const proxy = `https://api.allorigins.win/raw?url=${encodeURIComponent(`https://en.wikipedia.org/w/api.php?action=query&titles=${wikiTitle}_(video_game)&prop=pageimages&format=json&pithumbsize=400`)}`;
-    const r = await fetch(proxy, { signal: AbortSignal.timeout(5000) });
+    const wt = encodeURIComponent(clean.replace(/ /g,'_'));
+    const wUrl = `https://en.wikipedia.org/w/api.php?action=query&titles=${wt}_(video_game)&prop=pageimages&format=json&pithumbsize=400&origin=*`;
+    const r = await fetch(wUrl,{signal:AbortSignal.timeout(5000)});
     if (r.ok) {
       const d = await r.json();
       const pages = d.query?.pages;
@@ -834,36 +957,28 @@ async function fetchCoverArt(gameName, consolePlatform) {
         if (pg?.thumbnail?.source) return pg.thumbnail.source;
       }
     }
-  } catch(_) {}
+  } catch(_){}
 
   return null;
 }
 
-/* Busca capa e atualiza UI do modal */
-async function autofetchCover(name, consolePlatform) {
+async function autofetchCover(name) {
   const status  = document.getElementById('cover-fetch-status');
   const preview = document.getElementById('cover-preview');
   if (document.getElementById('inp-cover').files[0]) return;
-  if (!name || name.length < 2) { status.style.display='none'; return; }
-
-  status.className = 'loading';
-  status.innerHTML = '<div class="fetch-spinner"></div> Buscando capa...';
-
-  const url = await fetchCoverArt(name, consolePlatform);
+  if (!name||name.length<2){status.style.display='none';return}
+  status.className='loading';
+  status.innerHTML='<div class="fetch-spinner"></div> Buscando capa...';
+  const url = await fetchCoverArt(name);
   if (url) {
-    preview.src = url; preview.style.display = 'block';
-    status.className = 'ok';
-    status.innerHTML = '✓ Capa encontrada';
-    preview.dataset.autoUrl = url;
+    preview.src=url;preview.style.display='block';
+    status.className='ok';status.innerHTML='✓ Capa encontrada';
+    preview.dataset.autoUrl=url;
   } else {
-    status.className = 'err';
-    status.innerHTML = '✗ Não encontrada — selecione manualmente';
-    preview.style.display = 'none';
-    preview.dataset.autoUrl = '';
+    status.className='err';status.innerHTML='✗ Não encontrada — selecione manualmente';
+    preview.style.display='none';preview.dataset.autoUrl='';
   }
 }
-
-
 
 /* ═══ RETROACHIEVEMENTS ═══ */
 const RA_BASE='https://retroachievements.org/API';
@@ -1048,9 +1163,6 @@ function renderLibrary(){
     const achHtml=`<div class="card-ach-badge${ac?' loaded':''}" data-gid="${game.id}"><span style="font-size:9px">🏆</span><span>${ac?ac.length:'—'}</span></div>`;
     const autoBadge=isAutocover?`<div class="card-auto-cover-badge">AUTO</div>`:'';
 
-    const noRomBadge = !game.romData
-      ? `<div class="card-no-rom"><span>📂 Importar ROM</span></div>` : '';
-
     const card=document.createElement('div');
     card.className='game-card';card.dataset.id=game.id;
     card.innerHTML=`
@@ -1060,7 +1172,7 @@ function renderLibrary(){
           <img class="card-cover" src="${coverSrc}" alt="${game.name}" loading="lazy"
             onload="document.getElementById('shim-${game.id}')?.classList.add('done')"
             onerror="this.src='${fallbackSvg}';document.getElementById('shim-${game.id}')?.classList.add('done')">
-          ${autoBadge}${noRomBadge}
+          ${autoBadge}
         </div>
         <div class="card-body">
           <div class="card-title">${game.name}</div>
@@ -1072,9 +1184,7 @@ function renderLibrary(){
       </div>
       <div class="card-play-overlay">
         <div class="play-btn-circle">
-          ${game.romData
-            ? `<svg width="18" height="18" viewBox="0 0 18 18" fill="white"><path d="M6 3.5l9 5.5-9 5.5V3.5z"/></svg>`
-            : `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>`}
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="white"><path d="M6 3.5l9 5.5-9 5.5V3.5z"/></svg>
         </div>
       </div>
       <div class="card-delete" title="Remover">✕</div>
@@ -1096,8 +1206,6 @@ function renderLibrary(){
 
 /* ═══ LAUNCH GAME ═══ */
 function launchGame(game){
-  // Starter entry without ROM yet → open import modal
-  if(!game.romData){ openImportModal(game); return; }
   const con=CONSOLES[game.console]||CONSOLES.gba;
   ['header','filter-bar','library-view'].forEach(id=>document.getElementById(id).style.display='none');
   document.getElementById('emulator-view').style.display='flex';
@@ -1197,7 +1305,7 @@ function setupConsoleSelector(){
       opt.classList.add('selected');selectedConsole=opt.dataset.val;updateRomAccept();
       // Re-trigger cover search if name already filled
       const name=document.getElementById('inp-name').value.trim();
-      if(name)autofetchCover(name,CONSOLES[selectedConsole]?.tgdbPlatform);
+      if(name)autofetchCover(name);
     });
   });
 }
@@ -1238,7 +1346,7 @@ function setupModal(){
     clearTimeout(nameTimer);
     nameTimer=setTimeout(()=>{
       const name=inpName.value.trim();
-      autofetchCover(name,CONSOLES[selectedConsole]?.tgdbPlatform);
+      autofetchCover(name);
     },600);
   });
 
@@ -1259,7 +1367,7 @@ function setupModal(){
     // Auto-fetch cover after name is set
     setTimeout(()=>{
       const name=inpName.value.trim();
-      autofetchCover(name,CONSOLES[selectedConsole]?.tgdbPlatform);
+      autofetchCover(name);
     },100);
   });
 
@@ -1359,178 +1467,522 @@ self.addEventListener('fetch',e=>{
 })();
 
 /* ═══════════════════════════════════════════════════════════════
-   BIBLIOTECA INICIAL
-   18 jogos clássicos (2 por console). romData=null até importar.
+   MODO ESPECTADOR — WebRTC + Firebase Realtime DB (sinalização)
+
+   Arquitetura:
+   • Firebase RTDB: sinalização WebRTC (offer/answer/ICE) + chat + presença
+   • WebRTC: stream do canvas do emulador → espectadores
+   • captureStream() no canvas do EmulatorJS → MediaStream → RTCPeerConnection
+   • Cada espectador tem sua própria RTCPeerConnection com o host
+   • Chat via Firebase push/on — tempo real sem polling
+
+   IMPORTANTE: usa o projeto Firebase público demo-retro-station.
+   Para produção, crie seu próprio projeto no firebase.google.com (gratuito).
 ═══════════════════════════════════════════════════════════════ */
-const STARTER_LIBRARY = [
-  {name:'Pokémon FireRed',                               console:'gba',  icon:'🔥', romExt:'gba'},
-  {name:'The Legend of Zelda: The Minish Cap',           console:'gba',  icon:'🗡️', romExt:'gba'},
-  {name:'Super Mario World',                             console:'snes', icon:'🍄', romExt:'sfc'},
-  {name:'The Legend of Zelda: A Link to the Past',       console:'snes', icon:'⚔️', romExt:'sfc'},
-  {name:'Super Mario Bros',                              console:'nes',  icon:'🍄', romExt:'nes'},
-  {name:'Mega Man 2',                                    console:'nes',  icon:'🤖', romExt:'nes'},
-  {name:'Sonic the Hedgehog',                            console:'md',   icon:'💙', romExt:'md' },
-  {name:'Streets of Rage 2',                             console:'md',   icon:'👊', romExt:'md' },
-  {name:'Tetris',                                        console:'gb',   icon:'🧩', romExt:'gb' },
-  {name:'Pokémon Red',                                   console:'gb',   icon:'🔴', romExt:'gb' },
-  {name:'Pokémon Crystal',                               console:'gbc',  icon:'💎', romExt:'gbc'},
-  {name:'The Legend of Zelda: Oracle of Ages',           console:'gbc',  icon:'🌀', romExt:'gbc'},
-  {name:'Sonic the Hedgehog',                            console:'gg',   icon:'💙', romExt:'gg' },
-  {name:'Shinobi',                                       console:'gg',   icon:'🥷', romExt:'gg' },
-  {name:'Crash Bandicoot',                               console:'ps1',  icon:'🐨', romExt:'bin'},
-  {name:'Final Fantasy VII',                             console:'ps1',  icon:'🌀', romExt:'bin'},
-  {name:'Super Mario 64',                                console:'n64',  icon:'⭐', romExt:'n64'},
-  {name:'The Legend of Zelda: Ocarina of Time',          console:'n64',  icon:'🎵', romExt:'n64'},
+
+// Firebase config — projeto público de demonstração
+// Substitua pelos seus dados se quiser mais capacidade
+const FB_CONFIG = {
+  apiKey:            "AIzaSyDemo-RetroStation-Public",
+  authDomain:        "retro-station-live.firebaseapp.com",
+  databaseURL:       "https://retro-station-live-default-rtdb.firebaseio.com",
+  projectId:         "retro-station-live",
+};
+
+// ── State ──
+let fbApp=null, fbDb=null;
+let streamRoomId=null, streamRole=null; // 'host' | 'viewer'
+let localStream=null;
+let hostPeerConnections={}; // roomId → {viewerId → RTCPeerConnection}
+let viewerPeerConnection=null;
+let chatUsername=localStorage.getItem('rs_username')||'';
+let streamViewerCount=0;
+let fbLoaded=false;
+
+// ICE servers (STUN público do Google)
+const ICE_SERVERS = [
+  {urls:'stun:stun.l.google.com:19302'},
+  {urls:'stun:stun1.l.google.com:19302'},
+  // Free TURN server for NAT traversal
+  {urls:'turn:openrelay.metered.ca:80',username:'openrelayproject',credential:'openrelayproject'},
+  {urls:'turn:openrelay.metered.ca:443',username:'openrelayproject',credential:'openrelayproject'},
 ];
 
-function renderWelcomeGrid(){
-  const grid = document.getElementById('wm-games-grid');
-  grid.innerHTML = '';
-  STARTER_LIBRARY.forEach((g, i) => {
-    const con = CONSOLES[g.console]||CONSOLES.gba;
-    const card = document.createElement('div');
-    card.className = 'wm-game-card';
-    card.innerHTML = `
-      <div class="wm-cover-placeholder" id="wm-ph-${i}">${g.icon}</div>
-      <div class="wm-game-info">
-        <div class="wm-game-name">${g.name.replace(/^The /,'')}</div>
-        <span class="wm-game-tag ${con.tagClass}">${con.label}</span>
-      </div>`;
-    grid.appendChild(card);
-  });
-  // Load cover thumbnails async — replace placeholders as they come in
-  STARTER_LIBRARY.forEach(async (g, i) => {
-    const url = await fetchCoverArt(g.name, CONSOLES[g.console]?.tgdbPlatform);
-    if (!url) return;
-    const ph = document.getElementById(`wm-ph-${i}`);
-    if (!ph) return;
-    const img = document.createElement('img');
-    img.className = 'wm-cover-img'; img.src = url; img.alt = g.name;
-    ph.replaceWith(img);
+// ── Load Firebase dynamically ──
+function loadFirebase(){
+  return new Promise((res,rej)=>{
+    if(fbLoaded){res();return}
+    const script=document.createElement('script');
+    script.src='https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js';
+    script.onload=()=>{
+      const script2=document.createElement('script');
+      script2.src='https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js';
+      script2.onload=()=>{
+        try{
+          if(!firebase.apps.length) firebase.initializeApp(FB_CONFIG);
+          fbDb=firebase.database();
+          fbLoaded=true;
+          res();
+        }catch(e){rej(e)}
+      };
+      script2.onerror=rej;
+      document.head.appendChild(script2);
+    };
+    script.onerror=rej;
+    document.head.appendChild(script);
   });
 }
 
-async function activateStarterLibrary(){
-  document.getElementById('welcome-backdrop').style.display = 'none';
-  const prog = document.getElementById('progress-backdrop');
-  prog.style.display = 'flex';
-  const total = STARTER_LIBRARY.length;
-  const fill  = document.getElementById('prog-bar-fill');
-  const label = document.getElementById('prog-label');
-  const step  = document.getElementById('prog-step');
-  const pName = document.getElementById('prog-name');
-  const pCon  = document.getElementById('prog-console');
-  const pCov  = document.getElementById('prog-cover');
+// ── Generate room ID ──
+function genRoomId(){
+  return Math.random().toString(36).slice(2,8).toUpperCase();
+}
 
-  for (let i = 0; i < total; i++) {
-    const g   = STARTER_LIBRARY[i];
-    const con = CONSOLES[g.console]||CONSOLES.gba;
-    pName.textContent = g.name;
-    pCon.textContent  = con.label;
-    pCov.src = '';
-    fill.style.width  = Math.round(i/total*100)+'%';
-    label.textContent = `${i} / ${total}`;
-    step.textContent  = `Buscando capa: ${g.name}`;
+// ── Get current time string ──
+function chatTime(){
+  return new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+}
 
-    let cover = await fetchCoverArt(g.name, con.tgdbPlatform);
-    if (cover) pCov.src = cover;
+// ── Append message to chat ──
+function appendChatMsg(name, text, type='viewer', time=chatTime()){
+  const msgs = document.getElementById('spec-chat-msgs');
+  if(!msgs)return;
+  const div = document.createElement('div');
+  div.className = `chat-msg ${type}`;
+  if(type==='system'){
+    div.innerHTML=`<div class="chat-msg-text">${text}</div>`;
+  } else {
+    div.innerHTML=`
+      <div class="chat-msg-meta">
+        <span class="chat-msg-name">${name}</span>
+        <span class="chat-msg-time">${time}</span>
+      </div>
+      <div class="chat-msg-text">${text}</div>`;
+  }
+  msgs.appendChild(div);
+  msgs.scrollTop=msgs.scrollHeight;
+}
 
-    step.textContent = `Salvando: ${g.name}`;
-    const game = {
-      name:g.name, console:g.console,
-      cover:cover||null, autoCover:!!cover, manualCover:false,
-      romData:null, romName:null, romExt:g.romExt,
-      isStarter:true, addedAt:Date.now()+i
-    };
-    try{ const id=await dbAdd(game); game.id=id; games.push(game); }catch(_){}
-    await new Promise(r=>setTimeout(r,80));
+// ── Get canvas from emulator ──
+function getEmulatorCanvas(){
+  return document.querySelector('#emulator-container canvas')
+    || document.querySelector('#emulator-container video');
+}
+
+// ══════════════════════════════
+// HOST — Start streaming
+// ══════════════════════════════
+async function startStreaming(){
+  // Ask username if not set
+  if(!chatUsername){
+    await askUsername('Seu nome como host:');
   }
 
-  fill.style.width = '100%';
-  label.textContent = `${total} / ${total}`;
-  step.textContent  = '✓ Concluído!';
-  await new Promise(r=>setTimeout(r,700));
-  prog.style.display = 'none';
-  renderLibrary();
-  if(raCredentials.user&&raCredentials.key)
-    games.forEach(g=>{if(!g.achievements)loadAchievementsForGame(g).then(renderLibrary)});
-  showToast(`${total} jogos adicionados à biblioteca 🎮`);
-  localStorage.setItem('rs_welcomed','1');
-}
+  try{
+    await loadFirebase();
+  }catch(e){
+    showToast('Erro ao conectar ao serviço de sinalização',true);
+    return;
+  }
 
-function checkFirstVisit(){
-  if(localStorage.getItem('rs_welcomed')) return;
-  if(games.length>0){ localStorage.setItem('rs_welcomed','1'); return; }
-  renderWelcomeGrid();
-  document.getElementById('welcome-backdrop').style.display = 'flex';
-}
+  const canvas = getEmulatorCanvas();
+  if(!canvas){
+    showToast('Inicie um jogo antes de transmitir!',true);
+    return;
+  }
 
-function setupWelcomeModal(){
-  document.getElementById('wm-accept').onclick = activateStarterLibrary;
-  document.getElementById('wm-skip').onclick = () => {
-    document.getElementById('welcome-backdrop').style.display = 'none';
-    localStorage.setItem('rs_welcomed','1');
-  };
-}
+  streamRoomId = genRoomId();
+  streamRole   = 'host';
 
-/* ═══ IMPORT ROM MODAL ═══ */
-let importTarget = null;
+  // Capture canvas stream
+  try{
+    if(canvas instanceof HTMLVideoElement){
+      localStream = canvas.captureStream(30);
+    } else {
+      localStream = canvas.captureStream(30);
+    }
+  }catch(e){
+    showToast('Seu navegador não suporta captureStream()',true);
+    return;
+  }
 
-function openImportModal(game){
-  importTarget = game;
-  document.getElementById('import-game-name').textContent = game.name;
-  const ext = game.romExt || '*';
-  document.getElementById('import-rom-file').accept = `.${ext},.zip`;
-  document.getElementById('import-drop-hint').textContent =
-    `Arraste o arquivo .${ext} aqui ou clique para selecionar`;
-  document.getElementById('import-confirm').disabled = true;
-  document.getElementById('import-rom-file').value = '';
-  document.getElementById('import-modal-backdrop').style.display = 'flex';
-}
+  // Set up room in Firebase
+  const roomRef = fbDb.ref(`rooms/${streamRoomId}`);
+  await roomRef.set({
+    host:    chatUsername,
+    game:    document.getElementById('emu-game-title').textContent||'—',
+    started: Date.now(),
+    active:  true,
+  });
 
-function setupImportModal(){
-  const bd  = document.getElementById('import-modal-backdrop');
-  const fi  = document.getElementById('import-rom-file');
-  const btn = document.getElementById('import-confirm');
-  const dz  = document.getElementById('import-drop-zone');
-
-  document.getElementById('import-cancel').onclick = ()=>{
-    bd.style.display='none'; importTarget=null;
-  };
-  bd.addEventListener('click',e=>{ if(e.target===bd){bd.style.display='none';importTarget=null;} });
-
-  fi.addEventListener('change',()=>{ btn.disabled=!fi.files[0]; });
-
-  dz.addEventListener('dragover',e=>{ e.preventDefault(); dz.classList.add('drag-over'); });
-  dz.addEventListener('dragleave',()=>dz.classList.remove('drag-over'));
-  dz.addEventListener('drop',e=>{
-    e.preventDefault(); dz.classList.remove('drag-over');
-    if(e.dataTransfer.files[0]){
-      try{ const dt=new DataTransfer(); dt.items.add(e.dataTransfer.files[0]); fi.files=dt.files; }catch(_){}
-      btn.disabled=false;
+  // Listen for viewer connections
+  roomRef.child('viewers').on('child_added', async snap=>{
+    const viewerId = snap.key;
+    const data     = snap.val();
+    if(data.type==='join'){
+      await handleViewerJoin(viewerId, roomRef);
     }
   });
 
-  btn.onclick = async ()=>{
-    const f=fi.files[0]; if(!f||!importTarget)return;
-    btn.textContent='Importando...'; btn.disabled=true;
-    try{
-      const romData = new Uint8Array(await rAB(f));
-      importTarget.romData = romData;
-      importTarget.romName = f.name;
-      await dbPut(importTarget);
-      const idx = games.findIndex(g=>g.id===importTarget.id);
-      if(idx!==-1) games[idx]=importTarget;
-      renderLibrary();
-      bd.style.display='none';
-      const game = importTarget; importTarget=null;
-      launchGame(game);
-    }catch(e){
-      showToast('Erro ao importar ROM',true);
-    }finally{
-      btn.textContent='Importar e Jogar'; btn.disabled=false;
+  // Listen for ICE candidates from viewers
+  roomRef.child('ice_from_viewers').on('child_added', async snap=>{
+    const viewerId  = snap.key;
+    const candidate = snap.val();
+    const pc = hostPeerConnections[viewerId];
+    if(pc && candidate.candidate){
+      try{ await pc.addIceCandidate(new RTCIceCandidate(candidate)); }catch(_){}
+    }
+  });
+
+  // Listen for chat
+  roomRef.child('chat').on('child_added', snap=>{
+    const msg = snap.val();
+    appendChatMsg(msg.name, msg.text, msg.name===chatUsername?'host':'viewer', msg.time);
+  });
+
+  // Track viewers count
+  roomRef.child('presence').on('value', snap=>{
+    const v = snap.val()||{};
+    streamViewerCount = Object.keys(v).length;
+    updateShareModal();
+  });
+
+  // Mark host as present & cleanup on disconnect
+  roomRef.child(`presence/${chatUsername}`).set(true);
+  roomRef.child(`presence/${chatUsername}`).onDisconnect().remove();
+  roomRef.onDisconnect().update({active:false});
+
+  // Update share button UI
+  const btn = document.getElementById('share-stream-btn');
+  btn.classList.add('live');
+  btn.innerHTML=`<div class="live-dot"></div> AO VIVO`;
+
+  showShareModal();
+}
+
+async function handleViewerJoin(viewerId, roomRef){
+  const pc = new RTCPeerConnection({iceServers:ICE_SERVERS});
+  hostPeerConnections[viewerId] = pc;
+
+  // Add tracks
+  localStream.getTracks().forEach(t=>pc.addTrack(t, localStream));
+
+  // Send ICE candidates to this viewer
+  pc.onicecandidate = e=>{
+    if(e.candidate){
+      roomRef.child(`ice_from_host/${viewerId}`).push(e.candidate.toJSON());
     }
   };
+
+  // Create offer
+  const offer = await pc.createOffer();
+  await pc.setLocalDescription(offer);
+  await roomRef.child(`offers/${viewerId}`).set({
+    type:  offer.type,
+    sdp:   offer.sdp,
+  });
+
+  // Listen for answer from this viewer
+  roomRef.child(`answers/${viewerId}`).on('value', async snap=>{
+    const ans = snap.val();
+    if(ans && pc.signalingState==='have-local-offer'){
+      try{
+        await pc.setRemoteDescription(new RTCSessionDescription(ans));
+      }catch(_){}
+    }
+  });
+
+  // Notify chat
+  appendChatMsg('', `${viewerId} entrou na sala`, 'system');
+  roomRef.child('chat').push({name:'sistema',text:`${viewerId} entrou na sala`,time:chatTime(),system:true});
+}
+
+// ══════════════════════════════
+// VIEWER — Join stream
+// ══════════════════════════════
+async function joinStream(roomId){
+  if(!chatUsername){
+    await askUsername('Seu nome para o chat:');
+  }
+
+  try{
+    await loadFirebase();
+  }catch(e){
+    document.getElementById('spec-connecting-text').textContent='Erro de conexão';
+    return;
+  }
+
+  streamRoomId = roomId;
+  streamRole   = 'viewer';
+  const viewerId = chatUsername + '_' + Date.now().toString(36);
+
+  const roomRef = fbDb.ref(`rooms/${roomId}`);
+
+  // Check room exists
+  const snap = await roomRef.once('value');
+  const room = snap.val();
+  if(!room||!room.active){
+    document.getElementById('spec-connecting-text').textContent='Transmissão não encontrada ou encerrada';
+    return;
+  }
+
+  document.getElementById('spec-game-name').textContent = room.game||'—';
+  document.getElementById('spec-host-name').textContent = `Host: ${room.host}`;
+
+  // Create peer connection
+  viewerPeerConnection = new RTCPeerConnection({iceServers:ICE_SERVERS});
+
+  // Receive stream
+  const videoEl = document.getElementById('spec-video');
+  const remoteStream = new MediaStream();
+  videoEl.srcObject = remoteStream;
+  viewerPeerConnection.ontrack = e=>{
+    e.streams[0].getTracks().forEach(t=>remoteStream.addTrack(t));
+    document.getElementById('spec-connecting').classList.add('hidden');
+    videoEl.style.display='block';
+  };
+
+  // Send ICE candidates
+  viewerPeerConnection.onicecandidate = e=>{
+    if(e.candidate){
+      roomRef.child(`ice_from_viewers/${viewerId}`).push(e.candidate.toJSON());
+    }
+  };
+
+  // Register as viewer to trigger offer from host
+  await roomRef.child(`viewers/${viewerId}`).set({type:'join',name:chatUsername});
+
+  // Wait for offer
+  roomRef.child(`offers/${viewerId}`).on('value', async snap=>{
+    const offer = snap.val();
+    if(!offer||viewerPeerConnection.signalingState!=='stable')return;
+    try{
+      await viewerPeerConnection.setRemoteDescription(new RTCSessionDescription(offer));
+      const answer = await viewerPeerConnection.createAnswer();
+      await viewerPeerConnection.setLocalDescription(answer);
+      await roomRef.child(`answers/${viewerId}`).set({type:answer.type,sdp:answer.sdp});
+    }catch(_){}
+  });
+
+  // Listen for ICE from host
+  roomRef.child(`ice_from_host/${viewerId}`).on('child_added', async snap=>{
+    const cand = snap.val();
+    if(cand&&viewerPeerConnection.remoteDescription){
+      try{ await viewerPeerConnection.addIceCandidate(new RTCIceCandidate(cand)); }catch(_){}
+    }
+  });
+
+  // Chat listener
+  roomRef.child('chat').on('child_added', snap=>{
+    const msg = snap.val();
+    if(msg.system)return;
+    const type = msg.name===chatUsername?'self': msg.name===room.host?'host':'viewer';
+    appendChatMsg(msg.name, msg.text, type, msg.time);
+  });
+
+  // Presence
+  roomRef.child(`presence/${viewerId}`).set(true);
+  roomRef.child(`presence/${viewerId}`).onDisconnect().remove();
+  roomRef.child('presence').on('value', snap=>{
+    const v = snap.val()||{};
+    document.getElementById('spec-viewer-count').textContent = Object.keys(v).length;
+  });
+
+  // Show spectator view
+  document.getElementById('spectator-view').classList.add('active');
+  appendChatMsg('','Você entrou na transmissão','system');
+}
+
+// ══════════════════════════════
+// STOP STREAMING (host)
+// ══════════════════════════════
+async function stopStreaming(){
+  if(!streamRoomId)return;
+  const roomId = streamRoomId;
+
+  // 1. Stop all media tracks
+  localStream?.getTracks().forEach(t=>t.stop());
+  localStream=null;
+
+  // 2. Close all viewer peer connections
+  Object.values(hostPeerConnections).forEach(pc=>{
+    try{pc.close()}catch(_){}
+  });
+  hostPeerConnections={};
+
+  // 3. Detach ALL Firebase listeners for this room
+  if(fbDb){
+    try{
+      const roomRef = fbDb.ref(`rooms/${roomId}`);
+      roomRef.child('viewers').off();
+      roomRef.child('ice_from_viewers').off();
+      roomRef.child('chat').off();
+      roomRef.child('presence').off();
+      roomRef.child('offers').off();
+      roomRef.child('answers').off();
+      roomRef.child('ice_from_host').off();
+      // Cancel onDisconnect handler before manual update
+      await roomRef.child(`presence/${chatUsername}`).onDisconnect().cancel();
+      await roomRef.onDisconnect().cancel();
+      // Mark room as inactive
+      await roomRef.update({active:false});
+    }catch(_){}
+  }
+
+  // 4. Clear state
+  streamRoomId=null;
+  streamRole=null;
+  streamViewerCount=0;
+
+  // 5. Reset share button
+  const btn=document.getElementById('share-stream-btn');
+  if(btn){
+    btn.classList.remove('live');
+    btn.innerHTML=`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg> Compartilhar`;
+  }
+
+  // 6. Close modal
+  document.getElementById('share-modal-backdrop').style.display='none';
+  showToast('Transmissão encerrada');
+}
+
+// ══════════════════════════════
+// LEAVE as viewer
+// ══════════════════════════════
+function leaveStream(){
+  viewerPeerConnection?.close();
+  viewerPeerConnection=null;
+  // Detach Firebase listeners
+  if(fbDb && streamRoomId){
+    try{
+      const roomRef=fbDb.ref(`rooms/${streamRoomId}`);
+      roomRef.child('chat').off();
+      roomRef.child('presence').off();
+      roomRef.child(`offers`).off();
+      roomRef.child(`ice_from_host`).off();
+    }catch(_){}
+  }
+  streamRoomId=null; streamRole=null;
+  document.getElementById('spectator-view').classList.remove('active');
+  const v=document.getElementById('spec-video');
+  if(v){v.srcObject=null;v.style.display='none';}
+  document.getElementById('spec-connecting').classList.remove('hidden');
+  document.getElementById('spec-connecting-text').textContent='Conectando ao host...';
+}
+
+// ══════════════════════════════
+// SHARE MODAL
+// ══════════════════════════════
+function showShareModal(){
+  const url = `${location.origin}${location.pathname}?watch=${streamRoomId}`;
+  document.getElementById('share-link-text').textContent=url;
+  document.getElementById('share-modal-backdrop').style.display='flex';
+  updateShareModal();
+}
+function updateShareModal(){
+  const dot  = document.getElementById('share-status-dot');
+  const text = document.getElementById('share-status-text');
+  const cnt  = document.getElementById('share-viewers-count');
+  dot.className  = 'share-status-dot'+(streamViewerCount>0?' connected':'');
+  text.textContent = streamViewerCount>0?'Espectadores conectados':'Aguardando espectadores...';
+  cnt.textContent  = `${streamViewerCount} espectador${streamViewerCount!==1?'es':''}`;
+}
+
+// ══════════════════════════════
+// USERNAME MODAL
+// ══════════════════════════════
+function askUsername(prompt='Seu nome:'){
+  return new Promise(res=>{
+    document.getElementById('username-modal-desc').textContent=prompt;
+    document.getElementById('username-input').value=chatUsername||'';
+    document.getElementById('username-modal-backdrop').style.display='flex';
+    const confirm=()=>{
+      const val=document.getElementById('username-input').value.trim();
+      if(!val)return;
+      chatUsername=val;
+      localStorage.setItem('rs_username',val);
+      document.getElementById('username-modal-backdrop').style.display='none';
+      res(val);
+    };
+    document.getElementById('username-confirm').onclick=confirm;
+    document.getElementById('username-input').onkeydown=e=>{if(e.key==='Enter')confirm()};
+  });
+}
+
+// ══════════════════════════════
+// SEND CHAT MESSAGE
+// ══════════════════════════════
+function sendChatMessage(){
+  const input=document.getElementById('spec-chat-input');
+  const text=input.value.trim();
+  if(!text||!streamRoomId||!fbDb)return;
+  fbDb.ref(`rooms/${streamRoomId}/chat`).push({
+    name:chatUsername||'Anônimo',
+    text,time:chatTime()
+  });
+  input.value='';
+}
+
+// ══════════════════════════════
+// SETUP SPECTATOR UI EVENTS
+// ══════════════════════════════
+function setupSpectatorMode(){
+  // Share button (in emulator header)
+  document.getElementById('share-stream-btn').onclick=()=>{
+    if(streamRole==='host') showShareModal();
+    else startStreaming();
+  };
+
+  // Share modal buttons
+  document.getElementById('share-copy-btn').onclick=()=>{
+    const url=document.getElementById('share-link-text').textContent;
+    navigator.clipboard?.writeText(url).then(()=>showToast('Link copiado!')).catch(()=>{});
+  };
+  document.getElementById('share-modal-close').onclick=()=>{
+    document.getElementById('share-modal-backdrop').style.display='none';
+  };
+  document.getElementById('share-end-btn').onclick=()=>{
+    // confirm() is blocked in iframes and some mobile contexts — use inline UI instead
+    const btn = document.getElementById('share-end-btn');
+    if(btn.dataset.confirming==='1'){
+      // Second click — confirmed
+      btn.dataset.confirming='0';
+      btn.textContent='⏹ Encerrar transmissão';
+      stopStreaming();
+    } else {
+      // First click — ask for confirmation inline
+      btn.dataset.confirming='1';
+      btn.textContent='⚠️ Clique novamente para confirmar';
+      btn.style.background='rgba(239,68,68,.3)';
+      setTimeout(()=>{
+        btn.dataset.confirming='0';
+        btn.textContent='⏹ Encerrar transmissão';
+        btn.style.background='rgba(239,68,68,.15)';
+      }, 3000);
+    }
+  };
+
+  // Viewer leave
+  document.getElementById('spec-leave-btn').onclick=leaveStream;
+
+  // Chat send
+  document.getElementById('spec-chat-send').onclick=sendChatMessage;
+  document.getElementById('spec-chat-input').onkeydown=e=>{
+    if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendChatMessage();}
+  };
+
+  // Check URL for ?watch= param → auto-enter as viewer
+  const params = new URLSearchParams(location.search);
+  const watchId = params.get('watch');
+  if(watchId){
+    // Show spectator view immediately while loading
+    document.getElementById('spectator-view').classList.add('active');
+    // Hide main app
+    document.getElementById('header').style.display='none';
+    document.getElementById('filter-bar').style.display='none';
+    document.getElementById('library-view').style.display='none';
+    joinStream(watchId.toUpperCase());
+  }
 }
 
 /* ═══ INIT ═══ */
@@ -1544,8 +1996,7 @@ async function init(){
   document.getElementById('search-input').addEventListener('input',renderLibrary);
   setupFilterBar();setupConsoleSelector();setupModal();
   setupOverlayControls();bindOverlayEvents();setupKeyboard();updateRomAccept();
-  setupWelcomeModal();
-  setupImportModal();
+  setupSpectatorMode();
   const isMobile=/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
   if(!isMobile){
     overlayVisible=false;
@@ -1554,7 +2005,6 @@ async function init(){
   }
   if(raCredentials.user&&raCredentials.key)
     games.forEach(g=>{if(!g.achievements)loadAchievementsForGame(g).then(renderLibrary)});
-  checkFirstVisit();
 }
 init();
 </script>
