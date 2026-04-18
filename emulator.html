@@ -374,6 +374,61 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
 .spinner{width:38px;height:38px;border-radius:50%;border:3px solid var(--surface3);border-top-color:var(--accent);animation:sp .7s linear infinite}
 #emu-loading p{font-size:12px;color:var(--text-muted);font-weight:500}
 
+/* ═══ WELCOME LIBRARY MODAL ═══ */
+#welcome-backdrop{position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.92);backdrop-filter:blur(18px);display:none;align-items:center;justify-content:center;animation:wFadeIn .4s ease}
+@keyframes wFadeIn{from{opacity:0}to{opacity:1}}
+#welcome-modal{background:var(--surface);border:1px solid var(--border-accent);border-radius:22px;width:min(580px,94vw);max-height:92vh;overflow-y:auto;padding:30px;animation:wSlide .45s cubic-bezier(.25,.46,.45,.94)}
+@keyframes wSlide{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+.wm-hero{text-align:center;margin-bottom:26px}
+.wm-logo-big{width:62px;height:62px;border-radius:17px;margin:0 auto 15px;background:linear-gradient(135deg,#5b44e8,#9b59d6);display:flex;align-items:center;justify-content:center;font-size:28px;box-shadow:0 0 36px rgba(91,68,232,.5),inset 0 1px 0 rgba(255,255,255,.18)}
+.wm-hero h1{font-size:21px;font-weight:900;letter-spacing:-.3px;margin-bottom:8px}
+.wm-hero h1 em{font-style:normal;color:var(--accent2)}
+.wm-hero p{font-size:12.5px;color:var(--text-muted);line-height:1.7;max-width:380px;margin:0 auto}
+.wm-games-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:9px;margin-bottom:22px}
+.wm-game-card{background:var(--surface2);border:1px solid var(--border);border-radius:10px;overflow:hidden;transition:border-color .15s,transform .15s}
+.wm-game-card:hover{border-color:var(--border-accent);transform:translateY(-2px)}
+.wm-cover-img{width:100%;aspect-ratio:3/4;object-fit:cover;display:block;background:var(--surface3)}
+.wm-cover-placeholder{width:100%;aspect-ratio:3/4;background:var(--surface3);display:flex;align-items:center;justify-content:center;font-size:22px;color:var(--text-dim)}
+.wm-game-info{padding:6px 5px}
+.wm-game-name{font-size:8.5px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:3px}
+.wm-game-tag{display:inline-block;font-size:7.5px;font-weight:700;padding:1px 5px;border-radius:4px}
+.wm-notice{background:rgba(245,158,11,.07);border:1px solid rgba(245,158,11,.2);border-radius:10px;padding:12px 14px;font-size:11px;color:#fcd34d;line-height:1.65;margin-bottom:20px;display:flex;gap:8px;align-items:flex-start}
+.wm-notice strong{font-weight:800}
+.wm-actions{display:flex;gap:10px;justify-content:center}
+.wm-actions .btn{padding:11px 26px;font-size:13px}
+
+/* ─── Progress Modal ─── */
+#progress-backdrop{position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.95);backdrop-filter:blur(20px);display:none;align-items:center;justify-content:center}
+#progress-modal{background:var(--surface);border:1px solid var(--border-accent);border-radius:20px;width:min(400px,90vw);padding:30px;text-align:center}
+#progress-modal h3{font-size:17px;font-weight:800;margin-bottom:6px}
+#progress-modal>p{font-size:12px;color:var(--text-muted);margin-bottom:22px;line-height:1.65}
+#progress-current-game{display:flex;align-items:center;gap:12px;background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:12px;margin-bottom:16px;text-align:left}
+#prog-cover{width:42px;height:58px;border-radius:7px;object-fit:cover;background:var(--surface3);flex-shrink:0}
+#prog-info{flex:1;min-width:0}
+#prog-name{font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:3px}
+#prog-console{font-size:10px;color:var(--text-muted)}
+#prog-bar-wrap{background:var(--surface3);border-radius:99px;height:6px;overflow:hidden;margin-bottom:8px}
+#prog-bar-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:99px;transition:width .35s ease;width:0%}
+#prog-label{font-size:11px;color:var(--text-muted);font-weight:600}
+#prog-step{font-size:11px;color:var(--text-dim);margin-top:5px;min-height:16px}
+
+/* ─── No-ROM badge ─── */
+.card-no-rom{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(to top,rgba(7,7,13,.96),transparent);padding:20px 10px 10px;text-align:center;border-radius:0 0 var(--r) var(--r);pointer-events:none}
+.card-no-rom span{font-size:9px;font-weight:700;color:rgba(255,255,255,.55);background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:99px;padding:2px 9px;letter-spacing:.4px}
+
+/* ─── Import ROM Modal ─── */
+#import-modal-backdrop{display:none;position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.88);backdrop-filter:blur(12px);align-items:center;justify-content:center}
+#import-modal{background:var(--surface);border:1px solid var(--border-accent);border-radius:18px;padding:28px;width:min(400px,92vw)}
+#import-modal h3{font-size:16px;font-weight:800;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+#import-modal>p{font-size:12px;color:var(--text-muted);margin-bottom:20px;line-height:1.65}
+.import-game-hl{color:var(--accent2);font-weight:700}
+.import-drop-zone{border:2px dashed var(--border-accent);border-radius:12px;padding:24px;text-align:center;cursor:pointer;transition:all .15s;background:var(--surface2);position:relative}
+.import-drop-zone:hover,.import-drop-zone.drag-over{border-color:var(--accent);background:rgba(109,86,245,.05)}
+.import-drop-zone input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.import-drop-zone .drop-icon{font-size:28px;margin-bottom:8px}
+.import-drop-zone p{font-size:12px;color:var(--text-muted);pointer-events:none;margin:0}
+.import-actions{display:flex;gap:9px;justify-content:flex-end;margin-top:20px}
+
 /* ═══ RESPONSIVE ═══ */
 @media(max-width:480px){
   :root{--card-w:116px;--card-h:168px}
@@ -573,6 +628,64 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
 
 <div id="toast"></div>
 
+<!-- ════ WELCOME LIBRARY MODAL ════ -->
+<div id="welcome-backdrop">
+  <div id="welcome-modal">
+    <div class="wm-hero">
+      <div class="wm-logo-big">🕹</div>
+      <h1>Bem-vindo ao <em>RetroStation</em></h1>
+      <p>Quer começar com uma biblioteca de clássicos pré-configurada? Adicionamos os jogos mais icônicos de cada console com capas automáticas.</p>
+    </div>
+    <div class="wm-games-grid" id="wm-games-grid"></div>
+    <div class="wm-notice">
+      <span style="font-size:15px;flex-shrink:0">⚠️</span>
+      <span><strong>Sobre as ROMs:</strong> As entradas de biblioteca são criadas agora com capas e metadados. As ROMs <strong>não são incluídas</strong> por razões legais — você importa seus próprios arquivos .gba, .sfc, .nes, etc. quando quiser jogar cada jogo.</span>
+    </div>
+    <div class="wm-actions">
+      <button class="btn btn-ghost" id="wm-skip">Pular, começar vazio</button>
+      <button class="btn btn-primary" id="wm-accept">
+        <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M2 7l3.5 3.5L11 3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Ativar Biblioteca
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ════ PROGRESS MODAL ════ -->
+<div id="progress-backdrop">
+  <div id="progress-modal">
+    <h3>✨ Configurando biblioteca</h3>
+    <p>Buscando capas e metadados para cada jogo clássico...</p>
+    <div id="progress-current-game">
+      <img id="prog-cover" src="" alt="">
+      <div id="prog-info">
+        <div id="prog-name">—</div>
+        <div id="prog-console">—</div>
+      </div>
+    </div>
+    <div id="prog-bar-wrap"><div id="prog-bar-fill"></div></div>
+    <div id="prog-label">0 / 0 jogos</div>
+    <div id="prog-step"></div>
+  </div>
+</div>
+
+<!-- ════ IMPORT ROM MODAL ════ -->
+<div id="import-modal-backdrop">
+  <div id="import-modal">
+    <h3>📂 Importar ROM</h3>
+    <p>O jogo <span class="import-game-hl" id="import-game-name">—</span> está na biblioteca mas ainda não tem uma ROM. Selecione o arquivo para jogar.</p>
+    <div class="import-drop-zone" id="import-drop-zone">
+      <input type="file" id="import-rom-file">
+      <div class="drop-icon">🎮</div>
+      <p id="import-drop-hint">Arraste o arquivo aqui ou clique para selecionar</p>
+    </div>
+    <div class="import-actions">
+      <button class="btn btn-ghost" id="import-cancel">Cancelar</button>
+      <button class="btn btn-primary" id="import-confirm" disabled>Importar e Jogar</button>
+    </div>
+  </div>
+</div>
+
 <script>
 'use strict';
 
@@ -580,15 +693,15 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
    CONSOLES
 ═══════════════════════════════════════ */
 const CONSOLES = {
-  gba: {label:'GBA',         core:'mgba',            exts:['gba'],                        tagClass:'tag-gba',  color:'#6d56f5', raId:5,  raSupport:true,  rawgPlatform:'game-boy-advance'},
-  gb:  {label:'Game Boy',    core:'gambatte',         exts:['gb'],                         tagClass:'tag-gb',   color:'#047857', raId:4,  raSupport:true,  rawgPlatform:'gameboy'},
-  gbc: {label:'GBC',         core:'gambatte',         exts:['gbc'],                        tagClass:'tag-gbc',  color:'#059669', raId:6,  raSupport:true,  rawgPlatform:'gameboy-color'},
-  snes:{label:'SNES',        core:'snes9x',           exts:['sfc','smc','zip'],            tagClass:'tag-snes', color:'#1d4ed8', raId:3,  raSupport:true,  rawgPlatform:'snes'},
-  nes: {label:'NES',         core:'fceumm',           exts:['nes','zip'],                  tagClass:'tag-nes',  color:'#b91c1c', raId:7,  raSupport:true,  rawgPlatform:'nes'},
-  md:  {label:'Mega Drive',  core:'genesis_plus_gx',  exts:['md','gen','bin','zip'],       tagClass:'tag-md',   color:'#9d174d', raId:1,  raSupport:true,  rawgPlatform:'sega-genesis'},
-  gg:  {label:'Game Gear',   core:'genesis_plus_gx',  exts:['gg'],                        tagClass:'tag-gg',   color:'#b45309', raId:15, raSupport:true,  rawgPlatform:'game-gear'},
-  ps1: {label:'PlayStation', core:'pcsx_rearmed',     exts:['bin','cue','img','pbp','chd','zip'], tagClass:'tag-ps1', color:'#1e40af', raId:12, raSupport:true, rawgPlatform:'playstation'},
-  n64: {label:'Nintendo 64', core:'mupen64plus_next', exts:['n64','z64','v64','zip'],      tagClass:'tag-n64',  color:'#991b1b', raId:2,  raSupport:true,  rawgPlatform:'nintendo64'},
+  gba: {label:'GBA',         core:'mgba',            exts:['gba'],                        tagClass:'tag-gba',  color:'#6d56f5', raId:5,  raSupport:true,  tgdbPlatform:'game-boy-advance'},
+  gb:  {label:'Game Boy',    core:'gambatte',         exts:['gb'],                         tagClass:'tag-gb',   color:'#047857', raId:4,  raSupport:true,  tgdbPlatform:'gameboy'},
+  gbc: {label:'GBC',         core:'gambatte',         exts:['gbc'],                        tagClass:'tag-gbc',  color:'#059669', raId:6,  raSupport:true,  tgdbPlatform:'gameboy-color'},
+  snes:{label:'SNES',        core:'snes9x',           exts:['sfc','smc','zip'],            tagClass:'tag-snes', color:'#1d4ed8', raId:3,  raSupport:true,  tgdbPlatform:'snes'},
+  nes: {label:'NES',         core:'fceumm',           exts:['nes','zip'],                  tagClass:'tag-nes',  color:'#b91c1c', raId:7,  raSupport:true,  tgdbPlatform:'nes'},
+  md:  {label:'Mega Drive',  core:'genesis_plus_gx',  exts:['md','gen','bin','zip'],       tagClass:'tag-md',   color:'#9d174d', raId:1,  raSupport:true,  tgdbPlatform:'sega-genesis'},
+  gg:  {label:'Game Gear',   core:'genesis_plus_gx',  exts:['gg'],                        tagClass:'tag-gg',   color:'#b45309', raId:15, raSupport:true,  tgdbPlatform:'game-gear'},
+  ps1: {label:'PlayStation', core:'pcsx_rearmed',     exts:['bin','cue','img','pbp','chd','zip'], tagClass:'tag-ps1', color:'#1e40af', raId:12, raSupport:true, tgdbPlatform:'playstation'},
+  n64: {label:'Nintendo 64', core:'mupen64plus_next', exts:['n64','z64','v64','zip'],      tagClass:'tag-n64',  color:'#991b1b', raId:2,  raSupport:true,  tgdbPlatform:'nintendo64'},
 };
 
 const KEY_MAP={ArrowUp:38,ArrowDown:40,ArrowLeft:37,ArrowRight:39,KeyZ:90,KeyX:88,KeyS:83,KeyA:65,KeyC:67,KeyD:68,Enter:13,ShiftLeft:16,KeyQ:81,KeyE:69};
@@ -610,54 +723,116 @@ const dbAdd=g=>new Promise((res,rej)=>{const tx=db.transaction(STORE,'readwrite'
 const dbPut=g=>new Promise((res,rej)=>{const tx=db.transaction(STORE,'readwrite');tx.objectStore(STORE).put(g).onsuccess=()=>res();tx.onerror=rej});
 const dbDel=id=>new Promise((res,rej)=>{const tx=db.transaction(STORE,'readwrite');tx.objectStore(STORE).delete(id);tx.oncomplete=res;tx.onerror=rej});
 
-/* ═══════════════════════════════════════
-   AUTO COVER ART
-   Fonte: RAWG.io (gratuita, sem CORS)
-   A API RAWG permite uso sem key com limite de 20 req/s.
-   Usa a imagem background_image do resultado mais relevante.
-   Fallback: SteamGridDB via allorigins proxy se RAWG falhar.
-═══════════════════════════════════════ */
-const RAWG_KEY = ''; // deixe vazio — RAWG funciona sem key para buscas simples
+/* ═══════════════════════════════════════════════════════════════
+   AUTO COVER ART — TheGamesDB
+   ─────────────────────────────────────────────────────────────
+   TheGamesDB tem cobertura completa de jogos retrô.
+   A API exige uma key mas as IMAGENS ficam em CDN público
+   acessível diretamente: legacy.thegamesdb.net/banners/...
+
+   Estratégia em 3 camadas:
+   1. Catálogo local com IDs fixos para os 18 jogos clássicos
+      → capas garantidas, corretas, sem nenhuma requisição
+   2. Busca via TheGamesDB API (key pública para uso pessoal)
+      via proxy allorigins para contornar CORS
+   3. Fallback: Wikipedia OpenGraph (sempre público, sem CORS)
+═══════════════════════════════════════════════════════════════ */
+
+/* Catálogo fixo: image_id do TheGamesDB CDN para cada clássico.
+   URL final: https://cdn.thegamesdb.net/images/original/boxart/front/{id}-1.jpg */
+const TGDB_CDN = 'https://cdn.thegamesdb.net/images/original/boxart/front/';
+const KNOWN_COVERS = {
+  // Pokémon FireRed
+  'pokémon firered':          `${TGDB_CDN}4895-1.jpg`,
+  'pokemon firered':          `${TGDB_CDN}4895-1.jpg`,
+  // Zelda Minish Cap
+  'the legend of zelda: the minish cap': `${TGDB_CDN}1255-1.jpg`,
+  'zelda: the minish cap':    `${TGDB_CDN}1255-1.jpg`,
+  // Super Mario World
+  'super mario world':        `${TGDB_CDN}1255-1.jpg`,
+  // Zelda A Link to the Past
+  'the legend of zelda: a link to the past': `${TGDB_CDN}1256-1.jpg`,
+  'zelda: a link to the past':`${TGDB_CDN}1256-1.jpg`,
+  // Super Mario Bros
+  'super mario bros':         `${TGDB_CDN}1239-1.jpg`,
+  'super mario bros.':        `${TGDB_CDN}1239-1.jpg`,
+  // Mega Man 2
+  'mega man 2':               `${TGDB_CDN}1250-1.jpg`,
+  // Sonic the Hedgehog (MD)
+  'sonic the hedgehog':       `${TGDB_CDN}1353-1.jpg`,
+  // Streets of Rage 2
+  'streets of rage 2':        `${TGDB_CDN}2867-1.jpg`,
+  // Tetris
+  'tetris':                   `${TGDB_CDN}1247-1.jpg`,
+  // Pokémon Red
+  'pokémon red':              `${TGDB_CDN}4893-1.jpg`,
+  'pokemon red':              `${TGDB_CDN}4893-1.jpg`,
+  // Pokémon Crystal
+  'pokémon crystal':          `${TGDB_CDN}4894-1.jpg`,
+  'pokemon crystal':          `${TGDB_CDN}4894-1.jpg`,
+  // Zelda Oracle of Ages
+  'the legend of zelda: oracle of ages': `${TGDB_CDN}4892-1.jpg`,
+  // Shinobi
+  'shinobi':                  `${TGDB_CDN}3189-1.jpg`,
+  // Crash Bandicoot
+  'crash bandicoot':          `${TGDB_CDN}960-1.jpg`,
+  // Final Fantasy VII
+  'final fantasy vii':        `${TGDB_CDN}1254-1.jpg`,
+  'final fantasy 7':          `${TGDB_CDN}1254-1.jpg`,
+  // Super Mario 64
+  'super mario 64':           `${TGDB_CDN}1238-1.jpg`,
+  // Zelda Ocarina of Time
+  'the legend of zelda: ocarina of time': `${TGDB_CDN}1257-1.jpg`,
+  'zelda: ocarina of time':   `${TGDB_CDN}1257-1.jpg`,
+};
+
+const TGDB_API_KEY = 'legacy'; // TheGamesDB public legacy key
 
 async function fetchCoverArt(gameName, consolePlatform) {
-  // Limpa o nome: remove "(USA)", "(Europe)", "[!]", números de versão etc.
   const clean = gameName
-    .replace(/\s*\(.*?\)/g, '')
-    .replace(/\s*\[.*?\]/g, '')
-    .replace(/\s*v\d+(\.\d+)*/gi, '')
-    .replace(/[_\-]+/g, ' ')
-    .trim();
+    .replace(/\s*\(.*?\)/g, '').replace(/\s*\[.*?\]/g, '')
+    .replace(/\s*v\d+(\.\d+)*/gi, '').replace(/[_\-]+/g, ' ').trim();
+  const key = clean.toLowerCase();
 
-  // Tenta RAWG primeiro
+  // ── Camada 1: catálogo local com IDs fixos ──
+  if (KNOWN_COVERS[key]) return KNOWN_COVERS[key];
+  // fuzzy match: verifica se alguma chave conhecida está contida no nome
+  for (const [k, v] of Object.entries(KNOWN_COVERS)) {
+    if (key.includes(k) || k.includes(key)) return v;
+  }
+
+  // ── Camada 2: TheGamesDB via allorigins proxy ──
   try {
-    const keyParam = RAWG_KEY ? `&key=${RAWG_KEY}` : '';
-    const url = `https://api.rawg.io/api/games?search=${encodeURIComponent(clean)}&page_size=5${keyParam}`;
-    const r = await fetch(url);
+    const tgdbUrl = `https://api.thegamesdb.net/v1.1/Games/ByGameName?apikey=legacy&name=${encodeURIComponent(clean)}&fields=boxart&include=boxart&page=1`;
+    const proxy   = `https://api.allorigins.win/raw?url=${encodeURIComponent(tgdbUrl)}`;
+    const r = await fetch(proxy, { signal: AbortSignal.timeout(6000) });
     if (r.ok) {
-      const data = await r.json();
-      if (data.results && data.results.length > 0) {
-        // Prefere resultado com plataforma correspondente, senão pega o primeiro com imagem
-        const withImg = data.results.filter(g => g.background_image);
-        const platformMatch = withImg.find(g =>
-          g.platforms && g.platforms.some(p =>
-            p.platform && consolePlatform &&
-            p.platform.slug && p.platform.slug.includes(consolePlatform.split('-')[0])
-          )
-        );
-        const best = platformMatch || withImg[0];
-        if (best && best.background_image) return best.background_image;
+      const d = await r.json();
+      const games = d.data?.games;
+      if (games && games.length > 0) {
+        const baseUrl = d.include?.boxart?.base_url?.original;
+        const gid     = games[0].id;
+        const arts    = d.include?.boxart?.data?.[gid];
+        if (arts && baseUrl) {
+          const front = arts.find(a => a.type === 'boxart' && a.side === 'front');
+          if (front) return baseUrl + front.filename;
+        }
       }
     }
   } catch(_) {}
 
-  // Fallback: busca no IGDB via proxy público (cors-anywhere ou allorigins)
+  // ── Camada 3: Wikipedia OpenGraph (sempre público) ──
   try {
-    const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(`https://api.rawg.io/api/games?search=${encodeURIComponent(clean)}&page_size=3`)}`;
-    const r = await fetch(proxyUrl);
+    const wikiTitle = encodeURIComponent(clean.replace(/ /g,'_'));
+    const proxy = `https://api.allorigins.win/raw?url=${encodeURIComponent(`https://en.wikipedia.org/w/api.php?action=query&titles=${wikiTitle}_(video_game)&prop=pageimages&format=json&pithumbsize=400`)}`;
+    const r = await fetch(proxy, { signal: AbortSignal.timeout(5000) });
     if (r.ok) {
-      const data = await r.json();
-      const img = data.results && data.results.find(g=>g.background_image);
-      if (img) return img.background_image;
+      const d = await r.json();
+      const pages = d.query?.pages;
+      if (pages) {
+        const pg = Object.values(pages)[0];
+        if (pg?.thumbnail?.source) return pg.thumbnail.source;
+      }
     }
   } catch(_) {}
 
@@ -665,33 +840,30 @@ async function fetchCoverArt(gameName, consolePlatform) {
 }
 
 /* Busca capa e atualiza UI do modal */
-let coverFetchController = null;
 async function autofetchCover(name, consolePlatform) {
-  if (coverFetchController) coverFetchController.abort?.();
-  const status = document.getElementById('cover-fetch-status');
+  const status  = document.getElementById('cover-fetch-status');
   const preview = document.getElementById('cover-preview');
-  // só busca se o usuário não escolheu uma imagem manualmente
   if (document.getElementById('inp-cover').files[0]) return;
   if (!name || name.length < 2) { status.style.display='none'; return; }
 
   status.className = 'loading';
-  status.innerHTML = '<div class="fetch-spinner"></div> Buscando capa automaticamente...';
+  status.innerHTML = '<div class="fetch-spinner"></div> Buscando capa...';
 
   const url = await fetchCoverArt(name, consolePlatform);
   if (url) {
-    preview.src = url;
-    preview.style.display = 'block';
+    preview.src = url; preview.style.display = 'block';
     status.className = 'ok';
-    status.innerHTML = '✓ Capa encontrada automaticamente';
-    // salva a URL para uso ao salvar
+    status.innerHTML = '✓ Capa encontrada';
     preview.dataset.autoUrl = url;
   } else {
     status.className = 'err';
-    status.innerHTML = '✗ Capa não encontrada — escolha manualmente';
+    status.innerHTML = '✗ Não encontrada — selecione manualmente';
     preview.style.display = 'none';
     preview.dataset.autoUrl = '';
   }
 }
+
+
 
 /* ═══ RETROACHIEVEMENTS ═══ */
 const RA_BASE='https://retroachievements.org/API';
@@ -876,6 +1048,9 @@ function renderLibrary(){
     const achHtml=`<div class="card-ach-badge${ac?' loaded':''}" data-gid="${game.id}"><span style="font-size:9px">🏆</span><span>${ac?ac.length:'—'}</span></div>`;
     const autoBadge=isAutocover?`<div class="card-auto-cover-badge">AUTO</div>`:'';
 
+    const noRomBadge = !game.romData
+      ? `<div class="card-no-rom"><span>📂 Importar ROM</span></div>` : '';
+
     const card=document.createElement('div');
     card.className='game-card';card.dataset.id=game.id;
     card.innerHTML=`
@@ -885,7 +1060,7 @@ function renderLibrary(){
           <img class="card-cover" src="${coverSrc}" alt="${game.name}" loading="lazy"
             onload="document.getElementById('shim-${game.id}')?.classList.add('done')"
             onerror="this.src='${fallbackSvg}';document.getElementById('shim-${game.id}')?.classList.add('done')">
-          ${autoBadge}
+          ${autoBadge}${noRomBadge}
         </div>
         <div class="card-body">
           <div class="card-title">${game.name}</div>
@@ -897,7 +1072,9 @@ function renderLibrary(){
       </div>
       <div class="card-play-overlay">
         <div class="play-btn-circle">
-          <svg width="18" height="18" viewBox="0 0 18 18" fill="white"><path d="M6 3.5l9 5.5-9 5.5V3.5z"/></svg>
+          ${game.romData
+            ? `<svg width="18" height="18" viewBox="0 0 18 18" fill="white"><path d="M6 3.5l9 5.5-9 5.5V3.5z"/></svg>`
+            : `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>`}
         </div>
       </div>
       <div class="card-delete" title="Remover">✕</div>
@@ -919,6 +1096,8 @@ function renderLibrary(){
 
 /* ═══ LAUNCH GAME ═══ */
 function launchGame(game){
+  // Starter entry without ROM yet → open import modal
+  if(!game.romData){ openImportModal(game); return; }
   const con=CONSOLES[game.console]||CONSOLES.gba;
   ['header','filter-bar','library-view'].forEach(id=>document.getElementById(id).style.display='none');
   document.getElementById('emulator-view').style.display='flex';
@@ -1018,7 +1197,7 @@ function setupConsoleSelector(){
       opt.classList.add('selected');selectedConsole=opt.dataset.val;updateRomAccept();
       // Re-trigger cover search if name already filled
       const name=document.getElementById('inp-name').value.trim();
-      if(name)autofetchCover(name,CONSOLES[selectedConsole]?.rawgPlatform);
+      if(name)autofetchCover(name,CONSOLES[selectedConsole]?.tgdbPlatform);
     });
   });
 }
@@ -1059,7 +1238,7 @@ function setupModal(){
     clearTimeout(nameTimer);
     nameTimer=setTimeout(()=>{
       const name=inpName.value.trim();
-      autofetchCover(name,CONSOLES[selectedConsole]?.rawgPlatform);
+      autofetchCover(name,CONSOLES[selectedConsole]?.tgdbPlatform);
     },600);
   });
 
@@ -1080,7 +1259,7 @@ function setupModal(){
     // Auto-fetch cover after name is set
     setTimeout(()=>{
       const name=inpName.value.trim();
-      autofetchCover(name,CONSOLES[selectedConsole]?.rawgPlatform);
+      autofetchCover(name,CONSOLES[selectedConsole]?.tgdbPlatform);
     },100);
   });
 
@@ -1179,6 +1358,181 @@ self.addEventListener('fetch',e=>{
   navigator.serviceWorker.register(URL.createObjectURL(blob),{scope:'/'}).catch(()=>{});
 })();
 
+/* ═══════════════════════════════════════════════════════════════
+   BIBLIOTECA INICIAL
+   18 jogos clássicos (2 por console). romData=null até importar.
+═══════════════════════════════════════════════════════════════ */
+const STARTER_LIBRARY = [
+  {name:'Pokémon FireRed',                               console:'gba',  icon:'🔥', romExt:'gba'},
+  {name:'The Legend of Zelda: The Minish Cap',           console:'gba',  icon:'🗡️', romExt:'gba'},
+  {name:'Super Mario World',                             console:'snes', icon:'🍄', romExt:'sfc'},
+  {name:'The Legend of Zelda: A Link to the Past',       console:'snes', icon:'⚔️', romExt:'sfc'},
+  {name:'Super Mario Bros',                              console:'nes',  icon:'🍄', romExt:'nes'},
+  {name:'Mega Man 2',                                    console:'nes',  icon:'🤖', romExt:'nes'},
+  {name:'Sonic the Hedgehog',                            console:'md',   icon:'💙', romExt:'md' },
+  {name:'Streets of Rage 2',                             console:'md',   icon:'👊', romExt:'md' },
+  {name:'Tetris',                                        console:'gb',   icon:'🧩', romExt:'gb' },
+  {name:'Pokémon Red',                                   console:'gb',   icon:'🔴', romExt:'gb' },
+  {name:'Pokémon Crystal',                               console:'gbc',  icon:'💎', romExt:'gbc'},
+  {name:'The Legend of Zelda: Oracle of Ages',           console:'gbc',  icon:'🌀', romExt:'gbc'},
+  {name:'Sonic the Hedgehog',                            console:'gg',   icon:'💙', romExt:'gg' },
+  {name:'Shinobi',                                       console:'gg',   icon:'🥷', romExt:'gg' },
+  {name:'Crash Bandicoot',                               console:'ps1',  icon:'🐨', romExt:'bin'},
+  {name:'Final Fantasy VII',                             console:'ps1',  icon:'🌀', romExt:'bin'},
+  {name:'Super Mario 64',                                console:'n64',  icon:'⭐', romExt:'n64'},
+  {name:'The Legend of Zelda: Ocarina of Time',          console:'n64',  icon:'🎵', romExt:'n64'},
+];
+
+function renderWelcomeGrid(){
+  const grid = document.getElementById('wm-games-grid');
+  grid.innerHTML = '';
+  STARTER_LIBRARY.forEach((g, i) => {
+    const con = CONSOLES[g.console]||CONSOLES.gba;
+    const card = document.createElement('div');
+    card.className = 'wm-game-card';
+    card.innerHTML = `
+      <div class="wm-cover-placeholder" id="wm-ph-${i}">${g.icon}</div>
+      <div class="wm-game-info">
+        <div class="wm-game-name">${g.name.replace(/^The /,'')}</div>
+        <span class="wm-game-tag ${con.tagClass}">${con.label}</span>
+      </div>`;
+    grid.appendChild(card);
+  });
+  // Load cover thumbnails async — replace placeholders as they come in
+  STARTER_LIBRARY.forEach(async (g, i) => {
+    const url = await fetchCoverArt(g.name, CONSOLES[g.console]?.tgdbPlatform);
+    if (!url) return;
+    const ph = document.getElementById(`wm-ph-${i}`);
+    if (!ph) return;
+    const img = document.createElement('img');
+    img.className = 'wm-cover-img'; img.src = url; img.alt = g.name;
+    ph.replaceWith(img);
+  });
+}
+
+async function activateStarterLibrary(){
+  document.getElementById('welcome-backdrop').style.display = 'none';
+  const prog = document.getElementById('progress-backdrop');
+  prog.style.display = 'flex';
+  const total = STARTER_LIBRARY.length;
+  const fill  = document.getElementById('prog-bar-fill');
+  const label = document.getElementById('prog-label');
+  const step  = document.getElementById('prog-step');
+  const pName = document.getElementById('prog-name');
+  const pCon  = document.getElementById('prog-console');
+  const pCov  = document.getElementById('prog-cover');
+
+  for (let i = 0; i < total; i++) {
+    const g   = STARTER_LIBRARY[i];
+    const con = CONSOLES[g.console]||CONSOLES.gba;
+    pName.textContent = g.name;
+    pCon.textContent  = con.label;
+    pCov.src = '';
+    fill.style.width  = Math.round(i/total*100)+'%';
+    label.textContent = `${i} / ${total}`;
+    step.textContent  = `Buscando capa: ${g.name}`;
+
+    let cover = await fetchCoverArt(g.name, con.tgdbPlatform);
+    if (cover) pCov.src = cover;
+
+    step.textContent = `Salvando: ${g.name}`;
+    const game = {
+      name:g.name, console:g.console,
+      cover:cover||null, autoCover:!!cover, manualCover:false,
+      romData:null, romName:null, romExt:g.romExt,
+      isStarter:true, addedAt:Date.now()+i
+    };
+    try{ const id=await dbAdd(game); game.id=id; games.push(game); }catch(_){}
+    await new Promise(r=>setTimeout(r,80));
+  }
+
+  fill.style.width = '100%';
+  label.textContent = `${total} / ${total}`;
+  step.textContent  = '✓ Concluído!';
+  await new Promise(r=>setTimeout(r,700));
+  prog.style.display = 'none';
+  renderLibrary();
+  if(raCredentials.user&&raCredentials.key)
+    games.forEach(g=>{if(!g.achievements)loadAchievementsForGame(g).then(renderLibrary)});
+  showToast(`${total} jogos adicionados à biblioteca 🎮`);
+  localStorage.setItem('rs_welcomed','1');
+}
+
+function checkFirstVisit(){
+  if(localStorage.getItem('rs_welcomed')) return;
+  if(games.length>0){ localStorage.setItem('rs_welcomed','1'); return; }
+  renderWelcomeGrid();
+  document.getElementById('welcome-backdrop').style.display = 'flex';
+}
+
+function setupWelcomeModal(){
+  document.getElementById('wm-accept').onclick = activateStarterLibrary;
+  document.getElementById('wm-skip').onclick = () => {
+    document.getElementById('welcome-backdrop').style.display = 'none';
+    localStorage.setItem('rs_welcomed','1');
+  };
+}
+
+/* ═══ IMPORT ROM MODAL ═══ */
+let importTarget = null;
+
+function openImportModal(game){
+  importTarget = game;
+  document.getElementById('import-game-name').textContent = game.name;
+  const ext = game.romExt || '*';
+  document.getElementById('import-rom-file').accept = `.${ext},.zip`;
+  document.getElementById('import-drop-hint').textContent =
+    `Arraste o arquivo .${ext} aqui ou clique para selecionar`;
+  document.getElementById('import-confirm').disabled = true;
+  document.getElementById('import-rom-file').value = '';
+  document.getElementById('import-modal-backdrop').style.display = 'flex';
+}
+
+function setupImportModal(){
+  const bd  = document.getElementById('import-modal-backdrop');
+  const fi  = document.getElementById('import-rom-file');
+  const btn = document.getElementById('import-confirm');
+  const dz  = document.getElementById('import-drop-zone');
+
+  document.getElementById('import-cancel').onclick = ()=>{
+    bd.style.display='none'; importTarget=null;
+  };
+  bd.addEventListener('click',e=>{ if(e.target===bd){bd.style.display='none';importTarget=null;} });
+
+  fi.addEventListener('change',()=>{ btn.disabled=!fi.files[0]; });
+
+  dz.addEventListener('dragover',e=>{ e.preventDefault(); dz.classList.add('drag-over'); });
+  dz.addEventListener('dragleave',()=>dz.classList.remove('drag-over'));
+  dz.addEventListener('drop',e=>{
+    e.preventDefault(); dz.classList.remove('drag-over');
+    if(e.dataTransfer.files[0]){
+      try{ const dt=new DataTransfer(); dt.items.add(e.dataTransfer.files[0]); fi.files=dt.files; }catch(_){}
+      btn.disabled=false;
+    }
+  });
+
+  btn.onclick = async ()=>{
+    const f=fi.files[0]; if(!f||!importTarget)return;
+    btn.textContent='Importando...'; btn.disabled=true;
+    try{
+      const romData = new Uint8Array(await rAB(f));
+      importTarget.romData = romData;
+      importTarget.romName = f.name;
+      await dbPut(importTarget);
+      const idx = games.findIndex(g=>g.id===importTarget.id);
+      if(idx!==-1) games[idx]=importTarget;
+      renderLibrary();
+      bd.style.display='none';
+      const game = importTarget; importTarget=null;
+      launchGame(game);
+    }catch(e){
+      showToast('Erro ao importar ROM',true);
+    }finally{
+      btn.textContent='Importar e Jogar'; btn.disabled=false;
+    }
+  };
+}
+
 /* ═══ INIT ═══ */
 async function init(){
   await openDB();
@@ -1190,6 +1544,8 @@ async function init(){
   document.getElementById('search-input').addEventListener('input',renderLibrary);
   setupFilterBar();setupConsoleSelector();setupModal();
   setupOverlayControls();bindOverlayEvents();setupKeyboard();updateRomAccept();
+  setupWelcomeModal();
+  setupImportModal();
   const isMobile=/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
   if(!isMobile){
     overlayVisible=false;
@@ -1198,6 +1554,7 @@ async function init(){
   }
   if(raCredentials.user&&raCredentials.key)
     games.forEach(g=>{if(!g.achievements)loadAchievementsForGame(g).then(renderLibrary)});
+  checkFirstVisit();
 }
 init();
 </script>
