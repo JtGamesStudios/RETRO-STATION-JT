@@ -431,13 +431,20 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
 }
 #spec-connecting{
   position:absolute;inset:0;display:flex;flex-direction:column;
-  align-items:center;justify-content:center;gap:14px;
-  background:#000;
+  align-items:center;justify-content:center;gap:16px;
+  background:radial-gradient(ellipse at center, #0f0f20 0%, #07070d 100%);
+  padding:24px;text-align:center;
 }
 #spec-connecting.hidden{display:none}
-.spec-spinner{width:36px;height:36px;border-radius:50%;border:3px solid var(--surface3);border-top-color:var(--accent);animation:sp .7s linear infinite}
+.spec-spinner{
+  width:44px;height:44px;border-radius:50%;
+  border:3px solid var(--surface3);
+  border-top-color:var(--accent);
+  animation:sp .8s linear infinite;
+  box-shadow:0 0 20px var(--accent-glow);
+}
 @keyframes sp{to{transform:rotate(360deg)}}
-#spec-connecting p{font-size:12px;color:var(--text-muted)}
+#spec-connecting p{font-size:13px;color:var(--text-muted);max-width:300px;line-height:1.65}
 
 /* ── Chat side ── */
 #spec-chat-side{
@@ -760,8 +767,9 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
       <div id="spec-connecting">
         <div class="spec-spinner"></div>
         <p id="spec-connecting-text">Conectando ao host...</p>
+        <button id="spec-retry-btn" class="btn btn-ghost" style="display:none;margin-top:14px;font-size:11px;padding:7px 18px" onclick="location.reload()">🔄 Tentar novamente</button>
       </div>
-      <video id="spec-video" autoplay playsinline muted></video>
+      <video id="spec-video" autoplay playsinline style="display:none;max-width:100%;max-height:100%"></video>
     </div>
     <div id="spec-chat-side">
       <div id="spec-chat-header">
@@ -1480,13 +1488,16 @@ self.addEventListener('fetch',e=>{
    Para produção, crie seu próprio projeto no firebase.google.com (gratuito).
 ═══════════════════════════════════════════════════════════════ */
 
-// Firebase config — projeto público de demonstração
-// Substitua pelos seus dados se quiser mais capacidade
+// Firebase config — projeto retro-station-5b6f6
 const FB_CONFIG = {
   apiKey:            "AIzaSyCB-qtWBUA4bMa-iFhPLQ3jhk3VYQmDCUc",
   authDomain:        "retro-station-5b6f6.firebaseapp.com",
-  databaseURL:       "https://retro-station-live-default-rtdb.firebaseio.com",
+  databaseURL:       "https://retro-station-5b6f6-default-rtdb.firebaseio.com",
   projectId:         "retro-station-5b6f6",
+  storageBucket:     "retro-station-5b6f6.firebasestorage.app",
+  messagingSenderId: "928831787888",
+  appId:             "1:928831787888:web:816d6462f7c929bc6a35b5",
+  measurementId:     "G-N96SRN8JGS"
 };
 
 // ── State ──
@@ -1607,7 +1618,13 @@ async function startStreaming(){
   }
 
   // Set up room in Firebase
-
+  const roomRef = fbDb.ref(`rooms/${streamRoomId}`);
+  await roomRef.set({
+    host:    chatUsername,
+    game:    document.getElementById('emu-game-title').textContent||'—',
+    started: Date.now(),
+    active:  true,
+  });
 
   // Listen for viewer connections
   roomRef.child('viewers').on('child_added', async snap=>{
@@ -1654,51 +1671,72 @@ async function startStreaming(){
   showShareModal();
 }
 
-async function handleViewerJoin(viewerId, roomRef) {
-  const pc = new RTCPeerConnection({
-    iceServers: [
-      { urls: 'stun:stun.l.google.com:19302' },
-      { urls: 'stun:stun1.l.google.com:19302' }
-    ]
-  });
-  
+async function handleViewerJoin(viewerId, roomRef){
+  if(hostPeerConnections[viewerId]) return; // já conectado, ignorar duplicata
+
+  const pc = new RTCPeerConnection({iceServers: ICE_SERVERS});
   hostPeerConnections[viewerId] = pc;
 
-  // Adiciona o vídeo do jogo para este espectador
-  localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
+  // Add all tracks from the local stream
+  localStream.getTracks().forEach(t => pc.addTrack(t, localStream));
 
-  // Envia os candidatos ICE do Host para este Espectador específico
-  pc.onicecandidate = e => {
-    if (e.candidate) {
+  // Buffer ICE candidates until answer is set
+  const iceBuf = [];
+  let answerSet = false;
+
+  pc.onicecandidate = e=>{
+    if(e.candidate){
       roomRef.child(`ice_from_host/${viewerId}`).push(e.candidate.toJSON());
     }
   };
 
-  // ESCUTA os candidatos ICE vindo especificamente DESTE espectador
-  // Isso resolve o erro do loading infinito
-  roomRef.child(`ice_from_viewers/${viewerId}`).on('child_added', async snap => {
-    const cand = snap.val();
-    if (cand && pc.remoteDescription) {
-      try { await pc.addIceCandidate(new RTCIceCandidate(cand)); } catch(e) {}
+  pc.onconnectionstatechange = ()=>{
+    if(pc.connectionState==='connected'){
+      streamViewerCount = Object.keys(hostPeerConnections).length;
+      updateShareModal();
     }
-  });
+    if(pc.connectionState==='failed'||pc.connectionState==='closed'){
+      delete hostPeerConnections[viewerId];
+      streamViewerCount = Object.keys(hostPeerConnections).length;
+      updateShareModal();
+    }
+  };
 
-  // Cria a oferta de conexão
+  // Create offer and set local description
   const offer = await pc.createOffer();
   await pc.setLocalDescription(offer);
+  await roomRef.child(`offers/${viewerId}`).set({type: offer.type, sdp: offer.sdp});
 
-  await roomRef.child(`offers/${viewerId}`).set({
-    type: offer.type,
-    sdp: offer.sdp
+  // Listen for answer
+  roomRef.child(`answers/${viewerId}`).on('value', async snap=>{
+    const ans = snap.val();
+    if(!ans || pc.signalingState !== 'have-local-offer') return;
+    try{
+      await pc.setRemoteDescription(new RTCSessionDescription(ans));
+      answerSet = true;
+      // Flush buffered ICE from viewer
+      for(const c of iceBuf){
+        try{ await pc.addIceCandidate(new RTCIceCandidate(c)); }catch(_){}
+      }
+      iceBuf.length = 0;
+    }catch(_){}
   });
 
-  // Espera a resposta do espectador para finalizar a conexão
-  roomRef.child(`answers/${viewerId}`).on('value', async snap => {
-    const ans = snap.val();
-    if (ans && pc.signalingState === 'have-local-offer') {
-      await pc.setRemoteDescription(new RTCSessionDescription(ans));
+  // Buffer ICE candidates from viewer until answer is applied
+  roomRef.child(`ice_from_viewers/${viewerId}`).on('child_added', async snap=>{
+    const candidate = snap.val();
+    if(!candidate || !candidate.candidate) return;
+    if(answerSet && pc.remoteDescription){
+      try{ await pc.addIceCandidate(new RTCIceCandidate(candidate)); }catch(_){}
+    } else {
+      iceBuf.push(candidate);
     }
   });
+
+  // Notify chat — use display name not raw viewerId
+  const displayName = viewerId.split('_')[0];
+  appendChatMsg('', `${displayName} entrou na sala`, 'system');
+  roomRef.child('chat').push({name:'sistema', text:`${displayName} entrou na sala`, time:chatTime(), system:true});
 }
 
 // ══════════════════════════════
@@ -1709,78 +1747,123 @@ async function joinStream(roomId){
     await askUsername('Seu nome para o chat:');
   }
 
+  const connText = document.getElementById('spec-connecting-text');
+  connText.textContent = 'Conectando ao Firebase...';
+
   try{
     await loadFirebase();
   }catch(e){
-    document.getElementById('spec-connecting-text').textContent='Erro de conexão';
+    connText.textContent = '❌ Erro ao conectar ao servidor. Verifique sua internet.';
     return;
   }
 
+  connText.textContent = 'Verificando sala...';
   streamRoomId = roomId;
   streamRole   = 'viewer';
-  const viewerId = chatUsername + '_' + Date.now().toString(36);
+  const viewerId = (chatUsername + '_' + Date.now().toString(36)).replace(/[^a-zA-Z0-9_]/g,'_');
 
   const roomRef = fbDb.ref(`rooms/${roomId}`);
 
-  // Check room exists
-  const snap = await roomRef.once('value');
-  const room = snap.val();
-  if(!room||!room.active){
-    document.getElementById('spec-connecting-text').textContent='Transmissão não encontrada ou encerrada';
+  // Check room exists and is active
+  let room;
+  try{
+    const snap = await roomRef.once('value');
+    room = snap.val();
+  }catch(e){
+    connText.textContent = '❌ Erro ao acessar a sala. Verifique as Regras do Realtime Database no Firebase Console (deve permitir read/write).';
+    const retryBtn = document.getElementById('spec-retry-btn');
+    if(retryBtn) retryBtn.style.display = 'inline-flex';
+    return;
+  }
+
+  if(!room || !room.active){
+    connText.textContent = '❌ Transmissão não encontrada ou já encerrada.';
     return;
   }
 
   document.getElementById('spec-game-name').textContent = room.game||'—';
-  document.getElementById('spec-host-name').textContent = `Host: ${room.host}`;
+  document.getElementById('spec-host-name').textContent = `Host: ${room.host||'—'}`;
+  connText.textContent = 'Iniciando conexão WebRTC...';
+
+  // ICE candidate buffer — holds candidates that arrive before remoteDescription is set
+  const iceCandidateBuffer = [];
+  let remoteDescSet = false;
 
   // Create peer connection
-  viewerPeerConnection = new RTCPeerConnection({iceServers:ICE_SERVERS});
+  viewerPeerConnection = new RTCPeerConnection({iceServers: ICE_SERVERS});
 
   // Receive stream
   const videoEl = document.getElementById('spec-video');
   const remoteStream = new MediaStream();
   videoEl.srcObject = remoteStream;
+
   viewerPeerConnection.ontrack = e=>{
-    e.streams[0].getTracks().forEach(t=>remoteStream.addTrack(t));
+    e.streams[0].getTracks().forEach(t => remoteStream.addTrack(t));
     document.getElementById('spec-connecting').classList.add('hidden');
-    videoEl.style.display='block';
+    videoEl.style.display = 'block';
+    videoEl.muted = false;
+    videoEl.play().catch(()=>{ videoEl.muted=true; videoEl.play().catch(()=>{}); });
+    clearTimeout(connectionTimeout);
   };
 
-  // Send ICE candidates
   viewerPeerConnection.onicecandidate = e=>{
     if(e.candidate){
       roomRef.child(`ice_from_viewers/${viewerId}`).push(e.candidate.toJSON());
     }
   };
 
-  // Register as viewer to trigger offer from host
-  await roomRef.child(`viewers/${viewerId}`).set({type:'join',name:chatUsername});
+  viewerPeerConnection.onconnectionstatechange = ()=>{
+    const s = viewerPeerConnection?.connectionState;
+    if(s==='failed' || s==='disconnected'){
+      connText.textContent = '⚠️ Conexão perdida. O host pode ter encerrado.';
+      document.getElementById('spec-connecting').classList.remove('hidden');
+      videoEl.style.display = 'none';
+    }
+  };
 
-  // Wait for offer
+  // ── STEP 1: Set up offer listener BEFORE registering as viewer ──
+  // This prevents the race condition where host sends offer before viewer is listening
   roomRef.child(`offers/${viewerId}`).on('value', async snap=>{
     const offer = snap.val();
-    if(!offer||viewerPeerConnection.signalingState!=='stable')return;
+    if(!offer) return;
+    if(viewerPeerConnection.signalingState !== 'stable') return;
+    connText.textContent = 'Recebendo oferta WebRTC...';
     try{
       await viewerPeerConnection.setRemoteDescription(new RTCSessionDescription(offer));
+      remoteDescSet = true;
+      // Flush buffered ICE candidates
+      for(const c of iceCandidateBuffer){
+        try{ await viewerPeerConnection.addIceCandidate(new RTCIceCandidate(c)); }catch(_){}
+      }
+      iceCandidateBuffer.length = 0;
       const answer = await viewerPeerConnection.createAnswer();
       await viewerPeerConnection.setLocalDescription(answer);
-      await roomRef.child(`answers/${viewerId}`).set({type:answer.type,sdp:answer.sdp});
-    }catch(_){}
-  });
-
-  // Listen for ICE from host
-  roomRef.child(`ice_from_host/${viewerId}`).on('child_added', async snap=>{
-    const cand = snap.val();
-    if(cand&&viewerPeerConnection.remoteDescription){
-      try{ await viewerPeerConnection.addIceCandidate(new RTCIceCandidate(cand)); }catch(_){}
+      await roomRef.child(`answers/${viewerId}`).set({type:answer.type, sdp:answer.sdp});
+      connText.textContent = 'Aguardando vídeo...';
+    }catch(err){
+      connText.textContent = '❌ Falha na negociação WebRTC: '+(err.message||err);
     }
   });
+
+  // ── STEP 2: ICE from host — buffer if remoteDesc not ready ──
+  roomRef.child(`ice_from_host/${viewerId}`).on('child_added', async snap=>{
+    const cand = snap.val();
+    if(!cand) return;
+    if(remoteDescSet && viewerPeerConnection.remoteDescription){
+      try{ await viewerPeerConnection.addIceCandidate(new RTCIceCandidate(cand)); }catch(_){}
+    } else {
+      iceCandidateBuffer.push(cand);
+    }
+  });
+
+  // ── STEP 3: Now register as viewer to trigger host offer ──
+  await roomRef.child(`viewers/${viewerId}`).set({type:'join', name:chatUsername});
 
   // Chat listener
   roomRef.child('chat').on('child_added', snap=>{
     const msg = snap.val();
-    if(msg.system)return;
-    const type = msg.name===chatUsername?'self': msg.name===room.host?'host':'viewer';
+    if(msg.system) return;
+    const type = msg.name===chatUsername ? 'self' : msg.name===room.host ? 'host' : 'viewer';
     appendChatMsg(msg.name, msg.text, type, msg.time);
   });
 
@@ -1789,12 +1872,20 @@ async function joinStream(roomId){
   roomRef.child(`presence/${viewerId}`).onDisconnect().remove();
   roomRef.child('presence').on('value', snap=>{
     const v = snap.val()||{};
-    document.getElementById('spec-viewer-count').textContent = Object.keys(v).length;
+    const el = document.getElementById('spec-viewer-count');
+    if(el) el.textContent = Object.keys(v).length;
   });
 
-  // Show spectator view
-  document.getElementById('spectator-view').classList.add('active');
-  appendChatMsg('','Você entrou na transmissão','system');
+  // Connection timeout — if no stream after 20s, show helpful error
+  const connectionTimeout = setTimeout(()=>{
+    if(!videoEl.srcObject || remoteStream.getTracks().length===0){
+      connText.textContent = '⏱ Não foi possível receber o stream. O host precisa estar jogando com a transmissão ativa.';
+      const retryBtn = document.getElementById('spec-retry-btn');
+      if(retryBtn) retryBtn.style.display = 'inline-flex';
+    }
+  }, 20000);
+
+  appendChatMsg('', 'Você entrou na transmissão', 'system');
 }
 
 // ══════════════════════════════
@@ -1979,12 +2070,13 @@ function setupSpectatorMode(){
   const params = new URLSearchParams(location.search);
   const watchId = params.get('watch');
   if(watchId){
-    // Show spectator view immediately while loading
-    document.getElementById('spectator-view').classList.add('active');
-    // Hide main app
+    // Hide main app immediately
     document.getElementById('header').style.display='none';
     document.getElementById('filter-bar').style.display='none';
     document.getElementById('library-view').style.display='none';
+    // Show spectator view
+    document.getElementById('spectator-view').classList.add('active');
+    // Start join flow (will ask username if needed)
     joinStream(watchId.toUpperCase());
   }
 }
