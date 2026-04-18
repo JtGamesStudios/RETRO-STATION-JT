@@ -768,6 +768,21 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
         <div class="spec-spinner"></div>
         <p id="spec-connecting-text">Conectando ao host...</p>
         <button id="spec-retry-btn" class="btn btn-ghost" style="display:none;margin-top:14px;font-size:11px;padding:7px 18px" onclick="location.reload()">🔄 Tentar novamente</button>
+        <div id="spec-firebase-guide" style="
+          display:none;margin-top:20px;background:rgba(109,86,245,.08);
+          border:1px solid rgba(109,86,245,.25);border-radius:12px;
+          padding:16px;max-width:340px;text-align:left;font-size:11px;
+          color:#a78bfa;line-height:1.75;
+        ">
+          <strong style="display:block;margin-bottom:8px;font-size:12px">📋 Como ativar o Firebase:</strong>
+          1. Acesse <a href="https://console.firebase.google.com" target="_blank" style="color:#c4b5fd">console.firebase.google.com</a><br>
+          2. Abra o projeto <strong>retro-station-5b6f6</strong><br>
+          3. Clique em <strong>Realtime Database</strong> no menu<br>
+          4. Clique em <strong>Regras</strong> (aba Rules)<br>
+          5. Substitua tudo por:<br>
+          <code style="display:block;background:rgba(0,0,0,.3);border-radius:6px;padding:8px;margin:6px 0;font-size:10px;color:#e2e8f0">{"rules":{".read":true,".write":true}}</code>
+          6. Clique em <strong>Publicar</strong>
+        </div>
       </div>
       <video id="spec-video" autoplay playsinline style="display:none;max-width:100%;max-height:100%"></video>
     </div>
@@ -1492,6 +1507,7 @@ self.addEventListener('fetch',e=>{
 const FB_CONFIG = {
   apiKey:            "AIzaSyCB-qtWBUA4bMa-iFhPLQ3jhk3VYQmDCUc",
   authDomain:        "retro-station-5b6f6.firebaseapp.com",
+  // Tenta a URL padrão; se falhar, loadFirebase() tentará variantes automaticamente
   databaseURL:       "https://retro-station-5b6f6-default-rtdb.firebaseio.com",
   projectId:         "retro-station-5b6f6",
   storageBucket:     "retro-station-5b6f6.firebasestorage.app",
@@ -1499,6 +1515,14 @@ const FB_CONFIG = {
   appId:             "1:928831787888:web:816d6462f7c929bc6a35b5",
   measurementId:     "G-N96SRN8JGS"
 };
+
+// URLs alternativas do Realtime Database por região
+// O Firebase cria o DB em regiões diferentes dependendo do plano
+const FB_DB_URLS = [
+  "https://retro-station-5b6f6-default-rtdb.firebaseio.com",
+  "https://retro-station-5b6f6-default-rtdb.us-central1.firebasedatabase.app",
+  "https://retro-station-5b6f6-default-rtdb.europe-west1.firebasedatabase.app",
+];
 
 // ── State ──
 let fbApp=null, fbDb=null;
@@ -1519,28 +1543,48 @@ const ICE_SERVERS = [
   {urls:'turn:openrelay.metered.ca:443',username:'openrelayproject',credential:'openrelayproject'},
 ];
 
-// ── Load Firebase dynamically ──
+// ── Load Firebase + auto-detect correct databaseURL ──
 function loadFirebase(){
   return new Promise((res,rej)=>{
     if(fbLoaded){res();return}
-    const script=document.createElement('script');
-    script.src='https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js';
-    script.onload=()=>{
-      const script2=document.createElement('script');
-      script2.src='https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js';
-      script2.onload=()=>{
+    const s1=document.createElement('script');
+    s1.src='https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js';
+    s1.onload=()=>{
+      const s2=document.createElement('script');
+      s2.src='https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js';
+      s2.onload=async()=>{
         try{
           if(!firebase.apps.length) firebase.initializeApp(FB_CONFIG);
-          fbDb=firebase.database();
+          // Try each databaseURL until one responds (handles region variants)
+          let connected=false;
+          for(const url of FB_DB_URLS){
+            try{
+              fbDb=firebase.app().database(url);
+              // Quick connectivity test — write to .info/connected
+              const testSnap=await Promise.race([
+                fbDb.ref('.info/connected').once('value'),
+                new Promise((_,r)=>setTimeout(()=>r(new Error('timeout')),4000))
+              ]);
+              // .info/connected returns true when online
+              connected=true;
+              break;
+            }catch(e){
+              fbDb=null;
+            }
+          }
+          if(!connected||!fbDb){
+            rej(new Error('Não foi possível conectar ao Realtime Database. Verifique se o banco foi criado no Firebase Console e se as regras permitem leitura/escrita.'));
+            return;
+          }
           fbLoaded=true;
           res();
         }catch(e){rej(e)}
       };
-      script2.onerror=rej;
-      document.head.appendChild(script2);
+      s2.onerror=rej;
+      document.head.appendChild(s2);
     };
-    script.onerror=rej;
-    document.head.appendChild(script);
+    s1.onerror=rej;
+    document.head.appendChild(s1);
   });
 }
 
@@ -1617,14 +1661,23 @@ async function startStreaming(){
     return;
   }
 
-  // Set up room in Firebase
+  // Set up room in Firebase — timestamp allows viewer to detect stale rooms
   const roomRef = fbDb.ref(`rooms/${streamRoomId}`);
   await roomRef.set({
     host:    chatUsername,
     game:    document.getElementById('emu-game-title').textContent||'—',
     started: Date.now(),
     active:  true,
+    ping:    Date.now(),
   });
+
+  // Keepalive: ping every 20s so viewer knows host is alive even if onDisconnect fires early
+  const keepaliveInterval = setInterval(()=>{
+    if(!streamRoomId){ clearInterval(keepaliveInterval); return; }
+    roomRef.child('ping').set(Date.now()).catch(()=>{});
+    roomRef.child('active').set(true).catch(()=>{});
+  }, 20000);
+  window._streamKeepalive = keepaliveInterval;
 
   // Listen for viewer connections
   roomRef.child('viewers').on('child_added', async snap=>{
@@ -1658,8 +1711,8 @@ async function startStreaming(){
     updateShareModal();
   });
 
-  // Mark host as present & cleanup on disconnect
-  roomRef.child(`presence/${chatUsername}`).set(true);
+  // Mark host as present — use object not boolean, survives network hiccups better
+  roomRef.child(`presence/${chatUsername}`).set({name:chatUsername, ts:Date.now(), isHost:true});
   roomRef.child(`presence/${chatUsername}`).onDisconnect().remove();
   roomRef.onDisconnect().update({active:false});
 
@@ -1753,31 +1806,62 @@ async function joinStream(roomId){
   try{
     await loadFirebase();
   }catch(e){
-    connText.textContent = '❌ Erro ao conectar ao servidor. Verifique sua internet.';
+    connText.textContent = '❌ ' + (e.message || 'Erro ao carregar Firebase. Verifique sua internet.');
+    const retryBtn = document.getElementById('spec-retry-btn');
+    if(retryBtn){ retryBtn.style.display='inline-flex'; }
     return;
   }
 
   connText.textContent = 'Verificando sala...';
   streamRoomId = roomId;
   streamRole   = 'viewer';
+  // viewerId: alphanumeric only — Firebase keys cannot have special chars
   const viewerId = (chatUsername + '_' + Date.now().toString(36)).replace(/[^a-zA-Z0-9_]/g,'_');
 
   const roomRef = fbDb.ref(`rooms/${roomId}`);
 
-  // Check room exists and is active
-  let room;
+  // ── Read room with full error diagnosis ──
+  let room = null;
+  let readError = null;
   try{
-    const snap = await roomRef.once('value');
+    const snap = await Promise.race([
+      roomRef.once('value'),
+      new Promise((_,r) => setTimeout(()=>r(new Error('Timeout ao ler sala (5s). Verifique as regras do Firebase.')), 5000))
+    ]);
     room = snap.val();
   }catch(e){
-    connText.textContent = '❌ Erro ao acessar a sala. Verifique as Regras do Realtime Database no Firebase Console (deve permitir read/write).';
+    readError = e;
+  }
+
+  // Diagnose the exact problem
+  if(readError){
+    const isPermission = String(readError).toLowerCase().includes('permission') ||
+                         String(readError).includes('PERMISSION_DENIED');
+    connText.textContent = isPermission
+      ? '🔒 Firebase bloqueou o acesso — veja o guia abaixo:'
+      : `❌ ${readError.message||readError}`;
     const retryBtn = document.getElementById('spec-retry-btn');
-    if(retryBtn) retryBtn.style.display = 'inline-flex';
+    if(retryBtn){ retryBtn.style.display='inline-flex'; }
+    if(isPermission){
+      const guide = document.getElementById('spec-firebase-guide');
+      if(guide) guide.style.display='block';
+    }
     return;
   }
 
-  if(!room || !room.active){
-    connText.textContent = '❌ Transmissão não encontrada ou já encerrada.';
+  if(!room){
+    connText.textContent = '❌ Sala não existe. O host precisa iniciar a transmissão primeiro e enviar o link correto.';
+    const retryBtn = document.getElementById('spec-retry-btn');
+    if(retryBtn){ retryBtn.style.display='inline-flex'; }
+    return;
+  }
+
+  // Accept room if: active=true OR started recently (last 2h) — handles onDisconnect race
+  const recentEnough = room.started && (Date.now() - room.started) < 7200000;
+  if(!room.active && !recentEnough){
+    connText.textContent = '⏹ Esta transmissão foi encerrada.';
+    const retryBtn = document.getElementById('spec-retry-btn');
+    if(retryBtn){ retryBtn.style.display='inline-flex'; retryBtn.textContent='🔄 Tentar novamente'; }
     return;
   }
 
@@ -1785,14 +1869,13 @@ async function joinStream(roomId){
   document.getElementById('spec-host-name').textContent = `Host: ${room.host||'—'}`;
   connText.textContent = 'Iniciando conexão WebRTC...';
 
-  // ICE candidate buffer — holds candidates that arrive before remoteDescription is set
+  // ICE candidate buffer — holds candidates arriving before remoteDescription is ready
   const iceCandidateBuffer = [];
   let remoteDescSet = false;
 
   // Create peer connection
   viewerPeerConnection = new RTCPeerConnection({iceServers: ICE_SERVERS});
 
-  // Receive stream
   const videoEl = document.getElementById('spec-video');
   const remoteStream = new MediaStream();
   videoEl.srcObject = remoteStream;
@@ -1819,10 +1902,12 @@ async function joinStream(roomId){
       document.getElementById('spec-connecting').classList.remove('hidden');
       videoEl.style.display = 'none';
     }
+    if(s==='connected'){
+      clearTimeout(connectionTimeout);
+    }
   };
 
-  // ── STEP 1: Set up offer listener BEFORE registering as viewer ──
-  // This prevents the race condition where host sends offer before viewer is listening
+  // ── STEP 1: listen for offer BEFORE registering — avoids race condition ──
   roomRef.child(`offers/${viewerId}`).on('value', async snap=>{
     const offer = snap.val();
     if(!offer) return;
@@ -1831,7 +1916,6 @@ async function joinStream(roomId){
     try{
       await viewerPeerConnection.setRemoteDescription(new RTCSessionDescription(offer));
       remoteDescSet = true;
-      // Flush buffered ICE candidates
       for(const c of iceCandidateBuffer){
         try{ await viewerPeerConnection.addIceCandidate(new RTCIceCandidate(c)); }catch(_){}
       }
@@ -1841,11 +1925,13 @@ async function joinStream(roomId){
       await roomRef.child(`answers/${viewerId}`).set({type:answer.type, sdp:answer.sdp});
       connText.textContent = 'Aguardando vídeo...';
     }catch(err){
-      connText.textContent = '❌ Falha na negociação WebRTC: '+(err.message||err);
+      connText.textContent = '❌ Falha WebRTC: '+(err.message||err);
+      const retryBtn = document.getElementById('spec-retry-btn');
+      if(retryBtn) retryBtn.style.display='inline-flex';
     }
   });
 
-  // ── STEP 2: ICE from host — buffer if remoteDesc not ready ──
+  // ── STEP 2: ICE from host — buffer if remoteDesc not ready yet ──
   roomRef.child(`ice_from_host/${viewerId}`).on('child_added', async snap=>{
     const cand = snap.val();
     if(!cand) return;
@@ -1856,8 +1942,8 @@ async function joinStream(roomId){
     }
   });
 
-  // ── STEP 3: Now register as viewer to trigger host offer ──
-  await roomRef.child(`viewers/${viewerId}`).set({type:'join', name:chatUsername});
+  // ── STEP 3: register as viewer — this triggers the host to send an offer ──
+  await roomRef.child(`viewers/${viewerId}`).set({type:'join', name:chatUsername, ts:Date.now()});
 
   // Chat listener
   roomRef.child('chat').on('child_added', snap=>{
@@ -1867,8 +1953,8 @@ async function joinStream(roomId){
     appendChatMsg(msg.name, msg.text, type, msg.time);
   });
 
-  // Presence
-  roomRef.child(`presence/${viewerId}`).set(true);
+  // Presence — use viewerId as key (no special chars)
+  roomRef.child(`presence/${viewerId}`).set({name:chatUsername, ts:Date.now()});
   roomRef.child(`presence/${viewerId}`).onDisconnect().remove();
   roomRef.child('presence').on('value', snap=>{
     const v = snap.val()||{};
@@ -1876,12 +1962,12 @@ async function joinStream(roomId){
     if(el) el.textContent = Object.keys(v).length;
   });
 
-  // Connection timeout — if no stream after 20s, show helpful error
+  // Timeout — show helpful message if no video after 20s
   const connectionTimeout = setTimeout(()=>{
-    if(!videoEl.srcObject || remoteStream.getTracks().length===0){
-      connText.textContent = '⏱ Não foi possível receber o stream. O host precisa estar jogando com a transmissão ativa.';
+    if(remoteStream.getTracks().length===0){
+      connText.textContent = '⏱ Sem vídeo após 20s. Verifique se o host está jogando e com a transmissão ativa.';
       const retryBtn = document.getElementById('spec-retry-btn');
-      if(retryBtn) retryBtn.style.display = 'inline-flex';
+      if(retryBtn) retryBtn.style.display='inline-flex';
     }
   }, 20000);
 
@@ -1894,6 +1980,9 @@ async function joinStream(roomId){
 async function stopStreaming(){
   if(!streamRoomId)return;
   const roomId = streamRoomId;
+
+  // Clear keepalive
+  if(window._streamKeepalive){ clearInterval(window._streamKeepalive); window._streamKeepalive=null; }
 
   // 1. Stop all media tracks
   localStream?.getTracks().forEach(t=>t.stop());
