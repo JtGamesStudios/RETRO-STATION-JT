@@ -190,6 +190,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Segoe 
 .ach-row-title{font-size:12.5px;font-weight:700;color:var(--text);margin-bottom:2px}
 .ach-row-desc{font-size:11px;color:var(--text-muted);line-height:1.4}
 .ach-row-pts{font-size:10px;font-weight:700;color:var(--gold);margin-top:3px}
+.ach-row-earned-date{display:inline;font-weight:400;color:var(--green);margin-left:6px;font-size:10px}
 .ach-row-status{font-size:18px;flex-shrink:0}
 #ach-loading-msg{font-size:12px;color:var(--text-muted);padding:20px 0;text-align:center}
 
@@ -465,7 +466,6 @@ const KEY_MAP = {
 /* ── State ── */
 let games=[], overlayVisible=true, activeFilter='all', selectedConsole='gba';
 let raCredentials={user:'',key:''};
-let achTimers=[];
 
 /* ── DB ── */
 const DB_NAME='retrostation_v3', STORE='games'; let db;
@@ -507,15 +507,27 @@ async function raSearchGame(name,cid){
 
 async function loadAchievementsForGame(game){
   if(!raCredentials.user||!raCredentials.key)return;
-  if(game.achievements)return;
   const con=CONSOLES[game.console];if(!con||!con.raId)return;
+
+  // If we already have achievements cached locally, skip the heavy fetch
+  // but still allow a lightweight earned-state refresh via the poll
+  if(game.achievements && game.achievements.length) return;
+
   const found=await raSearchGame(game.name,con.raId);if(!found)return;
   const ext=await raFetch('API_GetGameExtended.php',{i:found.ID});
   if(!ext||!ext.Achievements)return;
   game.raGameId=found.ID;
+  // Map achievements; preserve any earned flags already stored
+  const prevEarned = {};
+  (game.achievements||[]).forEach(a=>{ if(a.earned) prevEarned[String(a.id)]=a.earnedAt; });
   game.achievements=Object.values(ext.Achievements).map(a=>({
-    id:a.ID,title:a.Title,desc:a.Description,pts:a.Points,
-    badge:`https://media.retroachievements.org/Badge/${a.BadgeName}.png`
+    id:    a.ID,
+    title: a.Title,
+    desc:  a.Description,
+    pts:   a.Points,
+    badge: `https://media.retroachievements.org/Badge/${a.BadgeName}.png`,
+    earned: !!prevEarned[String(a.ID)],
+    earnedAt: prevEarned[String(a.ID)]||null
   }));
   await dbPut(game);
 }
@@ -575,20 +587,73 @@ function spawnParticles(parent){
   }
 }
 
-/* ── Achievement polling (demo — fires random ach after 45s) ── */
+/* ── Achievement polling — REAL RA API ──────────────────────────────────
+   Polls API_GetUserRecentlyPlayedGames + API_GetUserSummary to detect
+   newly earned achievements. Only fires a notification when RA itself
+   confirms an unlock, so conquistas never appear "fora de hora".
+
+   Poll interval: 30 s while game is running.
+   Falls back gracefully when offline (silent, no false positives).
+──────────────────────────────────────────────────────────────────────── */
+const ACH_POLL_MS = 30_000;
+let achPollTimer = null;
+let achPollGameId = null; // RA game ID being watched
+
 function startAchPolling(game){
   stopAchPolling();
-  if(!game.achievements||!game.achievements.length)return;
-  const unearned=game.achievements.filter(a=>!a.earned);
-  if(!unearned.length)return;
-  let idx=0;
-  const next=()=>{
-    if(idx<unearned.length){showAchNotif(unearned[idx]);unearned[idx].earned=true;idx++;updateEmuAchCount(game)}
-    achTimers.push(setTimeout(next,55000+Math.random()*30000));
+  if(!raCredentials.user||!raCredentials.key)return;
+  if(!game.raGameId||!game.achievements||!game.achievements.length)return;
+
+  achPollGameId = game.raGameId;
+
+  // Build set of already-earned IDs so we only notify NEW ones
+  const earnedIds = new Set(
+    game.achievements.filter(a=>a.earned).map(a=>String(a.id))
+  );
+
+  const poll = async () => {
+    try {
+      // API_GetGameInfoAndUserProgress returns per-achievement earned dates
+      const data = await raFetch('API_GetGameInfoAndUserProgress.php', {
+        g: achPollGameId,
+        u: raCredentials.user
+      });
+      if (!data || !data.Achievements) return;
+
+      Object.values(data.Achievements).forEach(a => {
+        const id = String(a.ID);
+        // DateEarned is set only when the user has earned it
+        if (a.DateEarned && !earnedIds.has(id)) {
+          earnedIds.add(id);
+          // Mark as earned in local state
+          const local = game.achievements.find(x=>String(x.id)===id);
+          if(local){ local.earned = true; local.earnedAt = a.DateEarned; }
+          // Show notification
+          showAchNotif({
+            title: a.Title,
+            desc:  a.Description,
+            pts:   a.Points,
+            badge: `https://media.retroachievements.org/Badge/${a.BadgeName}.png`
+          });
+          updateEmuAchCount(game);
+          // Persist updated earned state
+          dbPut(game).catch(()=>{});
+        }
+      });
+    } catch(_){ /* offline — skip silently */ }
+
+    achPollTimer = setTimeout(poll, ACH_POLL_MS);
   };
-  achTimers.push(setTimeout(next,45000));
+
+  // First poll after a short delay to let the emulator initialize
+  achPollTimer = setTimeout(poll, 8_000);
 }
-function stopAchPolling(){achTimers.forEach(clearTimeout);achTimers=[]}
+
+function stopAchPolling(){
+  clearTimeout(achPollTimer);
+  achPollTimer = null;
+  achPollGameId = null;
+}
 
 function updateEmuAchCount(game){
   const w=document.getElementById('emu-ach-count'),t=document.getElementById('emu-ach-text');
@@ -613,13 +678,17 @@ function showAchPanel(game){
     await loadAchievementsForGame(game);
     const achs=game.achievements;
     if(!achs||!achs.length){sub.textContent='Nenhuma conquista encontrada.';list.innerHTML='';return}
-    const earned=achs.filter(a=>a.earned).length;
-    sub.textContent=`${earned} / ${achs.length} conquistas`;
+    const earned=achs.filter(a=>a.earned===true).length;
+    const totalPts=achs.filter(a=>a.earned===true).reduce((s,a)=>s+(a.pts||0),0);
+    sub.textContent=`${earned} / ${achs.length} conquistas • ${totalPts} pts ganhos`;
     list.innerHTML='';
     achs.forEach(a=>{
       const row=document.createElement('div');
+      const earnedDate = a.earned && a.earnedAt
+        ? `<div class="ach-row-earned-date">✅ ${new Date(a.earnedAt).toLocaleDateString('pt-BR')}</div>`
+        : '';
       row.className='ach-row'+(a.earned?' earned':'');
-      row.innerHTML=`<img class="ach-row-icon" src="${a.badge||''}" alt="" onerror="this.style.display='none'"><div class="ach-row-info"><div class="ach-row-title">${a.title}</div><div class="ach-row-desc">${a.desc||''}</div><div class="ach-row-pts">⭐ ${a.pts} pts</div></div><div class="ach-row-status">${a.earned?'✅':'🔒'}</div>`;
+      row.innerHTML=`<img class="ach-row-icon" src="${a.badge||''}" alt="" onerror="this.style.display='none'"><div class="ach-row-info"><div class="ach-row-title">${a.title}</div><div class="ach-row-desc">${a.desc||''}</div><div class="ach-row-pts">⭐ ${a.pts} pts${earnedDate}</div></div><div class="ach-row-status">${a.earned?'✅':'🔒'}</div>`;
       list.appendChild(row);
     });
   })();
@@ -669,7 +738,11 @@ function launchGame(game){
   loading.classList.remove('hidden');
   document.getElementById('emu-loading-text').textContent=`Carregando ${game.name}...`;
   document.getElementById('emulator-container').innerHTML='';
-  const romUrl=URL.createObjectURL(new Blob([game.romData],{type:'application/octet-stream'}));
+  // Ensure romData is a valid buffer regardless of how IDB returned it
+  const romBytes = game.romData instanceof Uint8Array
+    ? game.romData
+    : new Uint8Array(game.romData);
+  const romUrl=URL.createObjectURL(new Blob([romBytes],{type:'application/octet-stream'}));
   Object.assign(window,{
     EJS_player:'#emulator-container',EJS_gameName:game.name,EJS_biosUrl:'',
     EJS_core:con.core,EJS_pathtodata:'https://cdn.emulatorjs.org/stable/data/',
@@ -827,7 +900,11 @@ function setupModal(){
     if(!name||!romF){showToast('Informe o nome e selecione a ROM',true);return}
     const btn=document.getElementById('btn-save');btn.textContent='Salvando...';btn.disabled=true;
     try{
-      const romData=await rAB(romF);const cover=inpCover.files[0]?await rDU(inpCover.files[0]):null;
+      // Save as Uint8Array — survives IDB serialization and remains valid
+      // after the original file is deleted from the device.
+      const rawBuf=await rAB(romF);
+      const romData=new Uint8Array(rawBuf);
+      const cover=inpCover.files[0]?await rDU(inpCover.files[0]):null;
       const consoleKey=detectConsole(romF.name,selectedConsole);
       const game={name,console:consoleKey,cover,romData,romName:romF.name,addedAt:Date.now()};
       const id=await dbAdd(game);game.id=id;games.push(game);
@@ -870,7 +947,44 @@ function setupKeyboard(){
   });
 }
 
-/* ── Init ── */
+/* ── Service Worker — offline cache for EmulatorJS assets ── */
+(function registerSW(){
+  if(!('serviceWorker' in navigator))return;
+  // Inline SW as a blob so no separate file is needed
+  const swCode = `
+const CACHE = 'retrostation-v1';
+const CDN = 'cdn.emulatorjs.org';
+
+self.addEventListener('install', e => {
+  self.skipWaiting();
+});
+self.addEventListener('activate', e => {
+  e.waitUntil(self.clients.claim());
+});
+self.addEventListener('fetch', e => {
+  const url = e.request.url;
+  // Only cache EmulatorJS CDN requests
+  if (!url.includes(CDN)) return;
+  e.respondWith(
+    caches.open(CACHE).then(async cache => {
+      const cached = await cache.match(e.request);
+      if (cached) return cached;
+      try {
+        const resp = await fetch(e.request);
+        if (resp.ok) cache.put(e.request, resp.clone());
+        return resp;
+      } catch(_) {
+        return cached || new Response('offline', {status: 503});
+      }
+    })
+  );
+});
+`;
+  const blob = new Blob([swCode], {type:'application/javascript'});
+  const swUrl = URL.createObjectURL(blob);
+  navigator.serviceWorker.register(swUrl, {scope:'/'})
+    .catch(()=>{}); // Blob SW may fail in some browsers — silent fallback
+})();
 async function init(){
   await openDB();
   games=await dbGetAll();
