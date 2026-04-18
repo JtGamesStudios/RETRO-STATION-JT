@@ -1,26 +1,8 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
+<!DOCTYPE html><html lang="pt-BR">
 <head>
-  <!-- SEO básico -->
-<meta name="description" content="Retro Station é uma plataforma de emulação no navegador para jogar clássicos como GBA, GB e GBC sem instalar nada.">
-
-<!-- Open Graph (WhatsApp, Discord, Facebook) -->
-<meta property="og:title" content="Retro Station 🎮">
-<meta property="og:description" content="Jogue clássicos diretamente no navegador. GBA, GB e muito mais em um só lugar.">
-<meta property="og:image" content="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSgVWzymGMypgiu_jVr_XnHeSKH44-czhaDuA&s">
-<meta property="og:url" content="https://seusite.com">
-<meta property="og:type" content="website">
-
-<!-- Twitter (opcional mas bom) -->
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Retro Station 🎮">
-<meta name="twitter:description" content="Plataforma de emulação retrô no navegador.">
-<meta name="twitter:image" content="https://seusite.com/logo.png">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Retro Station</title>
-
-<style>
+<title>Retro Station</title><style>
 :root {
   --bg: #0a0a0f;
   --card: #13131a;
@@ -37,7 +19,6 @@ body {
   color: var(--text);
 }
 
-/* HEADER */
 header {
   display:flex;
   justify-content:space-between;
@@ -48,70 +29,101 @@ header {
 
 .logo {
   font-weight:700;
-  font-size:20px;
+  font-size:22px;
 }
 
 .btn {
-  padding:10px 18px;
+  padding:12px 20px;
   background:var(--accent);
   border:none;
-  border-radius:8px;
+  border-radius:10px;
   color:#fff;
   cursor:pointer;
+  transition:0.2s;
 }
 
-/* HERO */
+.btn:hover {
+  transform:scale(1.05);
+  opacity:0.9;
+}
+
 .hero {
   text-align:center;
-  padding:100px 20px;
+  padding:120px 20px 80px;
 }
 
 .hero h1 {
-  font-size:48px;
+  font-size:52px;
   margin-bottom:16px;
 }
 
 .hero p {
   color:var(--muted);
-  max-width:500px;
+  max-width:600px;
   margin:auto;
-  margin-bottom:24px;
+  margin-bottom:30px;
+  font-size:18px;
 }
 
-/* FEATURES */
-.features {
+.section-title {
+  text-align:center;
+  font-size:28px;
+  margin-bottom:40px;
+}
+
+.grid {
   display:grid;
   grid-template-columns: repeat(auto-fit, minmax(220px,1fr));
   gap:20px;
-  padding:60px 40px;
+  padding:0 40px 60px;
 }
 
 .card {
   background:var(--card);
-  padding:20px;
-  border-radius:12px;
+  padding:24px;
+  border-radius:16px;
   border:1px solid rgba(255,255,255,0.05);
+  transition:0.2s;
+}
+
+.card:hover {
+  transform:translateY(-5px);
 }
 
 .card h3 {
   margin-bottom:10px;
 }
 
-/* ROADMAP */
-.roadmap {
-  padding:60px 40px;
+.badge {
+  display:inline-block;
+  padding:6px 12px;
+  background:rgba(124,106,247,0.2);
+  border-radius:20px;
+  font-size:12px;
+  margin-bottom:10px;
 }
 
-.roadmap h2 {
-  margin-bottom:20px;
+.consoles {
+  display:grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px,1fr));
+  gap:20px;
+  padding:0 40px 80px;
 }
 
-.roadmap ul {
-  color:var(--muted);
-  line-height:1.8;
+.console {
+  background:var(--card);
+  padding:20px;
+  border-radius:12px;
+  text-align:center;
+  border:1px solid rgba(255,255,255,0.05);
 }
 
-/* FOOTER */
+.console span {
+  font-size:28px;
+  display:block;
+  margin-bottom:10px;
+}
+
 footer {
   text-align:center;
   padding:40px;
@@ -119,64 +131,51 @@ footer {
   border-top:1px solid rgba(255,255,255,0.05);
 }
 
-</style>
-</head>
-
-<body>
-
-<header>
+</style></head><body><header>
   <div class="logo">🎮 Retro Station</div>
-  <button class="btn" onclick="window.location.href='emulator.html'">
-  Abrir Emulador
-</button>
-</header>
-
-<section class="hero">
-  <h1>Todos os jogos clássicos em um só lugar</h1>
-  <p>
-    Retro Station é uma plataforma de emulação no navegador que permite jogar
-    clássicos diretamente no seu dispositivo, sem instalar nada.
-  </p>
-  <button class="btn">Começar Agora</button>
-</section>
-
-<section class="features">
-  <div class="card">
+  <button class="btn" onclick="window.location.href='emulator.html'">Abrir Emulador</button>
+</header><section class="hero">
+  <h1>Seu hub definitivo de jogos retrô</h1>
+  <p>Jogue clássicos diretamente no navegador com suporte a múltiplos consoles, salvamento rápido e experiência otimizada para mobile e PC.</p>
+  <button class="btn" onclick="window.location.href='emulator.html'">Começar Agora</button>
+</section><h2 class="section-title">✨ Recursos</h2>
+<section class="grid">  <div class="card">
+    <div class="badge">Instantâneo</div>
     <h3>🎮 Emulação Web</h3>
-    <p>Jogue GBA, GB e GBC direto no navegador.</p>
-  </div>
-
-  <div class="card">
+    <p>Sem downloads ou instalação. Abra e jogue direto.</p>
+  </div>  <div class="card">
+    <div class="badge">Organização</div>
     <h3>📚 Biblioteca</h3>
-    <p>Organize seus jogos com capas e busca integrada.</p>
-  </div>
-
-  <div class="card">
-    <h3>📱 Mobile</h3>
-    <p>Controles touchscreen completos para celular.</p>
-  </div>
-
-  <div class="card">
-    <h3>⚡ Performance</h3>
-    <p>Carregamento rápido e experiência fluida.</p>
-  </div>
-</section>
-
-<section class="roadmap">
-  <h2>🚀 Roadmap</h2>
-  <ul>
-    <li>✔ Suporte a Game Boy e GBA</li>
-    <li>🔐 Sistema de contas</li>
-    <li>☁️ Sincronização na nuvem</li>
-    <li>📲 App (PWA)</li>
-    <li>🎮 Novos consoles (NES, SNES, N64)</li>
-    <li>🔥 Suporte a PlayStation 1</li>
-  </ul>
-</section>
-
-<footer>
+    <p>Gerencie suas ROMs com capas, busca e organização.</p>
+  </div>  <div class="card">
+    <div class="badge">Mobile</div>
+    <h3>📱 Controles Touch</h3>
+    <p>Interface adaptada para celular com controles na tela.</p>
+  </div>  <div class="card">
+    <div class="badge">Performance</div>
+    <h3>⚡ Alta Velocidade</h3>
+    <p>Execução fluida mesmo em dispositivos mais simples.</p>
+  </div></section><h2 class="section-title">🎮 Consoles Suportados</h2>
+<section class="consoles">  <div class="console"><span>🟥</span>Game Boy</div>
+  <div class="console"><span>🟪</span>Game Boy Color</div>
+  <div class="console"><span>🟩</span>Game Boy Advance</div>
+  <div class="console"><span>⬛</span>NES</div>
+  <div class="console"><span>🟦</span>SNES</div>
+  <div class="console"><span>🟧</span>Mega Drive</div>
+  <div class="console"><span>🟨</span>Game Gear</div></section><h2 class="section-title">🚀 Em desenvolvimento</h2>
+<section class="grid">  <div class="card">
+    <h3>☁️ Cloud Save</h3>
+    <p>Salve seu progresso e continue em qualquer dispositivo.</p>
+  </div>  <div class="card">
+    <h3>🔐 Contas</h3>
+    <p>Sistema de login para salvar biblioteca e progresso.</p>
+  </div>  <div class="card">
+    <h3>📲 App (PWA)</h3>
+    <p>Instale como app direto no celular.</p>
+  </div>  <div class="card">
+    <h3>🎮 Novos Consoles</h3>
+    <p>Futuro suporte a N64 e PlayStation 1.</p>
+  </div></section><footer>
   <p>© 2026 Retro Station — JT Games</p>
-</footer>
-
-</body>
+</footer></body>
 </html>
