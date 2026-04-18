@@ -5,248 +5,383 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>RetroStation</title>
 <style>
+/* ═══════════════════════════════════════
+   DESIGN TOKENS
+═══════════════════════════════════════ */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
 :root {
-  --bg:#08080e; --bg2:#0d0d16;
-  --surface:#111119; --surface2:#191925; --surface3:#21212f; --surface4:#2a2a3a;
-  --accent:#7c6af7; --accent2:#a78bfa; --accent3:#c4b5fd;
-  --accent-glow:rgba(124,106,247,0.2); --accent-glow2:rgba(124,106,247,0.08);
-  --text:#eeeef5; --text-muted:#7878a0; --text-dim:#3a3a58;
-  --border:rgba(255,255,255,0.06); --border2:rgba(255,255,255,0.04);
-  --border-accent:rgba(124,106,247,0.35);
-  --gold:#f59e0b; --gold-glow:rgba(245,158,11,0.25);
-  --green:#10b981; --red:#ef4444;
-  --card-w:150px; --card-h:215px; --radius:12px; --radius-sm:8px;
+  --bg:#07070d; --surface:#0f0f1a; --surface2:#161624; --surface3:#1e1e2e; --surface4:#27273a;
+  --accent:#6d56f5; --accent2:#9b87fa; --accent3:#c4b5fd;
+  --accent-glow:rgba(109,86,245,0.22); --accent-glow2:rgba(109,86,245,0.1);
+  --text:#f0f0f8; --text-muted:#6e6e92; --text-dim:#333352;
+  --border:rgba(255,255,255,0.055); --border-accent:rgba(109,86,245,0.38);
+  --gold:#f59e0b; --green:#10b981; --red:#ef4444;
+  --card-w:152px; --card-h:218px; --r:14px; --r-sm:9px;
+  --font:'Inter',system-ui,sans-serif;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,-apple-system,sans-serif;overflow:hidden;-webkit-tap-highlight-color:transparent;-webkit-font-smoothing:antialiased}
-::-webkit-scrollbar{width:4px;height:4px}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--font);overflow:hidden;-webkit-tap-highlight-color:transparent;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+::-webkit-scrollbar{width:3px;height:3px}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:var(--surface4);border-radius:99px}
 
 /* ═══ CONSOLE TAGS ═══ */
-.tag-gba{background:rgba(124,106,247,.15);color:#a78bfa;border:1px solid rgba(124,106,247,.3)}
-.tag-gb{background:rgba(16,185,129,.12);color:#6ee7b7;border:1px solid rgba(16,185,129,.25)}
-.tag-gbc{background:rgba(16,185,129,.2);color:#34d399;border:1px solid rgba(16,185,129,.38)}
-.tag-snes{background:rgba(59,130,246,.15);color:#93c5fd;border:1px solid rgba(59,130,246,.3)}
-.tag-nes{background:rgba(239,68,68,.15);color:#fca5a5;border:1px solid rgba(239,68,68,.3)}
-.tag-gg{background:rgba(245,158,11,.15);color:#fcd34d;border:1px solid rgba(245,158,11,.3)}
-.tag-md{background:rgba(236,72,153,.15);color:#f9a8d4;border:1px solid rgba(236,72,153,.3)}
+.tag-gba{background:rgba(109,86,245,.14);color:#a78bfa;border:1px solid rgba(109,86,245,.28)}
+.tag-gb{background:rgba(16,185,129,.1);color:#6ee7b7;border:1px solid rgba(16,185,129,.22)}
+.tag-gbc{background:rgba(16,185,129,.18);color:#34d399;border:1px solid rgba(16,185,129,.35)}
+.tag-snes{background:rgba(59,130,246,.13);color:#93c5fd;border:1px solid rgba(59,130,246,.28)}
+.tag-nes{background:rgba(239,68,68,.13);color:#fca5a5;border:1px solid rgba(239,68,68,.28)}
+.tag-gg{background:rgba(245,158,11,.13);color:#fcd34d;border:1px solid rgba(245,158,11,.28)}
+.tag-md{background:rgba(236,72,153,.13);color:#f9a8d4;border:1px solid rgba(236,72,153,.28)}
+.tag-ps1{background:rgba(37,99,235,.14);color:#93c5fd;border:1px solid rgba(37,99,235,.3)}
+.tag-n64{background:rgba(220,38,38,.13);color:#fca5a5;border:1px solid rgba(220,38,38,.28)}
 
 /* ═══ HEADER ═══ */
-#header{position:fixed;top:0;left:0;right:0;z-index:50;height:56px;background:rgba(8,8,14,.94);backdrop-filter:blur(20px) saturate(1.4);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 20px;gap:12px}
-.logo{display:flex;align-items:center;gap:10px;font-weight:800;font-size:1rem;white-space:nowrap}
-.logo-icon{width:32px;height:32px;border-radius:9px;flex-shrink:0;background:linear-gradient(135deg,#6d54f5,#c084fc);display:flex;align-items:center;justify-content:center;font-size:16px;box-shadow:0 2px 14px rgba(109,84,245,.4)}
-.logo-name{color:var(--text)} .logo-name em{font-style:normal;color:var(--accent2)}
-.header-right{display:flex;align-items:center;gap:8px;flex-shrink:0}
-#game-count-badge{font-size:11px;color:var(--text-muted);background:var(--surface2);border:1px solid var(--border);padding:3px 10px;border-radius:99px;white-space:nowrap}
-.btn{display:inline-flex;align-items:center;gap:5px;padding:7px 15px;border-radius:var(--radius-sm);font-size:12px;font-weight:700;cursor:pointer;border:none;transition:all .15s;white-space:nowrap}
+#header{
+  position:fixed;top:0;left:0;right:0;z-index:50;height:58px;
+  background:rgba(7,7,13,.92);backdrop-filter:blur(24px) saturate(1.6);
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;padding:0 22px;gap:14px;
+}
+.logo{display:flex;align-items:center;gap:11px;font-weight:900;font-size:.95rem;letter-spacing:-.2px;white-space:nowrap}
+.logo-icon{
+  width:34px;height:34px;border-radius:10px;flex-shrink:0;
+  background:linear-gradient(135deg,#5b44e8 0%,#9b59d6 100%);
+  display:flex;align-items:center;justify-content:center;font-size:17px;
+  box-shadow:0 0 20px rgba(91,68,232,.5),inset 0 1px 0 rgba(255,255,255,.15);
+}
+.logo-word{color:var(--text)}.logo-word em{font-style:normal;color:var(--accent2)}
+.header-right{display:flex;align-items:center;gap:9px;flex-shrink:0}
+#game-count-badge{font-size:11px;font-weight:600;color:var(--text-muted);background:var(--surface2);border:1px solid var(--border);padding:3px 11px;border-radius:99px;white-space:nowrap;letter-spacing:.2px}
+.btn{display:inline-flex;align-items:center;gap:5px;padding:8px 16px;border-radius:var(--r-sm);font-size:12px;font-weight:700;cursor:pointer;border:none;transition:all .15s;white-space:nowrap;letter-spacing:.15px}
 .btn-ghost{background:var(--surface2);color:var(--text-muted);border:1px solid var(--border)}
 .btn-ghost:hover{background:var(--surface3);color:var(--text);border-color:var(--border-accent)}
-.btn-primary{background:var(--accent);color:#fff;box-shadow:0 0 18px var(--accent-glow)}
-.btn-primary:hover{background:var(--accent2);box-shadow:0 0 28px rgba(124,106,247,.35);transform:translateY(-1px)}
+.btn-primary{background:linear-gradient(135deg,var(--accent),#8b6cf5);color:#fff;box-shadow:0 0 20px var(--accent-glow)}
+.btn-primary:hover{filter:brightness(1.12);box-shadow:0 0 30px var(--accent-glow);transform:translateY(-1px)}
 .btn-primary:active{transform:translateY(0)}
 
 /* ═══ FILTER BAR ═══ */
-#filter-bar{position:fixed;top:56px;left:0;right:0;z-index:40;background:rgba(8,8,14,.9);backdrop-filter:blur(14px);border-bottom:1px solid var(--border);padding:0 20px;display:flex;align-items:center;gap:5px;height:46px;overflow-x:auto}
+#filter-bar{
+  position:fixed;top:58px;left:0;right:0;z-index:40;
+  background:rgba(7,7,13,.88);backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--border);
+  padding:0 22px;display:flex;align-items:center;gap:6px;height:44px;overflow-x:auto;
+}
 #filter-bar::-webkit-scrollbar{height:0}
-.filter-chip{padding:4px 13px;border-radius:99px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;border:1px solid var(--border);transition:all .15s;flex-shrink:0;background:var(--surface2);color:var(--text-muted)}
+.filter-chip{
+  padding:4px 13px;border-radius:99px;font-size:11px;font-weight:600;
+  cursor:pointer;white-space:nowrap;border:1px solid var(--border);
+  transition:all .15s;flex-shrink:0;background:var(--surface2);color:var(--text-muted);
+}
 .filter-chip:hover{color:var(--text);border-color:var(--border-accent)}
-.filter-chip.active{background:var(--accent);color:#fff;border-color:var(--accent);box-shadow:0 0 10px var(--accent-glow)}
-.filter-chip.chip-snes.active{background:#2563eb;border-color:#2563eb}
-.filter-chip.chip-nes.active{background:#dc2626;border-color:#dc2626}
-.filter-chip.chip-md.active{background:#be185d;border-color:#be185d}
-.filter-chip.chip-gg.active{background:#d97706;border-color:#d97706}
-.filter-chip.chip-gb.active{background:#047857;border-color:#047857}
-.filter-chip.chip-gbc.active{background:#059669;border-color:#059669}
+.filter-chip.active{background:var(--accent);color:#fff;border-color:var(--accent);box-shadow:0 0 12px var(--accent-glow)}
+.filter-chip.chip-snes.active{background:#1d4ed8;border-color:#1d4ed8}
+.filter-chip.chip-nes.active{background:#b91c1c;border-color:#b91c1c}
+.filter-chip.chip-md.active{background:#9d174d;border-color:#9d174d}
+.filter-chip.chip-gg.active{background:#b45309;border-color:#b45309}
+.filter-chip.chip-gb.active{background:#065f46;border-color:#065f46}
+.filter-chip.chip-gbc.active{background:#047857;border-color:#047857}
+.filter-chip.chip-ps1.active{background:#1e40af;border-color:#1e40af}
+.filter-chip.chip-n64.active{background:#991b1b;border-color:#991b1b}
 
 /* ═══ LIBRARY ═══ */
 #library-view{position:fixed;inset:0;padding-top:102px;overflow-y:auto}
-#lib-toolbar{display:flex;align-items:center;gap:10px;padding:16px 20px 0}
-.search-wrap{position:relative;max-width:400px;flex:1}
-.search-icon{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--text-dim);pointer-events:none;font-size:13px}
-#search-input{width:100%;padding:9px 14px 9px 34px;font-size:13px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);outline:none;transition:border-color .15s,box-shadow .15s}
+#lib-toolbar{padding:18px 22px 0;display:flex;gap:10px;align-items:center}
+.search-wrap{position:relative;flex:1;max-width:420px}
+.search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--text-dim);pointer-events:none;font-size:13px}
+#search-input{
+  width:100%;padding:10px 14px 10px 36px;font-size:13px;font-family:var(--font);
+  background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-sm);
+  color:var(--text);outline:none;transition:border-color .15s,box-shadow .15s;
+}
 #search-input:focus{border-color:var(--border-accent);box-shadow:0 0 0 3px var(--accent-glow2)}
 #search-input::placeholder{color:var(--text-dim)}
-#section-header{display:flex;align-items:center;justify-content:space-between;padding:14px 20px 10px}
-#section-label{font-size:10.5px;font-weight:700;letter-spacing:1.8px;color:var(--text-muted);text-transform:uppercase}
+#section-header{display:flex;align-items:center;justify-content:space-between;padding:15px 22px 10px}
+#section-label{font-size:10px;font-weight:800;letter-spacing:2px;color:var(--text-muted);text-transform:uppercase}
 #section-count{font-size:11px;color:var(--text-dim)}
-#game-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(var(--card-w),1fr));gap:14px;padding:0 20px 56px}
+#game-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(var(--card-w),1fr));gap:16px;padding:0 22px 60px}
 
 /* ── GAME CARD ── */
-.game-card{background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);cursor:pointer;overflow:visible;position:relative;transition:transform .22s cubic-bezier(.25,.46,.45,.94),border-color .2s,box-shadow .22s}
-.game-card-inner{border-radius:var(--radius);overflow:hidden}
-.game-card:hover{transform:translateY(-6px) scale(1.01);border-color:var(--border-accent);box-shadow:0 16px 40px rgba(0,0,0,.6),0 0 0 1px var(--accent-glow)}
+.game-card{
+  background:var(--surface);border-radius:var(--r);border:1px solid var(--border);
+  cursor:pointer;overflow:visible;position:relative;
+  transition:transform .24s cubic-bezier(.25,.46,.45,.94),border-color .2s,box-shadow .24s;
+}
+.game-card-inner{border-radius:var(--r);overflow:hidden}
+.game-card:hover{
+  transform:translateY(-7px) scale(1.015);
+  border-color:rgba(109,86,245,.4);
+  box-shadow:0 20px 48px rgba(0,0,0,.65),0 0 0 1px rgba(109,86,245,.15);
+}
 .game-card:active{transform:translateY(-2px) scale(.99)}
-.card-cover{width:100%;height:var(--card-h);object-fit:cover;display:block;background:var(--surface2)}
-.card-body{padding:9px 10px 11px;background:linear-gradient(to bottom,var(--surface),var(--surface2))}
-.card-title{font-size:11.5px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:6px}
+
+.card-cover-wrap{position:relative;width:100%;height:var(--card-h);background:var(--surface2);overflow:hidden}
+.card-cover{width:100%;height:100%;object-fit:cover;display:block;transition:transform .35s ease}
+.game-card:hover .card-cover{transform:scale(1.04)}
+.card-cover-shimmer{
+  position:absolute;inset:0;
+  background:linear-gradient(90deg,var(--surface2) 25%,var(--surface3) 50%,var(--surface2) 75%);
+  background-size:200% 100%;
+  animation:shimLoad 1.4s ease infinite;
+}
+@keyframes shimLoad{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.card-cover-shimmer.done{display:none}
+
+/* Auto-cover badge */
+.card-auto-cover-badge{
+  position:absolute;top:6px;left:6px;
+  background:rgba(7,7,13,.8);border:1px solid rgba(109,86,245,.35);
+  border-radius:99px;padding:2px 7px;
+  font-size:9px;font-weight:700;color:var(--accent2);letter-spacing:.5px;
+  opacity:0;transition:opacity .2s;pointer-events:none;
+}
+.game-card:hover .card-auto-cover-badge{opacity:1}
+
+.card-body{
+  padding:10px 11px 12px;
+  background:linear-gradient(to bottom,var(--surface),var(--surface2));
+}
+.card-title{font-size:11.5px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:7px}
 .card-footer{display:flex;align-items:center;justify-content:space-between;gap:4px}
-.card-tag{font-size:9.5px;font-weight:700;letter-spacing:.3px;padding:2px 7px;border-radius:5px;display:inline-block;flex-shrink:0}
-.card-ach-badge{display:flex;align-items:center;gap:3px;font-size:10px;color:var(--text-dim);background:var(--surface3);border:1px solid var(--border);padding:1px 6px;border-radius:5px;transition:all .2s;flex-shrink:0;cursor:pointer}
-.card-ach-badge:hover{border-color:rgba(245,158,11,.3);background:rgba(245,158,11,.06)}
-.card-ach-badge.loaded{color:var(--gold);border-color:rgba(245,158,11,.25);background:rgba(245,158,11,.07)}
-.card-play-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(8,8,14,.85) 0%,rgba(8,8,14,.3) 60%,transparent 100%);display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .2s;border-radius:var(--radius)}
+.card-tag{font-size:9.5px;font-weight:700;letter-spacing:.2px;padding:2px 7px;border-radius:5px;display:inline-block;flex-shrink:0}
+
+.card-ach-badge{
+  display:flex;align-items:center;gap:3px;font-size:10px;color:var(--text-dim);
+  background:var(--surface3);border:1px solid var(--border);padding:1px 6px;border-radius:5px;
+  transition:all .18s;flex-shrink:0;cursor:pointer;
+}
+.card-ach-badge:hover{border-color:rgba(245,158,11,.3);background:rgba(245,158,11,.07)}
+.card-ach-badge.loaded{color:var(--gold);border-color:rgba(245,158,11,.25);background:rgba(245,158,11,.06)}
+
+.card-play-overlay{
+  position:absolute;inset:0;
+  background:linear-gradient(to top,rgba(7,7,13,.88) 0%,rgba(7,7,13,.35) 55%,transparent 100%);
+  display:flex;align-items:center;justify-content:center;
+  opacity:0;transition:opacity .22s;border-radius:var(--r);
+}
 .game-card:hover .card-play-overlay{opacity:1}
-.play-btn-circle{width:48px;height:48px;border-radius:50%;background:rgba(124,106,247,.9);display:flex;align-items:center;justify-content:center;box-shadow:0 0 30px rgba(124,106,247,.5);transition:transform .12s,background .12s}
-.play-btn-circle:hover{transform:scale(1.12);background:var(--accent2)}
+.play-btn-circle{
+  width:50px;height:50px;border-radius:50%;
+  background:linear-gradient(135deg,var(--accent),#9b59d6);
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 0 32px rgba(109,86,245,.55);
+  transition:transform .12s,box-shadow .12s;
+}
+.play-btn-circle:hover{transform:scale(1.14);box-shadow:0 0 44px rgba(109,86,245,.7)}
 .play-btn-circle svg{margin-left:3px}
-.card-delete{position:absolute;top:7px;right:7px;z-index:5;width:22px;height:22px;border-radius:50%;background:rgba(8,8,14,.88);border:1px solid rgba(255,255,255,.1);cursor:pointer;display:none;align-items:center;justify-content:center;font-size:10px;color:var(--red);transition:background .15s}
+
+.card-delete{
+  position:absolute;top:7px;right:7px;z-index:5;width:24px;height:24px;border-radius:50%;
+  background:rgba(7,7,13,.85);border:1px solid rgba(255,255,255,.1);
+  cursor:pointer;display:none;align-items:center;justify-content:center;
+  font-size:10px;color:var(--red);transition:all .15s;
+}
 .game-card:hover .card-delete{display:flex}
-.card-delete:hover{background:rgba(239,68,68,.2)}
-#empty-state{display:none;flex-direction:column;align-items:center;justify-content:center;padding:80px 24px;text-align:center;gap:12px}
-.empty-icon-wrap{width:72px;height:72px;border-radius:20px;background:var(--surface2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:32px;opacity:.45}
-#empty-state h3{font-size:15px;font-weight:600;color:var(--text-muted)}
-#empty-state p{font-size:12px;color:var(--text-dim);max-width:240px;line-height:1.7}
+.card-delete:hover{background:rgba(239,68,68,.22);border-color:rgba(239,68,68,.4)}
+
+#empty-state{display:none;flex-direction:column;align-items:center;justify-content:center;padding:80px 24px;text-align:center;gap:14px}
+.empty-icon-wrap{width:76px;height:76px;border-radius:22px;background:var(--surface2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:34px;opacity:.4}
+#empty-state h3{font-size:15px;font-weight:700;color:var(--text-muted)}
+#empty-state p{font-size:12px;color:var(--text-dim);max-width:240px;line-height:1.75}
 
 /* ═══ EMULATOR VIEW ═══ */
 #emulator-view{display:none;position:fixed;inset:0;z-index:100;background:#000;flex-direction:column}
-#emu-header{height:44px;background:rgba(0,0,0,.95);border-bottom:1px solid rgba(255,255,255,.04);display:flex;align-items:center;justify-content:space-between;padding:0 12px;flex-shrink:0;gap:8px}
-#emu-title-wrap{display:flex;align-items:center;gap:7px;min-width:0;overflow:hidden}
-#emu-console-badge{font-size:9.5px;font-weight:700;padding:2px 7px;border-radius:4px;flex-shrink:0}
+#emu-header{
+  height:46px;background:rgba(0,0,0,.96);border-bottom:1px solid rgba(255,255,255,.045);
+  display:flex;align-items:center;justify-content:space-between;padding:0 14px;flex-shrink:0;gap:8px;
+}
+#emu-title-wrap{display:flex;align-items:center;gap:8px;min-width:0;overflow:hidden}
+#emu-console-badge{font-size:9.5px;font-weight:800;padding:2px 8px;border-radius:5px;flex-shrink:0;letter-spacing:.3px}
 #emu-game-title{font-size:12px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-#emu-controls-row{display:flex;align-items:center;gap:5px;flex-shrink:0}
-#emu-ach-count{display:flex;align-items:center;gap:4px;font-size:10px;font-weight:700;color:var(--gold);background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.2);padding:2px 8px;border-radius:99px;white-space:nowrap;flex-shrink:0}
-#toggle-overlay-btn{font-size:10px;padding:4px 10px;border-radius:5px;background:var(--surface3);border:1px solid var(--border);color:var(--text-muted);cursor:pointer;transition:all .15s}
+#emu-controls-row{display:flex;align-items:center;gap:6px;flex-shrink:0}
+#emu-ach-count{display:flex;align-items:center;gap:4px;font-size:10px;font-weight:700;color:var(--gold);background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.2);padding:2px 9px;border-radius:99px;white-space:nowrap;flex-shrink:0}
+#toggle-overlay-btn{font-size:10px;padding:4px 11px;border-radius:6px;background:var(--surface3);border:1px solid var(--border);color:var(--text-muted);cursor:pointer;transition:all .15s;font-family:var(--font);font-weight:600}
 #toggle-overlay-btn.active{background:var(--accent);color:#fff;border-color:var(--accent)}
-#close-emu-btn{width:28px;height:28px;border-radius:5px;background:var(--surface3);border:1px solid var(--border);color:var(--red);cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;transition:background .15s}
+#close-emu-btn{width:30px;height:30px;border-radius:6px;background:var(--surface3);border:1px solid var(--border);color:var(--red);cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;transition:background .15s}
 #close-emu-btn:hover{background:rgba(239,68,68,.15)}
 #canvas-wrap{flex:1;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
 #emulator-container{width:100%;height:100%;position:absolute;inset:0}
 
 /* ═══ MOBILE OVERLAY ═══ */
-#mobile-overlay{position:absolute;inset:0;pointer-events:none;display:flex;flex-direction:column;justify-content:flex-end;padding:8px 12px 16px;z-index:15}
+#mobile-overlay{position:absolute;inset:0;pointer-events:none;display:flex;flex-direction:column;justify-content:flex-end;padding:8px 14px 18px;z-index:15}
 #mobile-overlay.hidden{display:none}
 .overlay-row{display:flex;justify-content:space-between;align-items:flex-end;width:100%}
-.dpad{display:grid;grid-template-columns:repeat(3,48px);grid-template-rows:repeat(3,48px);gap:2px;pointer-events:all}
-.dpad-btn{background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.13);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:16px;cursor:pointer;user-select:none;transition:background .06s;-webkit-tap-highlight-color:transparent;touch-action:none}
-.dpad-btn:active,.dpad-btn.pressed{background:rgba(124,106,247,.38);border-color:rgba(124,106,247,.5)}
+.dpad{display:grid;grid-template-columns:repeat(3,50px);grid-template-rows:repeat(3,50px);gap:2px;pointer-events:all}
+.dpad-btn{
+  background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.12);
+  border-radius:8px;display:flex;align-items:center;justify-content:center;
+  font-size:16px;cursor:pointer;user-select:none;transition:background .06s,border-color .06s;
+  -webkit-tap-highlight-color:transparent;touch-action:none;
+}
+.dpad-btn:active,.dpad-btn.pressed{background:rgba(109,86,245,.4);border-color:rgba(109,86,245,.55)}
 .dpad-btn.empty{background:transparent;border-color:transparent;pointer-events:none}
-.dpad-btn.center{background:rgba(255,255,255,.04);pointer-events:none;border-color:rgba(255,255,255,.06)}
-.action-btns{display:grid;grid-template-columns:48px 48px;grid-template-rows:48px 48px;gap:5px;pointer-events:all}
-.action-btn{border-radius:50%;border:2px solid;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;cursor:pointer;user-select:none;transition:all .06s;-webkit-tap-highlight-color:transparent;touch-action:none}
-.action-btn.btn-a{background:rgba(239,68,68,.18);border-color:rgba(239,68,68,.55);color:#fca5a5}
-.action-btn.btn-b{background:rgba(16,185,129,.18);border-color:rgba(16,185,129,.55);color:#6ee7b7}
-.action-btn.btn-c{background:rgba(59,130,246,.18);border-color:rgba(59,130,246,.55);color:#93c5fd}
-.action-btn.btn-x{background:rgba(139,92,246,.18);border-color:rgba(139,92,246,.55);color:#c4b5fd}
-.action-btn.btn-y{background:rgba(245,158,11,.18);border-color:rgba(245,158,11,.55);color:#fcd34d}
-.action-btn.btn-z{background:rgba(236,72,153,.18);border-color:rgba(236,72,153,.55);color:#f9a8d4}
-.action-btn:active,.action-btn.pressed{filter:brightness(1.6);transform:scale(.88)}
-.center-btns{display:flex;flex-direction:column;align-items:center;gap:7px;pointer-events:all}
-.meta-btn{padding:5px 16px;border-radius:99px;font-size:9px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.15);color:rgba(255,255,255,.65);cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent;touch-action:none}
-.meta-btn:active,.meta-btn.pressed{background:rgba(124,106,247,.3);color:#fff;border-color:rgba(124,106,247,.5)}
-.shoulder-row{display:flex;justify-content:space-between;margin-bottom:9px;pointer-events:all}
-.shoulder-btn{width:64px;height:28px;border-radius:6px;background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.14);color:rgba(255,255,255,.75);font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent;touch-action:none}
-.shoulder-btn:active,.shoulder-btn.pressed{background:rgba(124,106,247,.35);border-color:rgba(124,106,247,.5)}
-#overlay-md-row{display:none;justify-content:flex-end;gap:5px;pointer-events:all;margin-top:5px}
-.md-extra-btn{width:42px;height:42px;border-radius:50%;border:2px solid;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent;touch-action:none}
+.dpad-btn.center{background:rgba(255,255,255,.04);pointer-events:none;border-color:rgba(255,255,255,.05)}
+.action-btns{display:grid;grid-template-columns:50px 50px;grid-template-rows:50px 50px;gap:6px;pointer-events:all}
+.action-btn{
+  border-radius:50%;border:2px solid;display:flex;align-items:center;justify-content:center;
+  font-size:13px;font-weight:800;cursor:pointer;user-select:none;transition:all .06s;
+  -webkit-tap-highlight-color:transparent;touch-action:none;font-family:var(--font);
+}
+.action-btn.btn-a{background:rgba(239,68,68,.16);border-color:rgba(239,68,68,.52);color:#fca5a5}
+.action-btn.btn-b{background:rgba(16,185,129,.16);border-color:rgba(16,185,129,.52);color:#6ee7b7}
+.action-btn.btn-c{background:rgba(59,130,246,.16);border-color:rgba(59,130,246,.52);color:#93c5fd}
+.action-btn.btn-x{background:rgba(139,92,246,.16);border-color:rgba(139,92,246,.52);color:#c4b5fd}
+.action-btn.btn-y{background:rgba(245,158,11,.16);border-color:rgba(245,158,11,.52);color:#fcd34d}
+.action-btn.btn-z{background:rgba(236,72,153,.16);border-color:rgba(236,72,153,.52);color:#f9a8d4}
+.action-btn:active,.action-btn.pressed{filter:brightness(1.65);transform:scale(.87)}
+.center-btns{display:flex;flex-direction:column;align-items:center;gap:8px;pointer-events:all}
+.meta-btn{
+  padding:6px 17px;border-radius:99px;font-size:9px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;
+  background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);color:rgba(255,255,255,.62);
+  cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent;touch-action:none;font-family:var(--font);
+}
+.meta-btn:active,.meta-btn.pressed{background:rgba(109,86,245,.32);color:#fff;border-color:rgba(109,86,245,.5)}
+.shoulder-row{display:flex;justify-content:space-between;margin-bottom:10px;pointer-events:all}
+.shoulder-btn{
+  width:66px;height:30px;border-radius:7px;
+  background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.13);
+  color:rgba(255,255,255,.72);font-size:11px;font-weight:800;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent;touch-action:none;font-family:var(--font);
+}
+.shoulder-btn:active,.shoulder-btn.pressed{background:rgba(109,86,245,.35);border-color:rgba(109,86,245,.52)}
+#overlay-md-row{display:none;justify-content:flex-end;gap:6px;pointer-events:all;margin-top:6px}
 
 /* ═══ ACHIEVEMENT NOTIFICATION ═══ */
 #ach-notification{
-  position:fixed;top:64px;right:16px;z-index:1000;
-  width:310px;max-width:calc(100vw - 28px);
-  background:linear-gradient(135deg,#1a1428 0%,#141420 55%,#0f1520 100%);
-  border:1px solid rgba(245,158,11,.45);
-  border-radius:14px;padding:14px 15px;
-  display:flex;align-items:flex-start;gap:12px;
-  box-shadow:0 4px 6px rgba(0,0,0,.4),0 12px 40px rgba(0,0,0,.55),0 0 0 1px rgba(245,158,11,.07),inset 0 1px 0 rgba(255,255,255,.06);
+  position:fixed;top:66px;right:16px;z-index:1000;
+  width:316px;max-width:calc(100vw - 28px);
+  background:linear-gradient(135deg,#180e28 0%,#12101e 55%,#0d1220 100%);
+  border:1px solid rgba(245,158,11,.42);border-radius:16px;
+  padding:15px 16px;display:flex;align-items:flex-start;gap:13px;
+  box-shadow:0 4px 8px rgba(0,0,0,.45),0 14px 44px rgba(0,0,0,.6),0 0 0 1px rgba(245,158,11,.06),inset 0 1px 0 rgba(255,255,255,.055);
   opacity:0;transform:translateX(calc(100% + 24px));
   transition:opacity .45s cubic-bezier(.25,.46,.45,.94),transform .45s cubic-bezier(.25,.46,.45,.94);
   pointer-events:none;overflow:hidden;
 }
 #ach-notification.show{opacity:1;transform:translateX(0);pointer-events:all}
-#ach-notification.hide{opacity:0;transform:translateX(calc(100% + 24px));transition-duration:.35s}
-#ach-notification::before{content:'';position:absolute;inset:0;border-radius:14px;background:linear-gradient(105deg,transparent 30%,rgba(245,158,11,.06) 50%,transparent 70%);background-size:200% 100%;animation:shimmer 2.8s ease-in-out infinite;pointer-events:none}
+#ach-notification.hide{opacity:0;transform:translateX(calc(100% + 24px));transition-duration:.32s}
+#ach-notification::before{content:'';position:absolute;inset:0;border-radius:16px;background:linear-gradient(105deg,transparent 30%,rgba(245,158,11,.05) 50%,transparent 70%);background-size:200% 100%;animation:shimmer 2.8s ease-in-out infinite;pointer-events:none}
 @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
-.ach-eyebrow{display:flex;align-items:center;gap:5px;font-size:9.5px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--gold);margin-bottom:7px}
+.ach-eyebrow{display:flex;align-items:center;gap:5px;font-size:9px;font-weight:800;letter-spacing:2.2px;text-transform:uppercase;color:var(--gold);margin-bottom:8px}
 .ach-eyebrow-dot{width:5px;height:5px;border-radius:50%;background:var(--gold);animation:blink 1s ease infinite}
-@keyframes blink{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.65)}}
-#ach-icon-wrap{flex-shrink:0;width:54px;height:54px;border-radius:12px;background:linear-gradient(135deg,rgba(245,158,11,.22),rgba(245,158,11,.07));border:1px solid rgba(245,158,11,.3);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;box-shadow:0 0 22px rgba(245,158,11,.18)}
-#ach-icon-wrap img{width:100%;height:100%;object-fit:cover;border-radius:11px}
-#ach-icon-wrap .ach-icon-fb{font-size:26px}
-#ach-icon-wrap::after{content:'';position:absolute;inset:-3px;border-radius:15px;border:2px solid transparent;border-top-color:var(--gold);animation:ringSpин 2s linear infinite}
-@keyframes ringSpин{to{transform:rotate(360deg)}}
+@keyframes blink{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.6)}}
+#ach-icon-wrap{flex-shrink:0;width:56px;height:56px;border-radius:13px;background:linear-gradient(135deg,rgba(245,158,11,.2),rgba(245,158,11,.06));border:1px solid rgba(245,158,11,.28);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;box-shadow:0 0 24px rgba(245,158,11,.16)}
+#ach-icon-wrap img{width:100%;height:100%;object-fit:cover;border-radius:12px}
+#ach-icon-wrap .ach-icon-fb{font-size:28px}
+#ach-icon-wrap::after{content:'';position:absolute;inset:-3px;border-radius:16px;border:2px solid transparent;border-top-color:var(--gold);animation:spin2 2s linear infinite}
+@keyframes spin2{to{transform:rotate(360deg)}}
 #ach-content{flex:1;min-width:0}
 #ach-title{font-size:14px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:3px;background:linear-gradient(90deg,#fff,var(--gold));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
 #ach-desc{font-size:11px;color:var(--text-muted);line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-#ach-pts{display:flex;align-items:center;gap:4px;margin-top:6px;font-size:10px;font-weight:700;color:var(--gold)}
-#ach-progress-bar{height:2px;background:rgba(255,255,255,.08);border-radius:99px;margin-top:9px;overflow:hidden}
+#ach-pts{display:flex;align-items:center;gap:4px;margin-top:7px;font-size:10px;font-weight:700;color:var(--gold)}
+#ach-progress-bar{height:2px;background:rgba(255,255,255,.07);border-radius:99px;margin-top:10px;overflow:hidden}
 #ach-progress-fill{height:100%;background:linear-gradient(90deg,var(--gold),#fbbf24);border-radius:99px;width:0%;transition:width 5.5s linear}
 .ach-particle{position:absolute;pointer-events:none;border-radius:50%;animation:floatUp 1.6s ease forwards}
 @keyframes floatUp{0%{transform:translate(0,0) scale(1);opacity:1}100%{transform:translate(var(--tx),var(--ty)) scale(0);opacity:0}}
 
 /* ═══ ACHIEVEMENT PANEL ═══ */
-#ach-panel{display:none;position:fixed;inset:0;z-index:150;background:rgba(0,0,0,.82);backdrop-filter:blur(10px);align-items:center;justify-content:center}
-#ach-panel-inner{background:var(--surface);border:1px solid var(--border-accent);border-radius:16px;width:min(460px,94vw);max-height:88vh;overflow-y:auto;padding:24px}
-#ach-panel-header{display:flex;align-items:center;gap:12px;margin-bottom:20px}
-#ach-panel-cover{width:52px;height:72px;border-radius:8px;object-fit:cover;flex-shrink:0;background:var(--surface2)}
+#ach-panel{display:none;position:fixed;inset:0;z-index:150;background:rgba(0,0,0,.84);backdrop-filter:blur(12px);align-items:center;justify-content:center}
+#ach-panel-inner{background:var(--surface);border:1px solid var(--border-accent);border-radius:18px;width:min(480px,94vw);max-height:88vh;overflow-y:auto;padding:26px}
+#ach-panel-header{display:flex;align-items:center;gap:13px;margin-bottom:22px}
+#ach-panel-cover{width:54px;height:76px;border-radius:9px;object-fit:cover;flex-shrink:0;background:var(--surface2)}
 #ach-panel-info h3{font-size:16px;font-weight:800;margin-bottom:4px}
 #ach-panel-info p{font-size:12px;color:var(--text-muted)}
-#ach-panel-close{margin-left:auto;width:30px;height:30px;border-radius:6px;background:var(--surface3);border:1px solid var(--border);color:var(--text-muted);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center}
-#ach-list{display:flex;flex-direction:column;gap:8px}
-.ach-row{display:flex;align-items:center;gap:11px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:11px;transition:border-color .15s}
-.ach-row.earned{border-color:rgba(245,158,11,.25);background:rgba(245,158,11,.04)}
-.ach-row-icon{width:42px;height:42px;border-radius:8px;object-fit:cover;flex-shrink:0;background:var(--surface3)}
+#ach-panel-close{margin-left:auto;width:32px;height:32px;border-radius:8px;background:var(--surface3);border:1px solid var(--border);color:var(--text-muted);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:background .15s}
+#ach-panel-close:hover{background:var(--surface4)}
+#ach-list{display:flex;flex-direction:column;gap:9px}
+.ach-row{display:flex;align-items:center;gap:12px;background:var(--surface2);border:1px solid var(--border);border-radius:11px;padding:12px;transition:border-color .15s}
+.ach-row.earned{border-color:rgba(245,158,11,.22);background:rgba(245,158,11,.035)}
+.ach-row-icon{width:44px;height:44px;border-radius:9px;object-fit:cover;flex-shrink:0;background:var(--surface3)}
 .ach-row-info{flex:1;min-width:0}
 .ach-row-title{font-size:12.5px;font-weight:700;color:var(--text);margin-bottom:2px}
-.ach-row-desc{font-size:11px;color:var(--text-muted);line-height:1.4}
-.ach-row-pts{font-size:10px;font-weight:700;color:var(--gold);margin-top:3px}
-.ach-row-earned-date{display:inline;font-weight:400;color:var(--green);margin-left:6px;font-size:10px}
+.ach-row-desc{font-size:11px;color:var(--text-muted);line-height:1.45}
+.ach-row-pts{font-size:10px;font-weight:700;color:var(--gold);margin-top:4px}
+.ach-row-earned-date{display:inline;font-weight:400;color:var(--green);margin-left:7px;font-size:10px}
 .ach-row-status{font-size:18px;flex-shrink:0}
-#ach-loading-msg{font-size:12px;color:var(--text-muted);padding:20px 0;text-align:center}
 
 /* ═══ ADD GAME MODAL ═══ */
-#modal-backdrop{display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.82);backdrop-filter:blur(10px);align-items:center;justify-content:center}
-#add-modal{background:var(--surface);border:1px solid var(--border-accent);border-radius:16px;padding:24px;width:min(400px,92vw);max-height:92vh;overflow-y:auto}
-#add-modal h2{font-size:16px;font-weight:800;color:var(--accent2);margin-bottom:20px;display:flex;align-items:center;gap:8px}
-.form-group{margin-bottom:14px}
-.form-group label{display:block;font-size:10px;font-weight:800;letter-spacing:1.4px;text-transform:uppercase;color:var(--text-muted);margin-bottom:5px}
-.form-group input[type="text"],.form-group input[type="password"]{width:100%;padding:9px 13px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-size:13px;outline:none;transition:border-color .15s}
+#modal-backdrop{display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.84);backdrop-filter:blur(12px);align-items:center;justify-content:center}
+#add-modal{
+  background:var(--surface);border:1px solid var(--border-accent);
+  border-radius:18px;padding:26px;width:min(420px,92vw);max-height:92vh;overflow-y:auto;
+}
+#add-modal h2{font-size:17px;font-weight:800;color:var(--accent2);margin-bottom:22px;display:flex;align-items:center;gap:9px}
+.form-group{margin-bottom:16px}
+.form-group label{display:block;font-size:10px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-muted);margin-bottom:6px}
+.form-group input[type="text"],.form-group input[type="password"]{
+  width:100%;padding:10px 13px;background:var(--surface2);border:1px solid var(--border);
+  border-radius:var(--r-sm);color:var(--text);font-size:13px;font-family:var(--font);
+  outline:none;transition:border-color .15s;
+}
 .form-group input:focus{border-color:var(--border-accent)}
-#console-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
-.console-opt{padding:8px 4px;border-radius:8px;text-align:center;cursor:pointer;border:1px solid var(--border);background:var(--surface2);font-size:9.5px;font-weight:700;color:var(--text-muted);transition:all .12s;user-select:none}
+#console-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:7px}
+.console-opt{
+  padding:9px 4px;border-radius:9px;text-align:center;cursor:pointer;
+  border:1px solid var(--border);background:var(--surface2);
+  font-size:9.5px;font-weight:700;color:var(--text-muted);transition:all .12s;user-select:none;
+}
 .console-opt:hover{border-color:var(--border-accent);color:var(--text)}
-.console-opt .co-icon{font-size:17px;display:block;margin-bottom:3px}
+.console-opt .co-icon{font-size:18px;display:block;margin-bottom:4px}
 .console-opt.selected{color:#fff}
-.console-opt[data-val="gba"].selected{background:rgba(124,106,247,.25);border-color:#7c6af7}
-.console-opt[data-val="gb"].selected{background:rgba(16,185,129,.18);border-color:#047857}
-.console-opt[data-val="gbc"].selected{background:rgba(16,185,129,.25);border-color:#059669}
-.console-opt[data-val="snes"].selected{background:rgba(59,130,246,.22);border-color:#2563eb}
-.console-opt[data-val="nes"].selected{background:rgba(239,68,68,.22);border-color:#dc2626}
-.console-opt[data-val="gg"].selected{background:rgba(245,158,11,.18);border-color:#d97706}
-.console-opt[data-val="md"].selected{background:rgba(236,72,153,.22);border-color:#be185d}
-.file-input-wrap{position:relative;border:1px dashed var(--border);border-radius:var(--radius-sm);padding:14px;text-align:center;cursor:pointer;transition:border-color .15s,background .15s;background:var(--surface2)}
-.file-input-wrap:hover{border-color:var(--border-accent);background:rgba(124,106,247,.03)}
+.console-opt[data-val="gba"].selected{background:rgba(109,86,245,.24);border-color:#6d56f5}
+.console-opt[data-val="gb"].selected{background:rgba(16,185,129,.17);border-color:#047857}
+.console-opt[data-val="gbc"].selected{background:rgba(16,185,129,.24);border-color:#059669}
+.console-opt[data-val="snes"].selected{background:rgba(59,130,246,.22);border-color:#1d4ed8}
+.console-opt[data-val="nes"].selected{background:rgba(239,68,68,.22);border-color:#b91c1c}
+.console-opt[data-val="gg"].selected{background:rgba(245,158,11,.17);border-color:#b45309}
+.console-opt[data-val="md"].selected{background:rgba(236,72,153,.22);border-color:#9d174d}
+.console-opt[data-val="ps1"].selected{background:rgba(37,99,235,.2);border-color:#1e40af}
+.console-opt[data-val="n64"].selected{background:rgba(220,38,38,.2);border-color:#991b1b}
+
+/* Cover art auto-fetch status */
+#cover-fetch-status{
+  display:none;margin-top:8px;padding:8px 12px;border-radius:8px;
+  font-size:11px;font-weight:600;gap:7px;align-items:center;
+}
+#cover-fetch-status.loading{background:rgba(109,86,245,.09);border:1px solid rgba(109,86,245,.22);color:var(--accent2);display:flex}
+#cover-fetch-status.ok{background:rgba(16,185,129,.09);border:1px solid rgba(16,185,129,.22);color:#6ee7b7;display:flex}
+#cover-fetch-status.err{background:rgba(239,68,68,.07);border:1px solid rgba(239,68,68,.18);color:#fca5a5;display:flex}
+.fetch-spinner{width:12px;height:12px;border-radius:50%;border:2px solid rgba(109,86,245,.3);border-top-color:var(--accent2);animation:sp .7s linear infinite;flex-shrink:0}
+@keyframes sp{to{transform:rotate(360deg)}}
+
+/* RA info banner */
+.ra-info-banner{display:flex;align-items:flex-start;gap:8px;padding:10px 13px;border-radius:9px;font-size:11px;line-height:1.55;margin-bottom:14px}
+.ra-info-banner.ok{background:rgba(16,185,129,.07);border:1px solid rgba(16,185,129,.18);color:#6ee7b7}
+.ra-info-banner.no{background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.15);color:#fca5a5}
+.file-input-wrap{position:relative;border:1px dashed var(--border);border-radius:var(--r-sm);padding:14px;text-align:center;cursor:pointer;transition:border-color .15s,background .15s;background:var(--surface2)}
+.file-input-wrap:hover{border-color:var(--border-accent);background:rgba(109,86,245,.03)}
 .file-input-wrap input[type="file"]{position:absolute;inset:0;opacity:0;cursor:pointer}
 .file-input-wrap .file-label{font-size:11px;color:var(--text-muted);pointer-events:none}
 .file-input-wrap .file-selected{font-size:11px;color:var(--green);pointer-events:none;display:none}
-#cover-preview{width:70px;height:98px;border-radius:8px;object-fit:cover;border:1px solid var(--border);display:none;margin:0 auto 10px}
-.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:20px}
-.ra-section{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px;margin-top:4px}
+#cover-preview-wrap{text-align:center;margin-bottom:10px}
+#cover-preview{width:72px;height:100px;border-radius:9px;object-fit:cover;border:1px solid var(--border);display:none}
+.modal-actions{display:flex;gap:9px;justify-content:flex-end;margin-top:22px}
+.ra-section{background:var(--surface2);border:1px solid var(--border);border-radius:11px;padding:15px}
 .ra-section h4{font-size:11px;font-weight:700;color:var(--text-muted);margin-bottom:10px;display:flex;align-items:center;gap:6px}
-.ra-row{display:flex;gap:8px}
+.ra-row{display:flex;gap:9px}
 .ra-status{font-size:11px;margin-top:7px}
 .ra-status.ok{color:var(--green)} .ra-status.err{color:var(--red)}
 
 /* ═══ TOAST ═══ */
-#toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%) translateY(14px);background:var(--surface3);border:1px solid var(--border-accent);color:var(--text);padding:9px 18px;border-radius:8px;font-size:12px;z-index:999;opacity:0;transition:all .25s;pointer-events:none;white-space:nowrap}
+#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(14px);background:var(--surface3);border:1px solid var(--border-accent);color:var(--text);padding:10px 20px;border-radius:9px;font-size:12px;font-weight:600;z-index:999;opacity:0;transition:all .25s;pointer-events:none;white-space:nowrap}
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 #toast.error{border-color:rgba(239,68,68,.45);color:var(--red)}
 
 /* ═══ LOADING ═══ */
-#emu-loading{position:absolute;inset:0;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;z-index:5}
+#emu-loading{position:absolute;inset:0;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:15px;z-index:5}
 #emu-loading.hidden{display:none}
-.spinner{width:36px;height:36px;border-radius:50%;border:3px solid var(--surface3);border-top-color:var(--accent);animation:sp .7s linear infinite}
-@keyframes sp{to{transform:rotate(360deg)}}
-#emu-loading p{font-size:12px;color:var(--text-muted)}
+.spinner{width:38px;height:38px;border-radius:50%;border:3px solid var(--surface3);border-top-color:var(--accent);animation:sp .7s linear infinite}
+#emu-loading p{font-size:12px;color:var(--text-muted);font-weight:500}
 
 /* ═══ RESPONSIVE ═══ */
 @media(max-width:480px){
-  :root{--card-w:118px;--card-h:170px}
+  :root{--card-w:116px;--card-h:168px}
   #game-grid{padding:0 12px 48px;gap:10px}
   #lib-toolbar{padding:12px 12px 0}
   #section-header{padding:12px 12px 8px}
-  #header,#filter-bar{padding-left:12px;padding-right:12px}
-  #console-grid{grid-template-columns:repeat(4,1fr)}
+  #header,#filter-bar{padding-left:14px;padding-right:14px}
+  #console-grid{grid-template-columns:repeat(5,1fr)}
   #ach-notification{width:calc(100vw - 24px);right:12px}
 }
 </style>
@@ -257,7 +392,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Segoe 
 <header id="header">
   <div class="logo">
     <div class="logo-icon">🕹</div>
-    <div class="logo-name"><em>Retro</em>Station</div>
+    <div class="logo-word"><em>Retro</em>Station</div>
   </div>
   <div class="header-right">
     <span id="game-count-badge">0 jogos</span>
@@ -272,9 +407,11 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Segoe 
 <div id="filter-bar">
   <div class="filter-chip active" data-console="all">Todos</div>
   <div class="filter-chip chip-gba"  data-console="gba">GBA</div>
-  <div class="filter-chip chip-snes" data-console="snes">Super Nintendo</div>
+  <div class="filter-chip chip-snes" data-console="snes">SNES</div>
   <div class="filter-chip chip-nes"  data-console="nes">NES</div>
   <div class="filter-chip chip-md"   data-console="md">Mega Drive</div>
+  <div class="filter-chip chip-ps1"  data-console="ps1">PlayStation</div>
+  <div class="filter-chip chip-n64"  data-console="n64">Nintendo 64</div>
   <div class="filter-chip chip-gg"   data-console="gg">Game Gear</div>
   <div class="filter-chip chip-gb"   data-console="gb">Game Boy</div>
   <div class="filter-chip chip-gbc"  data-console="gbc">GBC</div>
@@ -316,8 +453,6 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Segoe 
   <div id="canvas-wrap">
     <div id="emu-loading"><div class="spinner"></div><p id="emu-loading-text">Carregando...</p></div>
     <div id="emulator-container"></div>
-
-    <!-- MOBILE OVERLAY -->
     <div id="mobile-overlay">
       <div class="shoulder-row">
         <div class="shoulder-btn" data-key="KeyQ">L</div>
@@ -325,15 +460,9 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Segoe 
       </div>
       <div class="overlay-row">
         <div class="dpad">
-          <div class="dpad-btn empty"></div>
-          <div class="dpad-btn" data-key="ArrowUp">▲</div>
-          <div class="dpad-btn empty"></div>
-          <div class="dpad-btn" data-key="ArrowLeft">◀</div>
-          <div class="dpad-btn center"></div>
-          <div class="dpad-btn" data-key="ArrowRight">▶</div>
-          <div class="dpad-btn empty"></div>
-          <div class="dpad-btn" data-key="ArrowDown">▼</div>
-          <div class="dpad-btn empty"></div>
+          <div class="dpad-btn empty"></div><div class="dpad-btn" data-key="ArrowUp">▲</div><div class="dpad-btn empty"></div>
+          <div class="dpad-btn" data-key="ArrowLeft">◀</div><div class="dpad-btn center"></div><div class="dpad-btn" data-key="ArrowRight">▶</div>
+          <div class="dpad-btn empty"></div><div class="dpad-btn" data-key="ArrowDown">▼</div><div class="dpad-btn empty"></div>
         </div>
         <div class="center-btns">
           <div class="meta-btn" data-key="ShiftLeft">Select</div>
@@ -347,8 +476,8 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Segoe 
         </div>
       </div>
       <div id="overlay-md-row">
-        <div class="action-btn btn-c" data-key="KeyC" style="width:42px;height:42px;font-size:12px;font-weight:800;touch-action:none;">C</div>
-        <div class="action-btn btn-z" data-key="KeyD" style="width:42px;height:42px;font-size:12px;font-weight:800;touch-action:none;">Z</div>
+        <div class="action-btn btn-c" data-key="KeyC" style="width:44px;height:44px;font-size:12px;font-weight:800;touch-action:none">C</div>
+        <div class="action-btn btn-z" data-key="KeyD" style="width:44px;height:44px;font-size:12px;font-weight:800;touch-action:none">Z</div>
       </div>
     </div>
   </div>
@@ -371,13 +500,10 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Segoe 
   <div id="ach-panel-inner">
     <div id="ach-panel-header">
       <img id="ach-panel-cover" src="" alt="">
-      <div id="ach-panel-info">
-        <h3 id="ach-panel-title">Conquistas</h3>
-        <p id="ach-panel-sub">Carregando...</p>
-      </div>
+      <div id="ach-panel-info"><h3 id="ach-panel-title">Conquistas</h3><p id="ach-panel-sub">Carregando...</p></div>
       <button id="ach-panel-close">✕</button>
     </div>
-    <div id="ach-list"><p id="ach-loading-msg">Buscando conquistas...</p></div>
+    <div id="ach-list"><p style="font-size:12px;color:var(--text-muted);padding:20px 0;text-align:center">Buscando conquistas...</p></div>
   </div>
 </div>
 
@@ -395,10 +521,15 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Segoe 
         <div class="console-opt" data-val="snes"><span class="co-icon">🕹</span>SNES</div>
         <div class="console-opt" data-val="nes"><span class="co-icon">🎯</span>NES</div>
         <div class="console-opt" data-val="md"><span class="co-icon">⚡</span>Mega Drive</div>
+        <div class="console-opt" data-val="ps1"><span class="co-icon">🔵</span>PS1</div>
+        <div class="console-opt" data-val="n64"><span class="co-icon">🟥</span>N64</div>
         <div class="console-opt" data-val="gg"><span class="co-icon">📱</span>Game Gear</div>
         <div class="console-opt" data-val="gb"><span class="co-icon">🔲</span>Game Boy</div>
         <div class="console-opt" data-val="gbc"><span class="co-icon">🌈</span>GBC</div>
       </div>
+    </div>
+    <div class="ra-info-banner ok" id="ra-info-banner">
+      <span>ℹ️</span><span id="ra-info-text">Conquistas disponíveis para este console.</span>
     </div>
     <div class="form-group">
       <label>Nome do Jogo</label>
@@ -407,17 +538,18 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Segoe 
     <div class="form-group">
       <label>Arquivo ROM</label>
       <div class="file-input-wrap" id="rom-wrap">
-        <input type="file" id="inp-rom" accept=".gba,.gb,.gbc,.sfc,.smc,.nes,.md,.gen,.bin,.gg,.zip">
+        <input type="file" id="inp-rom" accept=".gba,.gb,.gbc,.sfc,.smc,.nes,.md,.gen,.bin,.cue,.img,.pbp,.chd,.n64,.z64,.v64,.gg,.zip">
         <span class="file-label">Clique para selecionar a ROM</span>
         <span class="file-selected" id="rom-selected"></span>
       </div>
     </div>
     <div class="form-group">
-      <label>Capa do Jogo</label>
-      <img id="cover-preview" src="" alt="">
+      <label>Capa do Jogo <span style="font-weight:400;color:var(--text-dim);font-size:10px;text-transform:none;letter-spacing:0">— buscada automaticamente pelo nome</span></label>
+      <div id="cover-fetch-status"></div>
+      <div id="cover-preview-wrap"><img id="cover-preview" src="" alt=""></div>
       <div class="file-input-wrap" id="cover-wrap">
         <input type="file" id="inp-cover" accept="image/*">
-        <span class="file-label">Clique para selecionar imagem (opcional)</span>
+        <span class="file-label">Ou escolha uma imagem manualmente</span>
         <span class="file-selected" id="cover-selected"></span>
       </div>
     </div>
@@ -443,34 +575,33 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Segoe 
 
 <script>
 'use strict';
+
 /* ═══════════════════════════════════════
-   RETROSTATION — Complete App Logic
+   CONSOLES
 ═══════════════════════════════════════ */
-
 const CONSOLES = {
-  gba: {label:'GBA',        core:'mgba',             exts:['gba'],                   tagClass:'tag-gba',  color:'#7c6af7', raId:5 },
-  gb:  {label:'Game Boy',   core:'gambatte',          exts:['gb'],                    tagClass:'tag-gb',   color:'#047857', raId:4 },
-  gbc: {label:'GBC',        core:'gambatte',          exts:['gbc'],                   tagClass:'tag-gbc',  color:'#059669', raId:6 },
-  snes:{label:'SNES',       core:'snes9x',            exts:['sfc','smc','zip'],       tagClass:'tag-snes', color:'#2563eb', raId:3 },
-  nes: {label:'NES',        core:'fceumm',            exts:['nes','zip'],             tagClass:'tag-nes',  color:'#dc2626', raId:7 },
-  md:  {label:'Mega Drive', core:'genesis_plus_gx',   exts:['md','gen','bin','zip'],  tagClass:'tag-md',   color:'#be185d', raId:1 },
-  gg:  {label:'Game Gear',  core:'genesis_plus_gx',   exts:['gg'],                   tagClass:'tag-gg',   color:'#d97706', raId:15},
+  gba: {label:'GBA',         core:'mgba',            exts:['gba'],                        tagClass:'tag-gba',  color:'#6d56f5', raId:5,  raSupport:true,  rawgPlatform:'game-boy-advance'},
+  gb:  {label:'Game Boy',    core:'gambatte',         exts:['gb'],                         tagClass:'tag-gb',   color:'#047857', raId:4,  raSupport:true,  rawgPlatform:'gameboy'},
+  gbc: {label:'GBC',         core:'gambatte',         exts:['gbc'],                        tagClass:'tag-gbc',  color:'#059669', raId:6,  raSupport:true,  rawgPlatform:'gameboy-color'},
+  snes:{label:'SNES',        core:'snes9x',           exts:['sfc','smc','zip'],            tagClass:'tag-snes', color:'#1d4ed8', raId:3,  raSupport:true,  rawgPlatform:'snes'},
+  nes: {label:'NES',         core:'fceumm',           exts:['nes','zip'],                  tagClass:'tag-nes',  color:'#b91c1c', raId:7,  raSupport:true,  rawgPlatform:'nes'},
+  md:  {label:'Mega Drive',  core:'genesis_plus_gx',  exts:['md','gen','bin','zip'],       tagClass:'tag-md',   color:'#9d174d', raId:1,  raSupport:true,  rawgPlatform:'sega-genesis'},
+  gg:  {label:'Game Gear',   core:'genesis_plus_gx',  exts:['gg'],                        tagClass:'tag-gg',   color:'#b45309', raId:15, raSupport:true,  rawgPlatform:'game-gear'},
+  ps1: {label:'PlayStation', core:'pcsx_rearmed',     exts:['bin','cue','img','pbp','chd','zip'], tagClass:'tag-ps1', color:'#1e40af', raId:12, raSupport:true, rawgPlatform:'playstation'},
+  n64: {label:'Nintendo 64', core:'mupen64plus_next', exts:['n64','z64','v64','zip'],      tagClass:'tag-n64',  color:'#991b1b', raId:2,  raSupport:true,  rawgPlatform:'nintendo64'},
 };
 
-const KEY_MAP = {
-  ArrowUp:38,ArrowDown:40,ArrowLeft:37,ArrowRight:39,
-  KeyZ:90,KeyX:88,KeyS:83,KeyA:65,KeyC:67,KeyD:68,
-  Enter:13,ShiftLeft:16,KeyQ:81,KeyE:69
-};
+const KEY_MAP={ArrowUp:38,ArrowDown:40,ArrowLeft:37,ArrowRight:39,KeyZ:90,KeyX:88,KeyS:83,KeyA:65,KeyC:67,KeyD:68,Enter:13,ShiftLeft:16,KeyQ:81,KeyE:69};
 
-/* ── State ── */
-let games=[], overlayVisible=true, activeFilter='all', selectedConsole='gba';
+/* ═══ STATE ═══ */
+let games=[],overlayVisible=true,activeFilter='all',selectedConsole='gba';
 let raCredentials={user:'',key:''};
+let achPollTimer=null,achPollGameId=null;
 
-/* ── DB ── */
-const DB_NAME='retrostation_v3', STORE='games'; let db;
+/* ═══ INDEXEDDB ═══ */
+const DB_NAME='retrostation_v4',STORE='games';let db;
 const openDB=()=>new Promise((res,rej)=>{
-  const req=indexedDB.open(DB_NAME,4);
+  const req=indexedDB.open(DB_NAME,5);
   req.onupgradeneeded=e=>{const d=e.target.result;if(!d.objectStoreNames.contains(STORE))d.createObjectStore(STORE,{keyPath:'id',autoIncrement:true})};
   req.onsuccess=e=>{db=e.target.result;res(db)};req.onerror=rej;
 });
@@ -479,17 +610,98 @@ const dbAdd=g=>new Promise((res,rej)=>{const tx=db.transaction(STORE,'readwrite'
 const dbPut=g=>new Promise((res,rej)=>{const tx=db.transaction(STORE,'readwrite');tx.objectStore(STORE).put(g).onsuccess=()=>res();tx.onerror=rej});
 const dbDel=id=>new Promise((res,rej)=>{const tx=db.transaction(STORE,'readwrite');tx.objectStore(STORE).delete(id);tx.oncomplete=res;tx.onerror=rej});
 
-/* ── RetroAchievements API ── */
+/* ═══════════════════════════════════════
+   AUTO COVER ART
+   Fonte: RAWG.io (gratuita, sem CORS)
+   A API RAWG permite uso sem key com limite de 20 req/s.
+   Usa a imagem background_image do resultado mais relevante.
+   Fallback: SteamGridDB via allorigins proxy se RAWG falhar.
+═══════════════════════════════════════ */
+const RAWG_KEY = ''; // deixe vazio — RAWG funciona sem key para buscas simples
+
+async function fetchCoverArt(gameName, consolePlatform) {
+  // Limpa o nome: remove "(USA)", "(Europe)", "[!]", números de versão etc.
+  const clean = gameName
+    .replace(/\s*\(.*?\)/g, '')
+    .replace(/\s*\[.*?\]/g, '')
+    .replace(/\s*v\d+(\.\d+)*/gi, '')
+    .replace(/[_\-]+/g, ' ')
+    .trim();
+
+  // Tenta RAWG primeiro
+  try {
+    const keyParam = RAWG_KEY ? `&key=${RAWG_KEY}` : '';
+    const url = `https://api.rawg.io/api/games?search=${encodeURIComponent(clean)}&page_size=5${keyParam}`;
+    const r = await fetch(url);
+    if (r.ok) {
+      const data = await r.json();
+      if (data.results && data.results.length > 0) {
+        // Prefere resultado com plataforma correspondente, senão pega o primeiro com imagem
+        const withImg = data.results.filter(g => g.background_image);
+        const platformMatch = withImg.find(g =>
+          g.platforms && g.platforms.some(p =>
+            p.platform && consolePlatform &&
+            p.platform.slug && p.platform.slug.includes(consolePlatform.split('-')[0])
+          )
+        );
+        const best = platformMatch || withImg[0];
+        if (best && best.background_image) return best.background_image;
+      }
+    }
+  } catch(_) {}
+
+  // Fallback: busca no IGDB via proxy público (cors-anywhere ou allorigins)
+  try {
+    const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(`https://api.rawg.io/api/games?search=${encodeURIComponent(clean)}&page_size=3`)}`;
+    const r = await fetch(proxyUrl);
+    if (r.ok) {
+      const data = await r.json();
+      const img = data.results && data.results.find(g=>g.background_image);
+      if (img) return img.background_image;
+    }
+  } catch(_) {}
+
+  return null;
+}
+
+/* Busca capa e atualiza UI do modal */
+let coverFetchController = null;
+async function autofetchCover(name, consolePlatform) {
+  if (coverFetchController) coverFetchController.abort?.();
+  const status = document.getElementById('cover-fetch-status');
+  const preview = document.getElementById('cover-preview');
+  // só busca se o usuário não escolheu uma imagem manualmente
+  if (document.getElementById('inp-cover').files[0]) return;
+  if (!name || name.length < 2) { status.style.display='none'; return; }
+
+  status.className = 'loading';
+  status.innerHTML = '<div class="fetch-spinner"></div> Buscando capa automaticamente...';
+
+  const url = await fetchCoverArt(name, consolePlatform);
+  if (url) {
+    preview.src = url;
+    preview.style.display = 'block';
+    status.className = 'ok';
+    status.innerHTML = '✓ Capa encontrada automaticamente';
+    // salva a URL para uso ao salvar
+    preview.dataset.autoUrl = url;
+  } else {
+    status.className = 'err';
+    status.innerHTML = '✗ Capa não encontrada — escolha manualmente';
+    preview.style.display = 'none';
+    preview.dataset.autoUrl = '';
+  }
+}
+
+/* ═══ RETROACHIEVEMENTS ═══ */
 const RA_BASE='https://retroachievements.org/API';
 async function raFetch(ep,params={}){
-  const {user,key}=raCredentials;
-  if(!user||!key)return null;
+  const {user,key}=raCredentials;if(!user||!key)return null;
   const url=new URL(`${RA_BASE}/${ep}`);
   url.searchParams.set('z',user);url.searchParams.set('y',key);
   Object.entries(params).forEach(([k,v])=>url.searchParams.set(k,v));
   try{const r=await fetch(url.toString());return r.ok?await r.json():null}catch{return null}
 }
-
 async function raSearchGame(name,cid){
   const data=await raFetch('API_GetGameList.php',{i:cid});
   if(!Array.isArray(data))return null;
@@ -504,45 +716,33 @@ async function raSearchGame(name,cid){
   });
   return bestScore>0?best:null;
 }
-
 async function loadAchievementsForGame(game){
   if(!raCredentials.user||!raCredentials.key)return;
-  const con=CONSOLES[game.console];if(!con||!con.raId)return;
-
-  // If we already have achievements cached locally, skip the heavy fetch
-  // but still allow a lightweight earned-state refresh via the poll
-  if(game.achievements && game.achievements.length) return;
-
+  const con=CONSOLES[game.console];if(!con||!con.raId||con.raSupport===false)return;
+  if(game.achievements&&game.achievements.length)return;
   const found=await raSearchGame(game.name,con.raId);if(!found)return;
   const ext=await raFetch('API_GetGameExtended.php',{i:found.ID});
   if(!ext||!ext.Achievements)return;
   game.raGameId=found.ID;
-  // Map achievements; preserve any earned flags already stored
-  const prevEarned = {};
-  (game.achievements||[]).forEach(a=>{ if(a.earned) prevEarned[String(a.id)]=a.earnedAt; });
+  const prevEarned={};
+  (game.achievements||[]).forEach(a=>{if(a.earned)prevEarned[String(a.id)]=a.earnedAt});
   game.achievements=Object.values(ext.Achievements).map(a=>({
-    id:    a.ID,
-    title: a.Title,
-    desc:  a.Description,
-    pts:   a.Points,
-    badge: `https://media.retroachievements.org/Badge/${a.BadgeName}.png`,
-    earned: !!prevEarned[String(a.ID)],
-    earnedAt: prevEarned[String(a.ID)]||null
+    id:a.ID,title:a.Title,desc:a.Description,pts:a.Points,
+    badge:`https://media.retroachievements.org/Badge/${a.BadgeName}.png`,
+    earned:!!prevEarned[String(a.ID)],earnedAt:prevEarned[String(a.ID)]||null
   }));
   await dbPut(game);
 }
 
-/* ── Achievement Sound (WebAudio) ── */
+/* ═══ ACHIEVEMENT SOUND ═══ */
 function playAchSound(){
   try{
     const ctx=new(window.AudioContext||window.webkitAudioContext)();
     [[523.25,0],[659.25,.12],[783.99,.24],[1046.5,.36]].forEach(([freq,t])=>{
       const o=ctx.createOscillator(),g=ctx.createGain();
-      o.connect(g);g.connect(ctx.destination);
-      o.type='sine';o.frequency.value=freq;
+      o.connect(g);g.connect(ctx.destination);o.type='sine';o.frequency.value=freq;
       const T=ctx.currentTime+t;
-      g.gain.setValueAtTime(0,T);g.gain.linearRampToValueAtTime(.16,T+.025);
-      g.gain.exponentialRampToValueAtTime(.001,T+.42);
+      g.gain.setValueAtTime(0,T);g.gain.linearRampToValueAtTime(.16,T+.025);g.gain.exponentialRampToValueAtTime(.001,T+.42);
       o.start(T);o.stop(T+.42);
     });
     const o2=ctx.createOscillator(),g2=ctx.createGain();
@@ -554,7 +754,7 @@ function playAchSound(){
   }catch(e){}
 }
 
-/* ── Achievement Notification ── */
+/* ═══ ACHIEVEMENT NOTIFICATION ═══ */
 let achNotifTimer=null;
 function showAchNotif(ach){
   playAchSound();
@@ -575,95 +775,52 @@ function showAchNotif(ach){
   achNotifTimer=setTimeout(()=>{notif.classList.add('hide');notif.classList.remove('show')},5600);
   notif.onclick=()=>{clearTimeout(achNotifTimer);notif.classList.add('hide');notif.classList.remove('show')};
 }
-
 function spawnParticles(parent){
   for(let i=0;i<12;i++){
-    const p=document.createElement('div');
-    p.className='ach-particle';
-    const a=Math.random()*Math.PI*2, d=30+Math.random()*55;
+    const p=document.createElement('div');p.className='ach-particle';
+    const a=Math.random()*Math.PI*2,d=30+Math.random()*55;
     const colors=['#f59e0b','#fbbf24','#fcd34d','#fff','#fde68a'];
     p.style.cssText=`left:${15+Math.random()*70}%;top:${15+Math.random()*70}%;--tx:${Math.cos(a)*d}px;--ty:${Math.sin(a)*d}px;background:${colors[Math.floor(Math.random()*colors.length)]};width:${3+Math.random()*5}px;height:${3+Math.random()*5}px;animation-delay:${Math.random()*.35}s`;
     parent.appendChild(p);setTimeout(()=>p.remove(),2200);
   }
 }
 
-/* ── Achievement polling — REAL RA API ──────────────────────────────────
-   Polls API_GetUserRecentlyPlayedGames + API_GetUserSummary to detect
-   newly earned achievements. Only fires a notification when RA itself
-   confirms an unlock, so conquistas never appear "fora de hora".
-
-   Poll interval: 30 s while game is running.
-   Falls back gracefully when offline (silent, no false positives).
-──────────────────────────────────────────────────────────────────────── */
-const ACH_POLL_MS = 30_000;
-let achPollTimer = null;
-let achPollGameId = null; // RA game ID being watched
-
+/* ═══ ACHIEVEMENT POLLING (RA real) ═══ */
+const ACH_POLL_MS=30000;
 function startAchPolling(game){
   stopAchPolling();
   if(!raCredentials.user||!raCredentials.key)return;
   if(!game.raGameId||!game.achievements||!game.achievements.length)return;
-
-  achPollGameId = game.raGameId;
-
-  // Build set of already-earned IDs so we only notify NEW ones
-  const earnedIds = new Set(
-    game.achievements.filter(a=>a.earned).map(a=>String(a.id))
-  );
-
-  const poll = async () => {
-    try {
-      // API_GetGameInfoAndUserProgress returns per-achievement earned dates
-      const data = await raFetch('API_GetGameInfoAndUserProgress.php', {
-        g: achPollGameId,
-        u: raCredentials.user
-      });
-      if (!data || !data.Achievements) return;
-
-      Object.values(data.Achievements).forEach(a => {
-        const id = String(a.ID);
-        // DateEarned is set only when the user has earned it
-        if (a.DateEarned && !earnedIds.has(id)) {
+  achPollGameId=game.raGameId;
+  const earnedIds=new Set(game.achievements.filter(a=>a.earned).map(a=>String(a.id)));
+  const poll=async()=>{
+    try{
+      const data=await raFetch('API_GetGameInfoAndUserProgress.php',{g:achPollGameId,u:raCredentials.user});
+      if(!data||!data.Achievements)return;
+      Object.values(data.Achievements).forEach(a=>{
+        const id=String(a.ID);
+        if(a.DateEarned&&!earnedIds.has(id)){
           earnedIds.add(id);
-          // Mark as earned in local state
-          const local = game.achievements.find(x=>String(x.id)===id);
-          if(local){ local.earned = true; local.earnedAt = a.DateEarned; }
-          // Show notification
-          showAchNotif({
-            title: a.Title,
-            desc:  a.Description,
-            pts:   a.Points,
-            badge: `https://media.retroachievements.org/Badge/${a.BadgeName}.png`
-          });
+          const local=game.achievements.find(x=>String(x.id)===id);
+          if(local){local.earned=true;local.earnedAt=a.DateEarned}
+          showAchNotif({title:a.Title,desc:a.Description,pts:a.Points,badge:`https://media.retroachievements.org/Badge/${a.BadgeName}.png`});
           updateEmuAchCount(game);
-          // Persist updated earned state
           dbPut(game).catch(()=>{});
         }
       });
-    } catch(_){ /* offline — skip silently */ }
-
-    achPollTimer = setTimeout(poll, ACH_POLL_MS);
+    }catch(_){}
+    achPollTimer=setTimeout(poll,ACH_POLL_MS);
   };
-
-  // First poll after a short delay to let the emulator initialize
-  achPollTimer = setTimeout(poll, 8_000);
+  achPollTimer=setTimeout(poll,8000);
 }
-
-function stopAchPolling(){
-  clearTimeout(achPollTimer);
-  achPollTimer = null;
-  achPollGameId = null;
-}
-
+function stopAchPolling(){clearTimeout(achPollTimer);achPollTimer=null;achPollGameId=null}
 function updateEmuAchCount(game){
   const w=document.getElementById('emu-ach-count'),t=document.getElementById('emu-ach-text');
-  if(game.achievements&&game.achievements.length){
-    const e=(game.achievements.filter(a=>a.earned)||[]).length;
-    t.textContent=`${e}/${game.achievements.length}`;w.style.display='flex';
-  }else w.style.display='none';
+  if(game.achievements&&game.achievements.length){const e=game.achievements.filter(a=>a.earned).length;t.textContent=`${e}/${game.achievements.length}`;w.style.display='flex'}
+  else w.style.display='none';
 }
 
-/* ── Achievement Panel ── */
+/* ═══ ACHIEVEMENT PANEL ═══ */
 function showAchPanel(game){
   const panel=document.getElementById('ach-panel');
   const cov=document.getElementById('ach-panel-cover');
@@ -672,7 +829,7 @@ function showAchPanel(game){
   const list=document.getElementById('ach-list');
   cov.src=game.cover||'';cov.style.display=game.cover?'block':'none';
   titleEl.textContent=game.name;sub.textContent='Buscando conquistas...';
-  list.innerHTML='<p id="ach-loading-msg" style="font-size:12px;color:var(--text-muted);padding:20px 0;text-align:center">Buscando no RetroAchievements...</p>';
+  list.innerHTML='<p style="font-size:12px;color:var(--text-muted);padding:20px 0;text-align:center">Buscando no RetroAchievements...</p>';
   panel.style.display='flex';
   (async()=>{
     await loadAchievementsForGame(game);
@@ -680,15 +837,13 @@ function showAchPanel(game){
     if(!achs||!achs.length){sub.textContent='Nenhuma conquista encontrada.';list.innerHTML='';return}
     const earned=achs.filter(a=>a.earned===true).length;
     const totalPts=achs.filter(a=>a.earned===true).reduce((s,a)=>s+(a.pts||0),0);
-    sub.textContent=`${earned} / ${achs.length} conquistas • ${totalPts} pts ganhos`;
+    sub.textContent=`${earned} / ${achs.length} conquistas • ${totalPts} pts`;
     list.innerHTML='';
     achs.forEach(a=>{
       const row=document.createElement('div');
-      const earnedDate = a.earned && a.earnedAt
-        ? `<div class="ach-row-earned-date">✅ ${new Date(a.earnedAt).toLocaleDateString('pt-BR')}</div>`
-        : '';
+      const dateStr=a.earned&&a.earnedAt?`<span class="ach-row-earned-date">✅ ${new Date(a.earnedAt).toLocaleDateString('pt-BR')}</span>`:'';
       row.className='ach-row'+(a.earned?' earned':'');
-      row.innerHTML=`<img class="ach-row-icon" src="${a.badge||''}" alt="" onerror="this.style.display='none'"><div class="ach-row-info"><div class="ach-row-title">${a.title}</div><div class="ach-row-desc">${a.desc||''}</div><div class="ach-row-pts">⭐ ${a.pts} pts${earnedDate}</div></div><div class="ach-row-status">${a.earned?'✅':'🔒'}</div>`;
+      row.innerHTML=`<img class="ach-row-icon" src="${a.badge||''}" alt="" onerror="this.style.display='none'"><div class="ach-row-info"><div class="ach-row-title">${a.title}</div><div class="ach-row-desc">${a.desc||''}</div><div class="ach-row-pts">⭐ ${a.pts} pts${dateStr}</div></div><div class="ach-row-status">${a.earned?'✅':'🔒'}</div>`;
       list.appendChild(row);
     });
   })();
@@ -696,7 +851,7 @@ function showAchPanel(game){
 document.getElementById('ach-panel-close').onclick=()=>document.getElementById('ach-panel').style.display='none';
 document.getElementById('ach-panel').addEventListener('click',e=>{if(e.target===document.getElementById('ach-panel'))document.getElementById('ach-panel').style.display='none'});
 
-/* ── Render Library ── */
+/* ═══ RENDER LIBRARY ═══ */
 function renderLibrary(){
   const grid=document.getElementById('game-grid'),empty=document.getElementById('empty-state');
   const badge=document.getElementById('game-count-badge'),cnt=document.getElementById('section-count');
@@ -709,98 +864,119 @@ function renderLibrary(){
   grid.innerHTML='';
   if(!filtered.length){empty.style.display='flex';grid.style.display='none';return}
   empty.style.display='none';grid.style.display='grid';
-  const fb=`data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="150" height="215"><rect fill="#191925" width="150" height="215"/><text x="75" y="115" text-anchor="middle" fill="#2a2a3a" font-size="40">🎮</text></svg>')}`;
+
+  const fallbackSvg=`data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="152" height="218"><rect fill="#161624" width="152" height="218"/><text x="76" y="116" text-anchor="middle" fill="#27273a" font-size="44">🎮</text></svg>')}`;
+
   filtered.forEach(game=>{
     const con=CONSOLES[game.console]||CONSOLES.gba;
     const ac=game.achievements;
-    const achHtml=`<div class="card-ach-badge${ac?' loaded':''}" data-id="${game.id}"><span style="font-size:9px">🏆</span><span>${ac?ac.length:'—'}</span></div>`;
+    const isAutocover=game.autoCover&&!game.manualCover;
+    const coverSrc=game.cover||fallbackSvg;
+
+    const achHtml=`<div class="card-ach-badge${ac?' loaded':''}" data-gid="${game.id}"><span style="font-size:9px">🏆</span><span>${ac?ac.length:'—'}</span></div>`;
+    const autoBadge=isAutocover?`<div class="card-auto-cover-badge">AUTO</div>`:'';
+
     const card=document.createElement('div');
     card.className='game-card';card.dataset.id=game.id;
-    card.innerHTML=`<div class="game-card-inner"><img class="card-cover" src="${game.cover||fb}" alt="${game.name}" loading="lazy" onerror="this.src='${fb}'"><div class="card-body"><div class="card-title">${game.name}</div><div class="card-footer"><span class="card-tag ${con.tagClass}">${con.label}</span>${achHtml}</div></div></div><div class="card-play-overlay"><div class="play-btn-circle"><svg width="18" height="18" viewBox="0 0 18 18" fill="white"><path d="M6 3.5l9 5.5-9 5.5V3.5z"/></svg></div></div><div class="card-delete" title="Remover">✕</div>`;
+    card.innerHTML=`
+      <div class="game-card-inner">
+        <div class="card-cover-wrap">
+          <div class="card-cover-shimmer" id="shim-${game.id}"></div>
+          <img class="card-cover" src="${coverSrc}" alt="${game.name}" loading="lazy"
+            onload="document.getElementById('shim-${game.id}')?.classList.add('done')"
+            onerror="this.src='${fallbackSvg}';document.getElementById('shim-${game.id}')?.classList.add('done')">
+          ${autoBadge}
+        </div>
+        <div class="card-body">
+          <div class="card-title">${game.name}</div>
+          <div class="card-footer">
+            <span class="card-tag ${con.tagClass}">${con.label}</span>
+            ${achHtml}
+          </div>
+        </div>
+      </div>
+      <div class="card-play-overlay">
+        <div class="play-btn-circle">
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="white"><path d="M6 3.5l9 5.5-9 5.5V3.5z"/></svg>
+        </div>
+      </div>
+      <div class="card-delete" title="Remover">✕</div>
+    `;
+
     card.querySelector('.card-ach-badge').addEventListener('click',e=>{e.stopPropagation();showAchPanel(game)});
-    card.querySelector('.card-delete').addEventListener('click',async e=>{e.stopPropagation();await dbDel(game.id);games=games.filter(g=>g.id!==game.id);renderLibrary();showToast('Jogo removido')});
+    card.querySelector('.card-delete').addEventListener('click',async e=>{
+      e.stopPropagation();await dbDel(game.id);games=games.filter(g=>g.id!==game.id);renderLibrary();showToast('Jogo removido');
+    });
     card.addEventListener('click',()=>launchGame(game));
     grid.appendChild(card);
-    if(!ac&&raCredentials.user)loadAchievementsForGame(game).then(()=>{const b=card.querySelector('.card-ach-badge');if(b&&game.achievements){b.classList.add('loaded');b.innerHTML=`<span style="font-size:9px">🏆</span><span>${game.achievements.length}</span>`}});
+
+    if(!ac&&raCredentials.user)loadAchievementsForGame(game).then(()=>{
+      const b=card.querySelector('.card-ach-badge');
+      if(b&&game.achievements){b.classList.add('loaded');b.innerHTML=`<span style="font-size:9px">🏆</span><span>${game.achievements.length}</span>`}
+    });
   });
 }
 
-/* ── Launch Game ── */
+/* ═══ LAUNCH GAME ═══ */
 function launchGame(game){
   const con=CONSOLES[game.console]||CONSOLES.gba;
   ['header','filter-bar','library-view'].forEach(id=>document.getElementById(id).style.display='none');
   document.getElementById('emulator-view').style.display='flex';
   document.getElementById('emu-game-title').textContent=game.name;
   const b=document.getElementById('emu-console-badge');b.textContent=con.label;b.className=`card-tag ${con.tagClass}`;
-  updateEmuAchCount(game);
-  adaptOverlay(game.console);
+  updateEmuAchCount(game);adaptOverlay(game.console);
   const loading=document.getElementById('emu-loading');
   loading.classList.remove('hidden');
   document.getElementById('emu-loading-text').textContent=`Carregando ${game.name}...`;
   document.getElementById('emulator-container').innerHTML='';
-  // Ensure romData is a valid buffer regardless of how IDB returned it
-  const romBytes = game.romData instanceof Uint8Array
-    ? game.romData
-    : new Uint8Array(game.romData);
+  const romBytes=game.romData instanceof Uint8Array?game.romData:new Uint8Array(game.romData);
   const romUrl=URL.createObjectURL(new Blob([romBytes],{type:'application/octet-stream'}));
   Object.assign(window,{
     EJS_player:'#emulator-container',EJS_gameName:game.name,EJS_biosUrl:'',
     EJS_core:con.core,EJS_pathtodata:'https://cdn.emulatorjs.org/stable/data/',
     EJS_gameUrl:romUrl,EJS_startOnLoaded:true,EJS_color:con.color,
-    EJS_backgroundColor:'#08080e',EJS_VirtualGamepadSettings:{disabled:true},
+    EJS_backgroundColor:'#07070d',EJS_VirtualGamepadSettings:{disabled:true},
     EJS_Buttons:{playPause:false,restart:true,mute:true,settings:true,fullscreen:true,saveState:true,loadState:true,screenRecord:false,gamepad:false,cheat:false,volume:true,saveSavFiles:true},
     EJS_onGameStart:()=>{loading.classList.add('hidden');URL.revokeObjectURL(romUrl);startAchPolling(game)}
   });
+  try{delete window.EJS_threads}catch(e){}
   const old=document.getElementById('ejs');if(old)old.remove();
   const s=document.createElement('script');s.id='ejs';s.src='https://cdn.emulatorjs.org/stable/data/loader.js';
-  s.onerror=()=>{loading.classList.add('hidden');document.getElementById('emulator-container').innerHTML=`<div style="color:#ef4444;text-align:center;padding:40px;font-size:13px">Falha ao carregar o emulador.<br>Verifique sua conexão.</div>`};
+  s.onerror=()=>{loading.classList.add('hidden');document.getElementById('emulator-container').innerHTML=`<div style="color:#ef4444;text-align:center;padding:40px;font-size:13px">Falha ao carregar o emulador.<br>Verifique sua conexão com a internet.</div>`};
   document.head.appendChild(s);
   setTimeout(()=>loading.classList.add('hidden'),22000);
 }
 
-/* ── Close Emulator ── */
+/* ═══ CLOSE EMULATOR ═══ */
 function closeEmulator(){
   stopAchPolling();
   document.getElementById('emulator-container').innerHTML='';
   const s=document.getElementById('ejs');if(s)s.remove();
-  ['EJS_player','EJS_gameName','EJS_core','EJS_gameUrl','EJS_pathtodata','EJS_startOnLoaded','EJS_onGameStart','EJS_color','EJS_backgroundColor'].forEach(k=>{try{delete window[k]}catch(e){}});
+  ['EJS_player','EJS_gameName','EJS_core','EJS_gameUrl','EJS_pathtodata','EJS_startOnLoaded','EJS_onGameStart','EJS_color','EJS_backgroundColor','EJS_threads'].forEach(k=>{try{delete window[k]}catch(e){}});
   document.getElementById('emulator-view').style.display='none';
   ['library-view','header','filter-bar'].forEach(id=>document.getElementById(id).style.display='');
 }
 
-/* ── Adapt Overlay ── */
-function adaptOverlay(consoleName){
+/* ═══ OVERLAY ═══ */
+function adaptOverlay(c){
   const mdRow=document.getElementById('overlay-md-row');
-  const a=document.getElementById('btn-a-slot'),b=document.getElementById('btn-b-slot');
+  const a=document.getElementById('btn-a-slot'),b_=document.getElementById('btn-b-slot');
   const x=document.getElementById('btn-x-slot'),y=document.getElementById('btn-y-slot');
-  a.textContent='A';a.dataset.key='KeyZ';b.textContent='B';b.dataset.key='KeyX';
+  a.textContent='A';a.dataset.key='KeyZ';b_.textContent='B';b_.dataset.key='KeyX';
   x.textContent='X';x.dataset.key='KeyS';x.style.display='';
   y.textContent='Y';y.dataset.key='KeyA';y.style.display='';
   mdRow.style.display='none';
-  if(consoleName==='md'||consoleName==='gg'){
-    x.textContent='C';x.dataset.key='KeyC';y.style.display='none';
-    mdRow.style.display='flex';
-  }else if(consoleName==='nes'){
-    x.style.display='none';y.style.display='none';
-  }
+  if(c==='md'||c==='gg'){x.textContent='C';x.dataset.key='KeyC';y.style.display='none';mdRow.style.display='flex'}
+  else if(c==='nes'){x.style.display='none';y.style.display='none'}
   bindOverlayEvents();
 }
-
-/* ── Dispatch key to emulator ── */
 function dispatchKey(code,type){
   const opts={keyCode:code,which:code,bubbles:true,cancelable:true,composed:true};
   const evt=new KeyboardEvent(type,opts);
   document.dispatchEvent(evt);window.dispatchEvent(evt);
-  const cvs=document.querySelector('#emulator-container canvas');
-  if(cvs)cvs.dispatchEvent(evt);
-  // Try iframe for some cores
-  const ifr=document.querySelector('#emulator-container iframe');
-  if(ifr){try{ifr.contentDocument&&ifr.contentDocument.dispatchEvent(new KeyboardEvent(type,opts))}catch(e){}}
+  const cvs=document.querySelector('#emulator-container canvas');if(cvs)cvs.dispatchEvent(evt);
+  const ifr=document.querySelector('#emulator-container iframe');if(ifr){try{ifr.contentDocument&&ifr.contentDocument.dispatchEvent(new KeyboardEvent(type,opts))}catch(e){}}
 }
-
-/* ── Bind overlay button events ──
-   Uses both pointer AND touch events to fix Mega Drive touch issues.
-   touch-action:none on buttons prevents scroll interference. */
 function bindOverlayEvents(){
   document.querySelectorAll('#mobile-overlay [data-key]:not(.empty):not(.center)').forEach(btn=>{
     const clone=btn.cloneNode(true);btn.parentNode.replaceChild(clone,btn);
@@ -809,32 +985,22 @@ function bindOverlayEvents(){
     const gc=()=>KEY_MAP[btn.getAttribute('data-key')]||0;
     const dn=e=>{e.preventDefault();e.stopPropagation();btn.classList.add('pressed');const c=gc();if(c)dispatchKey(c,'keydown')};
     const up=e=>{e.preventDefault();e.stopPropagation();btn.classList.remove('pressed');const c=gc();if(c)dispatchKey(c,'keyup')};
-    btn.addEventListener('touchstart',dn,{passive:false});
-    btn.addEventListener('touchend',up,{passive:false});
-    btn.addEventListener('touchcancel',up,{passive:false});
-    btn.addEventListener('pointerdown',dn,{passive:false});
-    btn.addEventListener('pointerup',up,{passive:false});
-    btn.addEventListener('pointercancel',up,{passive:false});
-    btn.addEventListener('pointerleave',up,{passive:false});
-    btn.addEventListener('mousedown',dn);
-    btn.addEventListener('mouseup',up);
-    btn.addEventListener('mouseleave',up);
+    btn.addEventListener('touchstart',dn,{passive:false});btn.addEventListener('touchend',up,{passive:false});
+    btn.addEventListener('touchcancel',up,{passive:false});btn.addEventListener('pointerdown',dn,{passive:false});
+    btn.addEventListener('pointerup',up,{passive:false});btn.addEventListener('pointercancel',up,{passive:false});
+    btn.addEventListener('pointerleave',up,{passive:false});btn.addEventListener('mousedown',dn);
+    btn.addEventListener('mouseup',up);btn.addEventListener('mouseleave',up);
   });
 }
-
-/* ── Overlay toggle ── */
 function setupOverlayControls(){
-  const tb=document.getElementById('toggle-overlay-btn');
-  const ov=document.getElementById('mobile-overlay');
+  const tb=document.getElementById('toggle-overlay-btn'),ov=document.getElementById('mobile-overlay');
   tb.addEventListener('click',()=>{
-    overlayVisible=!overlayVisible;
-    ov.classList.toggle('hidden',!overlayVisible);
-    tb.classList.toggle('active',overlayVisible);
-    tb.textContent=overlayVisible?'🕹 Controles':'🚫 Controles';
+    overlayVisible=!overlayVisible;ov.classList.toggle('hidden',!overlayVisible);
+    tb.classList.toggle('active',overlayVisible);tb.textContent=overlayVisible?'🕹 Controles':'🚫 Controles';
   });
 }
 
-/* ── Filter Bar ── */
+/* ═══ FILTER BAR ═══ */
 function setupFilterBar(){
   document.querySelectorAll('.filter-chip').forEach(chip=>{
     chip.addEventListener('click',()=>{
@@ -844,22 +1010,36 @@ function setupFilterBar(){
   });
 }
 
-/* ── Console Selector ── */
+/* ═══ CONSOLE SELECTOR & ROM ACCEPT ═══ */
 function setupConsoleSelector(){
   document.querySelectorAll('.console-opt').forEach(opt=>{
     opt.addEventListener('click',()=>{
       document.querySelectorAll('.console-opt').forEach(o=>o.classList.remove('selected'));
       opt.classList.add('selected');selectedConsole=opt.dataset.val;updateRomAccept();
+      // Re-trigger cover search if name already filled
+      const name=document.getElementById('inp-name').value.trim();
+      if(name)autofetchCover(name,CONSOLES[selectedConsole]?.rawgPlatform);
     });
   });
 }
+const RA_NOTES={
+  gba:'✅ GBA',gb:'✅ Game Boy',gbc:'✅ GBC',snes:'✅ SNES',nes:'✅ NES',
+  md:'✅ Mega Drive',gg:'✅ Game Gear',ps1:'✅ PlayStation',n64:'✅ N64'
+};
+const RA_GLOBAL=' — conquistas visíveis nos cards. ⚠️ Desbloqueio em tempo real não é suportado pelo EmulatorJS.';
 function updateRomAccept(){
   const con=CONSOLES[selectedConsole];if(!con)return;
-  document.getElementById('inp-rom').accept=con.exts.map(e=>'.'+e).join(',')+',.zip';
+  document.getElementById('inp-rom').accept=con.exts.map(e=>'.'+e).join(',');
   document.getElementById('rom-wrap').querySelector('.file-label').textContent=`Clique para selecionar ROM (${con.exts.map(e=>'.'+e).join(', ')})`;
+  const banner=document.getElementById('ra-info-banner');
+  const note=RA_NOTES[selectedConsole];
+  if(banner){
+    banner.className='ra-info-banner '+(note?'ok':'no');
+    document.getElementById('ra-info-text').textContent=(note||'❌ Sem suporte a conquistas')+RA_GLOBAL;
+  }
 }
 
-/* ── Modal ── */
+/* ═══ MODAL ═══ */
 function setupModal(){
   const bd=document.getElementById('modal-backdrop');
   const inpName=document.getElementById('inp-name'),inpRom=document.getElementById('inp-rom'),inpCover=document.getElementById('inp-cover');
@@ -867,27 +1047,54 @@ function setupModal(){
   const covPrev=document.getElementById('cover-preview');
   const raUser=document.getElementById('ra-user'),raKey=document.getElementById('ra-key'),raMsg=document.getElementById('ra-status-msg');
 
-  // Load saved RA creds
   try{const s=localStorage.getItem('ra_creds');if(s){raCredentials=JSON.parse(s);raUser.value=raCredentials.user||'';raKey.value=raCredentials.key||''}}catch(e){}
 
   document.getElementById('btn-add').onclick=()=>bd.style.display='flex';
   document.getElementById('btn-cancel').onclick=()=>{bd.style.display='none';resetModal()};
   bd.addEventListener('click',e=>{if(e.target===bd){bd.style.display='none';resetModal()}});
 
+  // Name field — trigger auto cover search on change
+  let nameTimer=null;
+  inpName.addEventListener('input',()=>{
+    clearTimeout(nameTimer);
+    nameTimer=setTimeout(()=>{
+      const name=inpName.value.trim();
+      autofetchCover(name,CONSOLES[selectedConsole]?.rawgPlatform);
+    },600);
+  });
+
   inpRom.addEventListener('change',()=>{
     if(!inpRom.files[0])return;
-    const f=inpRom.files[0];romSel.style.display='block';romSel.textContent=`✓ ${f.name}`;
+    const f=inpRom.files[0];
+    romSel.style.display='block';romSel.textContent=`✓ ${f.name}`;
     document.getElementById('rom-wrap').querySelector('.file-label').style.display='none';
-    if(!inpName.value)inpName.value=f.name.replace(/\.[^.]+$/,'').replace(/[_\-]/g,' ').trim();
+    if(!inpName.value){
+      inpName.value=f.name.replace(/\.[^.]+$/,'').replace(/[_\-]/g,' ').replace(/\(.*?\)/g,'').replace(/\[.*?\]/g,'').trim();
+    }
     const det=detectConsole(f.name,null);
-    if(det!==selectedConsole){document.querySelectorAll('.console-opt').forEach(o=>o.classList.remove('selected'));const tgt=document.querySelector(`.console-opt[data-val="${det}"]`);if(tgt){tgt.classList.add('selected');selectedConsole=det}}
+    if(det!==selectedConsole){
+      document.querySelectorAll('.console-opt').forEach(o=>o.classList.remove('selected'));
+      const tgt=document.querySelector(`.console-opt[data-val="${det}"]`);
+      if(tgt){tgt.classList.add('selected');selectedConsole=det;updateRomAccept()}
+    }
+    // Auto-fetch cover after name is set
+    setTimeout(()=>{
+      const name=inpName.value.trim();
+      autofetchCover(name,CONSOLES[selectedConsole]?.rawgPlatform);
+    },100);
   });
+
   inpCover.addEventListener('change',()=>{
     if(!inpCover.files[0])return;
     coverSel.style.display='block';coverSel.textContent=`✓ ${inpCover.files[0].name}`;
     document.getElementById('cover-wrap').querySelector('.file-label').style.display='none';
-    const r=new FileReader();r.onload=e=>{covPrev.src=e.target.result;covPrev.style.display='block'};r.readAsDataURL(inpCover.files[0]);
+    const r=new FileReader();r.onload=e=>{
+      covPrev.src=e.target.result;covPrev.style.display='block';
+      covPrev.dataset.autoUrl=''; // manual override clears auto
+      document.getElementById('cover-fetch-status').style.display='none';
+    };r.readAsDataURL(inpCover.files[0]);
   });
+
   const onRaChange=()=>{
     raCredentials={user:raUser.value.trim(),key:raKey.value.trim()};
     if(raCredentials.user&&raCredentials.key){localStorage.setItem('ra_creds',JSON.stringify(raCredentials));raMsg.textContent='✓ Credenciais salvas';raMsg.className='ra-status ok'}
@@ -900,13 +1107,16 @@ function setupModal(){
     if(!name||!romF){showToast('Informe o nome e selecione a ROM',true);return}
     const btn=document.getElementById('btn-save');btn.textContent='Salvando...';btn.disabled=true;
     try{
-      // Save as Uint8Array — survives IDB serialization and remains valid
-      // after the original file is deleted from the device.
-      const rawBuf=await rAB(romF);
-      const romData=new Uint8Array(rawBuf);
-      const cover=inpCover.files[0]?await rDU(inpCover.files[0]):null;
+      const romData=new Uint8Array(await rAB(romF));
+      let cover=null,autoCover=false,manualCover=false;
+      if(inpCover.files[0]){
+        cover=await rDU(inpCover.files[0]);manualCover=true;
+      } else if(covPrev.dataset.autoUrl){
+        // Store the URL directly — no need to download to base64, just use the URL as src
+        cover=covPrev.dataset.autoUrl;autoCover=true;
+      }
       const consoleKey=detectConsole(romF.name,selectedConsole);
-      const game={name,console:consoleKey,cover,romData,romName:romF.name,addedAt:Date.now()};
+      const game={name,console:consoleKey,cover,autoCover,manualCover,romData,romName:romF.name,addedAt:Date.now()};
       const id=await dbAdd(game);game.id=id;games.push(game);
       renderLibrary();bd.style.display='none';resetModal();showToast(`"${name}" adicionado!`);
       loadAchievementsForGame(game).then(renderLibrary);
@@ -917,7 +1127,10 @@ function setupModal(){
 
 function resetModal(){
   ['inp-name','inp-rom','inp-cover'].forEach(id=>document.getElementById(id).value='');
-  ['rom-selected','cover-selected','cover-preview'].forEach(id=>{document.getElementById(id).style.display='none'});
+  ['rom-selected','cover-selected'].forEach(id=>{document.getElementById(id).style.display='none'});
+  document.getElementById('cover-preview').style.display='none';
+  document.getElementById('cover-preview').dataset.autoUrl='';
+  document.getElementById('cover-fetch-status').style.display='none';
   document.getElementById('rom-wrap').querySelector('.file-label').style.display='';
   document.getElementById('cover-wrap').querySelector('.file-label').style.display='';
   document.querySelectorAll('.console-opt').forEach(o=>o.classList.remove('selected'));
@@ -934,57 +1147,39 @@ function detectConsole(filename,selected){
 const rAB=f=>new Promise((res,rej)=>{const r=new FileReader();r.onload=e=>res(e.target.result);r.onerror=rej;r.readAsArrayBuffer(f)});
 const rDU=f=>new Promise((res,rej)=>{const r=new FileReader();r.onload=e=>res(e.target.result);r.onerror=rej;r.readAsDataURL(f)});
 
-/* ── Toast ── */
+/* ═══ TOAST ═══ */
 function showToast(msg,isErr=false){
   const t=document.getElementById('toast');t.textContent=msg;
-  t.className='show'+(isErr?' error':'');clearTimeout(t._t);t._t=setTimeout(()=>t.className='',3000);
+  t.className='show'+(isErr?' error':'');clearTimeout(t._t);t._t=setTimeout(()=>t.className='',3200);
 }
 
-/* ── Keyboard shortcuts ── */
+/* ═══ KEYBOARD ═══ */
 function setupKeyboard(){
   document.addEventListener('keydown',e=>{
     if(document.getElementById('emulator-view').style.display==='flex'&&e.key==='Escape')closeEmulator();
   });
 }
 
-/* ── Service Worker — offline cache for EmulatorJS assets ── */
-(function registerSW(){
+/* ═══ SERVICE WORKER (offline cache) ═══ */
+(function(){
   if(!('serviceWorker' in navigator))return;
-  // Inline SW as a blob so no separate file is needed
-  const swCode = `
-const CACHE = 'retrostation-v1';
-const CDN = 'cdn.emulatorjs.org';
-
-self.addEventListener('install', e => {
-  self.skipWaiting();
-});
-self.addEventListener('activate', e => {
-  e.waitUntil(self.clients.claim());
-});
-self.addEventListener('fetch', e => {
-  const url = e.request.url;
-  // Only cache EmulatorJS CDN requests
-  if (!url.includes(CDN)) return;
-  e.respondWith(
-    caches.open(CACHE).then(async cache => {
-      const cached = await cache.match(e.request);
-      if (cached) return cached;
-      try {
-        const resp = await fetch(e.request);
-        if (resp.ok) cache.put(e.request, resp.clone());
-        return resp;
-      } catch(_) {
-        return cached || new Response('offline', {status: 503});
-      }
-    })
-  );
-});
-`;
-  const blob = new Blob([swCode], {type:'application/javascript'});
-  const swUrl = URL.createObjectURL(blob);
-  navigator.serviceWorker.register(swUrl, {scope:'/'})
-    .catch(()=>{}); // Blob SW may fail in some browsers — silent fallback
+  const sw=`const C='rs-v2',D='cdn.emulatorjs.org';
+self.addEventListener('install',e=>self.skipWaiting());
+self.addEventListener('activate',e=>e.waitUntil(self.clients.claim()));
+self.addEventListener('fetch',e=>{
+  if(!e.request.url.includes(D))return;
+  e.respondWith(caches.open(C).then(async cache=>{
+    const cached=await cache.match(e.request);
+    if(cached)return cached;
+    try{const resp=await fetch(e.request);if(resp.ok)cache.put(e.request,resp.clone());return resp}
+    catch(_){return cached||new Response('offline',{status:503})}
+  }));
+});`;
+  const blob=new Blob([sw],{type:'application/javascript'});
+  navigator.serviceWorker.register(URL.createObjectURL(blob),{scope:'/'}).catch(()=>{});
 })();
+
+/* ═══ INIT ═══ */
 async function init(){
   await openDB();
   games=await dbGetAll();
