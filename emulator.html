@@ -1607,13 +1607,7 @@ async function startStreaming(){
   }
 
   // Set up room in Firebase
-  const roomRef = fbDb.ref(`rooms/${streamRoomId}`);
-  await roomRef.set({
-    host:    chatUsername,
-    game:    document.getElementById('emu-game-title').textContent||'—',
-    started: Date.now(),
-    active:  true,
-  });
+
 
   // Listen for viewer connections
   roomRef.child('viewers').on('child_added', async snap=>{
@@ -1660,41 +1654,51 @@ async function startStreaming(){
   showShareModal();
 }
 
-async function handleViewerJoin(viewerId, roomRef){
-  const pc = new RTCPeerConnection({iceServers:ICE_SERVERS});
+async function handleViewerJoin(viewerId, roomRef) {
+  const pc = new RTCPeerConnection({
+    iceServers: [
+      { urls: 'stun:stun.l.google.com:19302' },
+      { urls: 'stun:stun1.l.google.com:19302' }
+    ]
+  });
+  
   hostPeerConnections[viewerId] = pc;
 
-  // Add tracks
-  localStream.getTracks().forEach(t=>pc.addTrack(t, localStream));
+  // Adiciona o vídeo do jogo para este espectador
+  localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
 
-  // Send ICE candidates to this viewer
-  pc.onicecandidate = e=>{
-    if(e.candidate){
+  // Envia os candidatos ICE do Host para este Espectador específico
+  pc.onicecandidate = e => {
+    if (e.candidate) {
       roomRef.child(`ice_from_host/${viewerId}`).push(e.candidate.toJSON());
     }
   };
 
-  // Create offer
-  const offer = await pc.createOffer();
-  await pc.setLocalDescription(offer);
-  await roomRef.child(`offers/${viewerId}`).set({
-    type:  offer.type,
-    sdp:   offer.sdp,
-  });
-
-  // Listen for answer from this viewer
-  roomRef.child(`answers/${viewerId}`).on('value', async snap=>{
-    const ans = snap.val();
-    if(ans && pc.signalingState==='have-local-offer'){
-      try{
-        await pc.setRemoteDescription(new RTCSessionDescription(ans));
-      }catch(_){}
+  // ESCUTA os candidatos ICE vindo especificamente DESTE espectador
+  // Isso resolve o erro do loading infinito
+  roomRef.child(`ice_from_viewers/${viewerId}`).on('child_added', async snap => {
+    const cand = snap.val();
+    if (cand && pc.remoteDescription) {
+      try { await pc.addIceCandidate(new RTCIceCandidate(cand)); } catch(e) {}
     }
   });
 
-  // Notify chat
-  appendChatMsg('', `${viewerId} entrou na sala`, 'system');
-  roomRef.child('chat').push({name:'sistema',text:`${viewerId} entrou na sala`,time:chatTime(),system:true});
+  // Cria a oferta de conexão
+  const offer = await pc.createOffer();
+  await pc.setLocalDescription(offer);
+
+  await roomRef.child(`offers/${viewerId}`).set({
+    type: offer.type,
+    sdp: offer.sdp
+  });
+
+  // Espera a resposta do espectador para finalizar a conexão
+  roomRef.child(`answers/${viewerId}`).on('value', async snap => {
+    const ans = snap.val();
+    if (ans && pc.signalingState === 'have-local-offer') {
+      await pc.setRemoteDescription(new RTCSessionDescription(ans));
+    }
+  });
 }
 
 // ══════════════════════════════
