@@ -4252,6 +4252,12 @@ function selectMpGame(idx){
   mpSelectedGame=_mpGameItems[idx];
 }
 
+// Helper: retorna true se o emulador já está rodando o jogo especificado
+function _isGameRunning(gameName){
+  return document.getElementById('emulator-view').style.display==='flex' &&
+    document.getElementById('emu-game-title').textContent===gameName;
+}
+
 async function mpCreateRoom(){
   const roomName=document.getElementById('mp-room-name-input').value.trim();
   const st=document.getElementById('mp-create-status');
@@ -4273,7 +4279,12 @@ async function mpCreateRoom(){
     if(libGame){
       // Grava o papel (host = Player 1) na sala Firebase antes de lançar
       await fbDb.ref('mp_rooms/'+id+'/netplay').set({server:'wss://netplay.emulatorjs.org:443',gameID:id,roomId:id});
-      launchGame(libGame, {roomId:id, role:'host'});
+      if(_isGameRunning(libGame.name)){
+        // Emulador já está rodando o jogo correto — só ativa o netplay
+        _mpNetplayStart(id,'host');
+      } else {
+        launchGame(libGame, {roomId:id, role:'host'});
+      }
     }
     else showToast('Sala criada! Código: '+id+' — Adicione "'+mpSelectedGame.name+'" à biblioteca para jogar.');
     st.style.display='none';
@@ -4301,7 +4312,12 @@ async function mpJoinByCode(code){
       const netSnap=await fbDb.ref('mp_rooms/'+code+'/netplay').once('value').catch(()=>null);
       const netCfg=netSnap?netSnap.val():null;
       const roomId=netCfg?netCfg.roomId:code;
-      launchGame(libGame, {roomId, role:'guest'});
+      if(_isGameRunning(libGame.name)){
+        // Emulador já está rodando o jogo correto — só ativa o netplay como guest
+        _mpNetplayStart(roomId,'guest');
+      } else {
+        launchGame(libGame, {roomId, role:'guest'});
+      }
     }
     else showToast('Entrou na sala! Adicione "'+room.game+'" à biblioteca para jogar.');
     st.style.display='none';
@@ -4329,6 +4345,9 @@ async function refreshMpRooms(){
 function showMpLobby(roomId,room){
   const lobby=document.getElementById('mp-lobby');
   lobby.style.display='block';
+  // Empurra os controles do overlay mobile acima da barra do lobby
+  const ov=document.getElementById('mobile-overlay');
+  if(ov) ov.style.paddingBottom='74px';
   const codeEl=document.getElementById('mp-lobby-room-code');
   codeEl.textContent='📋 Código: '+roomId;
   codeEl.onclick=()=>{try{navigator.clipboard.writeText(roomId)}catch(e){}showToast('Código copiado: '+roomId);};
@@ -4372,6 +4391,9 @@ async function leaveMpRoom(){
   if(mpChatRef){mpChatRef.off();mpChatRef=null;}
   mpRoomId=null;mpRole=null;
   document.getElementById('mp-lobby').style.display='none';
+  // Restaura padding original do overlay
+  const ov=document.getElementById('mobile-overlay');
+  if(ov) ov.style.paddingBottom='';
 }
 
 function injectNetplay(roomId,role){
