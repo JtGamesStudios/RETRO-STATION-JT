@@ -571,6 +571,10 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
   </div>
   <div class="header-right">
     <span id="game-count-badge">0 jogos</span>
+    <button class="btn btn-ghost" id="btn-friends" style="position:relative">
+      👥 Amigos
+      <span id="friends-notif-dot" style="display:none;position:absolute;top:4px;right:4px;width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 6px rgba(16,185,129,.6)"></span>
+    </button>
     <button class="btn btn-primary" id="btn-add">
       <svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M5.5 1v9M1 5.5h9" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
       Adicionar ROM
@@ -696,7 +700,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
     <div class="form-group">
       <label>Console</label>
       <div id="console-grid">
-        <div class="console-opt selected" data-val="gba"><span class="co-icon">🎮</span>GBA</div>
+        <div class="console-opt" data-val="gba"><span class="co-icon">🎮</span>GBA</div>
         <div class="console-opt" data-val="snes"><span class="co-icon">🕹</span>SNES</div>
         <div class="console-opt" data-val="nes"><span class="co-icon">🎯</span>NES</div>
         <div class="console-opt" data-val="md"><span class="co-icon">⚡</span>Mega Drive</div>
@@ -706,6 +710,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
         <div class="console-opt" data-val="gb"><span class="co-icon">🔲</span>Game Boy</div>
         <div class="console-opt" data-val="gbc"><span class="co-icon">🌈</span>GBC</div>
       </div>
+      <div id="console-required-warning" style="display:none;margin-top:6px;padding:6px 10px;background:rgba(239,68,68,.09);border:1px solid rgba(239,68,68,.28);border-radius:7px;font-size:11px;color:#fca5a5;">⚠️ Selecione o console antes de salvar.</div>
     </div>
     <div class="ra-info-banner ok" id="ra-info-banner">
       <span>ℹ️</span><span id="ra-info-text">Conquistas disponíveis para este console.</span>
@@ -724,6 +729,9 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
     </div>
     <div class="form-group">
       <label>Capa do Jogo <span style="font-weight:400;color:var(--text-dim);font-size:10px;text-transform:none;letter-spacing:0">— buscada automaticamente pelo nome</span></label>
+      <div style="margin-bottom:7px;padding:7px 10px;background:rgba(245,158,11,.07);border:1px solid rgba(245,158,11,.22);border-radius:7px;font-size:10.5px;color:#fcd34d;line-height:1.55">
+        ⚠️ As capas são buscadas por serviços externos e podem não corresponder ao título exato — isso não é um erro do jogo adicionado.
+      </div>
       <div id="cover-fetch-status"></div>
       <div id="cover-preview-wrap"><img id="cover-preview" src="" alt=""></div>
       <div class="file-input-wrap" id="cover-wrap">
@@ -825,6 +833,17 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
         ⏹ Encerrar transmissão
       </button>
     </div>
+    <!-- Host chat -->
+    <div style="margin-top:18px;border-top:1px solid var(--border);padding-top:14px">
+      <div style="font-size:10px;font-weight:800;letter-spacing:1.5px;color:var(--text-muted);text-transform:uppercase;margin-bottom:8px">💬 Chat da transmissão</div>
+      <div id="host-chat-msgs" style="height:140px;overflow-y:auto;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-sm);padding:8px 10px;display:flex;flex-direction:column;gap:5px;margin-bottom:8px;font-size:11px"></div>
+      <div style="display:flex;gap:7px">
+        <input type="text" id="host-chat-input" placeholder="Mensagem como host..." maxlength="200" style="flex:1;padding:8px 11px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-sm);color:var(--text);font-size:12px;font-family:var(--font);outline:none;transition:border-color .15s">
+        <button id="host-chat-send" style="width:34px;height:34px;border-radius:var(--r-sm);flex-shrink:0;background:var(--accent);border:none;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;transition:filter .15s">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        </button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -836,6 +855,34 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
     <input type="text" id="username-input" placeholder="Seu nome" maxlength="20">
     <div class="username-actions">
       <button class="btn btn-primary" id="username-confirm">Entrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════ FRIENDS PANEL ════ -->
+<div id="friends-panel-backdrop" style="display:none;position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.84);backdrop-filter:blur(12px);align-items:flex-start;justify-content:flex-end;padding:66px 16px 0">
+  <div id="friends-panel" style="background:var(--surface);border:1px solid var(--border-accent);border-radius:18px;width:min(360px,94vw);max-height:80vh;display:flex;flex-direction:column;overflow:hidden">
+    <div style="padding:18px 18px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
+      <h3 style="font-size:15px;font-weight:800;color:var(--accent2);display:flex;align-items:center;gap:8px">👥 Amigos</h3>
+      <button id="friends-panel-close" style="width:28px;height:28px;border-radius:7px;background:var(--surface3);border:1px solid var(--border);color:var(--text-muted);cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center">✕</button>
+    </div>
+    <!-- Add friend -->
+    <div style="padding:12px 18px;border-bottom:1px solid var(--border);flex-shrink:0">
+      <div style="display:flex;gap:8px">
+        <input type="text" id="friend-username-input" placeholder="Nome de usuário do amigo" maxlength="30" style="flex:1;padding:8px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-sm);color:var(--text);font-size:12px;font-family:var(--font);outline:none;transition:border-color .15s">
+        <button id="friend-add-btn" class="btn btn-primary" style="padding:8px 14px;font-size:11px;white-space:nowrap">Adicionar</button>
+      </div>
+      <div id="friend-add-status" style="font-size:11px;margin-top:6px;display:none"></div>
+    </div>
+    <!-- My username display -->
+    <div style="padding:10px 18px;border-bottom:1px solid var(--border);font-size:11px;color:var(--text-muted);flex-shrink:0;display:flex;align-items:center;gap:6px">
+      <span>Seu usuário:</span>
+      <span id="my-username-display" style="font-weight:700;color:var(--accent3)">—</span>
+      <span style="font-size:10px;color:var(--text-dim)">(use para que te adicionem)</span>
+    </div>
+    <!-- Friends list -->
+    <div id="friends-list" style="flex:1;overflow-y:auto;padding:10px 14px;display:flex;flex-direction:column;gap:8px">
+      <div id="friends-empty" style="text-align:center;padding:30px 0;color:var(--text-dim);font-size:12px">Nenhum amigo ainda.<br>Adicione pelo nome de usuário!</div>
     </div>
   </div>
 </div>
@@ -863,7 +910,7 @@ const CONSOLES = {
 const KEY_MAP={ArrowUp:38,ArrowDown:40,ArrowLeft:37,ArrowRight:39,KeyZ:90,KeyX:88,KeyS:83,KeyA:65,KeyC:67,KeyD:68,Enter:13,ShiftLeft:16,KeyQ:81,KeyE:69};
 
 /* ═══ STATE ═══ */
-let games=[],overlayVisible=true,activeFilter='all',selectedConsole='gba';
+let games=[],overlayVisible=true,activeFilter='all',selectedConsole=null;
 let raCredentials={user:'',key:''};
 let achPollTimer=null,achPollGameId=null;
 
@@ -1246,8 +1293,9 @@ function launchGame(game){
     EJS_core:con.core,EJS_pathtodata:'https://cdn.emulatorjs.org/stable/data/',
     EJS_gameUrl:romUrl,EJS_startOnLoaded:true,EJS_color:con.color,
     EJS_backgroundColor:'#07070d',EJS_VirtualGamepadSettings:{disabled:true},
+    EJS_defaultOptions:{'emulation-speed':'1'}, // lock default speed to normal; user can change in-game
     EJS_Buttons:{playPause:false,restart:true,mute:true,settings:true,fullscreen:true,saveState:true,loadState:true,screenRecord:false,gamepad:false,cheat:false,volume:true,saveSavFiles:true},
-    EJS_onGameStart:()=>{loading.classList.add('hidden');URL.revokeObjectURL(romUrl);startAchPolling(game)}
+    EJS_onGameStart:()=>{loading.classList.add('hidden');URL.revokeObjectURL(romUrl);startAchPolling(game);publishPresence(game.name, null);}
   });
   try{delete window.EJS_threads}catch(e){}
   const old=document.getElementById('ejs');if(old)old.remove();
@@ -1260,6 +1308,7 @@ function launchGame(game){
 /* ═══ CLOSE EMULATOR ═══ */
 function closeEmulator(){
   stopAchPolling();
+  publishPresence(null, null);
   document.getElementById('emulator-container').innerHTML='';
   const s=document.getElementById('ejs');if(s)s.remove();
   ['EJS_player','EJS_gameName','EJS_core','EJS_gameUrl','EJS_pathtodata','EJS_startOnLoaded','EJS_onGameStart','EJS_color','EJS_backgroundColor','EJS_threads'].forEach(k=>{try{delete window[k]}catch(e){}});
@@ -1338,7 +1387,14 @@ const RA_NOTES={
 };
 const RA_GLOBAL=' — conquistas visíveis nos cards. ⚠️ Desbloqueio em tempo real não é suportado pelo EmulatorJS.';
 function updateRomAccept(){
-  const con=CONSOLES[selectedConsole];if(!con)return;
+  const con=CONSOLES[selectedConsole];
+  if(!con){
+    document.getElementById('inp-rom').accept='.gba,.gb,.gbc,.sfc,.smc,.nes,.md,.gen,.bin,.cue,.img,.pbp,.chd,.n64,.z64,.v64,.gg,.zip';
+    document.getElementById('rom-wrap').querySelector('.file-label').textContent='Clique para selecionar a ROM';
+    const banner=document.getElementById('ra-info-banner');
+    if(banner){banner.className='ra-info-banner';document.getElementById('ra-info-text').textContent='Selecione o console para ver suporte a conquistas.';}
+    return;
+  }
   document.getElementById('inp-rom').accept=con.exts.map(e=>'.'+e).join(',');
   document.getElementById('rom-wrap').querySelector('.file-label').textContent=`Clique para selecionar ROM (${con.exts.map(e=>'.'+e).join(', ')})`;
   const banner=document.getElementById('ra-info-banner');
@@ -1382,10 +1438,11 @@ function setupModal(){
       inpName.value=f.name.replace(/\.[^.]+$/,'').replace(/[_\-]/g,' ').replace(/\(.*?\)/g,'').replace(/\[.*?\]/g,'').trim();
     }
     const det=detectConsole(f.name,null);
-    if(det!==selectedConsole){
+    if(det&&det!==selectedConsole){
       document.querySelectorAll('.console-opt').forEach(o=>o.classList.remove('selected'));
       const tgt=document.querySelector(`.console-opt[data-val="${det}"]`);
       if(tgt){tgt.classList.add('selected');selectedConsole=det;updateRomAccept()}
+      document.getElementById('console-required-warning').style.display='none';
     }
     // Auto-fetch cover after name is set
     setTimeout(()=>{
@@ -1415,6 +1472,13 @@ function setupModal(){
   document.getElementById('btn-save').onclick=async()=>{
     const name=inpName.value.trim(),romF=inpRom.files[0];
     if(!name||!romF){showToast('Informe o nome e selecione a ROM',true);return}
+    // Determine console: prefer selectedConsole, fallback to ROM detection
+    let consoleKey = selectedConsole ? detectConsole(romF.name, selectedConsole) : detectConsole(romF.name, null);
+    if(!consoleKey){
+      document.getElementById('console-required-warning').style.display='block';
+      showToast('Selecione o console do jogo!',true);return;
+    }
+    document.getElementById('console-required-warning').style.display='none';
     const btn=document.getElementById('btn-save');btn.textContent='Salvando...';btn.disabled=true;
     try{
       const romData=new Uint8Array(await rAB(romF));
@@ -1422,10 +1486,8 @@ function setupModal(){
       if(inpCover.files[0]){
         cover=await rDU(inpCover.files[0]);manualCover=true;
       } else if(covPrev.dataset.autoUrl){
-        // Store the URL directly — no need to download to base64, just use the URL as src
         cover=covPrev.dataset.autoUrl;autoCover=true;
       }
-      const consoleKey=detectConsole(romF.name,selectedConsole);
       const game={name,console:consoleKey,cover,autoCover,manualCover,romData,romName:romF.name,addedAt:Date.now()};
       const id=await dbAdd(game);game.id=id;games.push(game);
       renderLibrary();bd.style.display='none';resetModal();showToast(`"${name}" adicionado!`);
@@ -1444,15 +1506,20 @@ function resetModal(){
   document.getElementById('rom-wrap').querySelector('.file-label').style.display='';
   document.getElementById('cover-wrap').querySelector('.file-label').style.display='';
   document.querySelectorAll('.console-opt').forEach(o=>o.classList.remove('selected'));
-  document.querySelector('.console-opt[data-val="gba"]').classList.add('selected');
-  selectedConsole='gba';updateRomAccept();
+  document.getElementById('console-required-warning').style.display='none';
+  selectedConsole=null;
+  // Reset RA banner to neutral state
+  const banner=document.getElementById('ra-info-banner');
+  if(banner){banner.className='ra-info-banner';document.getElementById('ra-info-text').textContent='Selecione o console para ver suporte a conquistas.';}
+  document.getElementById('inp-rom').accept='.gba,.gb,.gbc,.sfc,.smc,.nes,.md,.gen,.bin,.cue,.img,.pbp,.chd,.n64,.z64,.v64,.gg,.zip';
+  document.getElementById('rom-wrap').querySelector('.file-label').textContent='Clique para selecionar a ROM';
 }
 
 function detectConsole(filename,selected){
   if(selected&&CONSOLES[selected])return selected;
   const ext=(filename||'').split('.').pop().toLowerCase();
   for(const[k,d]of Object.entries(CONSOLES))if(d.exts.includes(ext))return k;
-  return 'gba';
+  return null; // no fallback — require user to select
 }
 const rAB=f=>new Promise((res,rej)=>{const r=new FileReader();r.onload=e=>res(e.target.result);r.onerror=rej;r.readAsArrayBuffer(f)});
 const rDU=f=>new Promise((res,rej)=>{const r=new FileReader();r.onload=e=>res(e.target.result);r.onerror=rej;r.readAsDataURL(f)});
@@ -1600,22 +1667,25 @@ function chatTime(){
 
 // ── Append message to chat ──
 function appendChatMsg(name, text, type='viewer', time=chatTime()){
-  const msgs = document.getElementById('spec-chat-msgs');
-  if(!msgs)return;
-  const div = document.createElement('div');
-  div.className = `chat-msg ${type}`;
-  if(type==='system'){
-    div.innerHTML=`<div class="chat-msg-text">${text}</div>`;
-  } else {
-    div.innerHTML=`
-      <div class="chat-msg-meta">
-        <span class="chat-msg-name">${name}</span>
-        <span class="chat-msg-time">${time}</span>
-      </div>
-      <div class="chat-msg-text">${text}</div>`;
-  }
-  msgs.appendChild(div);
-  msgs.scrollTop=msgs.scrollHeight;
+  const targets = [document.getElementById('spec-chat-msgs')];
+  if(streamRole==='host') targets.push(document.getElementById('host-chat-msgs'));
+  targets.forEach(msgs=>{
+    if(!msgs)return;
+    const div = document.createElement('div');
+    div.className = `chat-msg ${type}`;
+    if(type==='system'){
+      div.innerHTML=`<div class="chat-msg-text">${text}</div>`;
+    } else {
+      div.innerHTML=`
+        <div class="chat-msg-meta">
+          <span class="chat-msg-name">${name}</span>
+          <span class="chat-msg-time">${time}</span>
+        </div>
+        <div class="chat-msg-text">${text}</div>`;
+    }
+    msgs.appendChild(div);
+    msgs.scrollTop=msgs.scrollHeight;
+  });
 }
 
 // ── Get canvas from emulator ──
@@ -1649,12 +1719,39 @@ async function startStreaming(){
   streamRoomId = genRoomId();
   streamRole   = 'host';
 
-  // Capture canvas stream
+  // Capture canvas stream + audio
   try{
+    // Get video from canvas/video element
+    let videoStream;
     if(canvas instanceof HTMLVideoElement){
-      localStream = canvas.captureStream(30);
+      videoStream = canvas.captureStream(30);
     } else {
-      localStream = canvas.captureStream(30);
+      videoStream = canvas.captureStream(30);
+    }
+
+    // Try to capture audio from the emulator's audio context / Web Audio
+    let audioStream = null;
+    try{
+      // Look for audio elements inside the emulator container
+      const audioEl = document.querySelector('#emulator-container audio')
+        || document.querySelector('#emulator-container video');
+      if(audioEl && audioEl.captureStream){
+        const as = audioEl.captureStream();
+        if(as.getAudioTracks().length > 0) audioStream = as;
+      }
+    }catch(_){}
+
+    // Combine video + audio tracks into a single MediaStream
+    const combinedTracks = [...videoStream.getVideoTracks()];
+    if(audioStream) audioStream.getAudioTracks().forEach(t=>combinedTracks.push(t));
+    localStream = new MediaStream(combinedTracks);
+
+    // If we still have no audio, try getUserMedia for system audio hint
+    if(localStream.getAudioTracks().length === 0){
+      try{
+        const sysAudio = await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,sampleRate:44100},video:false});
+        sysAudio.getAudioTracks().forEach(t=>localStream.addTrack(t));
+      }catch(_){} // optional — ignore if denied
     }
   }catch(e){
     showToast('Seu navegador não suporta captureStream()',true);
@@ -1720,6 +1817,9 @@ async function startStreaming(){
   const btn = document.getElementById('share-stream-btn');
   btn.classList.add('live');
   btn.innerHTML=`<div class="live-dot"></div> AO VIVO`;
+
+  // Publish live presence for friends to see
+  publishPresence(document.getElementById('emu-game-title').textContent||null, streamRoomId);
 
   showShareModal();
 }
@@ -2017,6 +2117,8 @@ async function stopStreaming(){
   streamRoomId=null;
   streamRole=null;
   streamViewerCount=0;
+  // Clear live presence
+  publishPresence(document.getElementById('emu-game-title')?.textContent||null, null);
 
   // 5. Reset share button
   const btn=document.getElementById('share-stream-btn');
@@ -2084,6 +2186,7 @@ function askUsername(prompt='Seu nome:'){
       const val=document.getElementById('username-input').value.trim();
       if(!val)return;
       chatUsername=val;
+      myUsername=val;
       localStorage.setItem('rs_username',val);
       document.getElementById('username-modal-backdrop').style.display='none';
       res(val);
@@ -2126,15 +2229,12 @@ function setupSpectatorMode(){
     document.getElementById('share-modal-backdrop').style.display='none';
   };
   document.getElementById('share-end-btn').onclick=()=>{
-    // confirm() is blocked in iframes and some mobile contexts — use inline UI instead
     const btn = document.getElementById('share-end-btn');
     if(btn.dataset.confirming==='1'){
-      // Second click — confirmed
       btn.dataset.confirming='0';
       btn.textContent='⏹ Encerrar transmissão';
       stopStreaming();
     } else {
-      // First click — ask for confirmation inline
       btn.dataset.confirming='1';
       btn.textContent='⚠️ Clique novamente para confirmar';
       btn.style.background='rgba(239,68,68,.3)';
@@ -2146,10 +2246,25 @@ function setupSpectatorMode(){
     }
   };
 
+  // HOST CHAT — send from share modal chat input
+  const hostChatInput = document.getElementById('host-chat-input');
+  const hostChatSend  = document.getElementById('host-chat-send');
+  const doHostChat = ()=>{
+    const text = hostChatInput?.value.trim();
+    if(!text||!streamRoomId||!fbDb) return;
+    fbDb.ref(`rooms/${streamRoomId}/chat`).push({
+      name: chatUsername||'Host',
+      text, time: chatTime()
+    });
+    hostChatInput.value='';
+  };
+  if(hostChatSend) hostChatSend.onclick = doHostChat;
+  if(hostChatInput) hostChatInput.onkeydown = e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();doHostChat();}};
+
   // Viewer leave
   document.getElementById('spec-leave-btn').onclick=leaveStream;
 
-  // Chat send
+  // Viewer chat send
   document.getElementById('spec-chat-send').onclick=sendChatMessage;
   document.getElementById('spec-chat-input').onkeydown=e=>{
     if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendChatMessage();}
@@ -2159,22 +2274,145 @@ function setupSpectatorMode(){
   const params = new URLSearchParams(location.search);
   const watchId = params.get('watch');
   if(watchId){
-    // Hide main app immediately
     document.getElementById('header').style.display='none';
     document.getElementById('filter-bar').style.display='none';
     document.getElementById('library-view').style.display='none';
-    // Show spectator view
     document.getElementById('spectator-view').classList.add('active');
-    // Start join flow (will ask username if needed)
     joinStream(watchId.toUpperCase());
   }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   SISTEMA DE AMIGOS
+   Armazena amigos no localStorage por username. Publica presença
+   e jogo atual no Firebase (rooms/users/<username>).
+═══════════════════════════════════════════════════════════════ */
+let myUsername = localStorage.getItem('rs_username') || '';
+let friendsData = JSON.parse(localStorage.getItem('rs_friends')||'[]'); // array of usernames
+
+function saveFriends(){ localStorage.setItem('rs_friends', JSON.stringify(friendsData)); }
+
+// Publish my presence + current game to Firebase
+async function publishPresence(gameName, liveRoomId){
+  if(!myUsername) return;
+  try{
+    await loadFirebase();
+    const ref = fbDb.ref(`users/${myUsername.replace(/[^a-zA-Z0-9_]/g,'_')}`);
+    const data = {username: myUsername, game: gameName||null, live: liveRoomId||null, ts: Date.now()};
+    await ref.set(data);
+    ref.onDisconnect().update({live:null, ts: Date.now()});
+  }catch(_){}
+}
+
+// Fetch a friend's presence from Firebase
+async function fetchFriendPresence(username){
+  try{
+    await loadFirebase();
+    const key = username.replace(/[^a-zA-Z0-9_]/g,'_');
+    const snap = await fbDb.ref(`users/${key}`).once('value');
+    return snap.val(); // {username, game, live, ts} or null
+  }catch(_){ return null; }
+}
+
+// Render friends panel
+async function renderFriends(){
+  const list = document.getElementById('friends-list');
+  const empty = document.getElementById('friends-empty');
+  const myDisp = document.getElementById('my-username-display');
+  if(myDisp) myDisp.textContent = myUsername || '(defina seu nome no chat)';
+
+  if(!friendsData.length){
+    empty.style.display='block';
+    // Remove old cards
+    list.querySelectorAll('.friend-card').forEach(c=>c.remove());
+    return;
+  }
+  empty.style.display='none';
+
+  // Show loading placeholders, then fill async
+  list.querySelectorAll('.friend-card').forEach(c=>c.remove());
+  for(const uname of friendsData){
+    const card = document.createElement('div');
+    card.className='friend-card';
+    card.style.cssText='background:var(--surface2);border:1px solid var(--border);border-radius:11px;padding:11px 13px;display:flex;align-items:center;gap:10px';
+    card.innerHTML=`
+      <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#9b59d6);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;color:#fff;flex-shrink:0">${uname[0].toUpperCase()}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:12.5px;font-weight:700;color:var(--text)">${uname}</div>
+        <div class="friend-status" style="font-size:11px;color:var(--text-dim);margin-top:2px">Carregando...</div>
+      </div>
+      <div class="friend-actions" style="display:flex;gap:6px;flex-shrink:0"></div>
+      <button class="friend-remove-btn" title="Remover amigo" style="width:22px;height:22px;border-radius:50%;background:transparent;border:1px solid rgba(239,68,68,.25);color:var(--red);font-size:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;opacity:.6;transition:opacity .15s">✕</button>
+    `;
+    card.querySelector('.friend-remove-btn').onclick=()=>{
+      friendsData=friendsData.filter(u=>u!==uname);
+      saveFriends(); renderFriends();
+    };
+    list.appendChild(card);
+
+    // Async fetch presence
+    fetchFriendPresence(uname).then(p=>{
+      const statusEl = card.querySelector('.friend-status');
+      const actionsEl = card.querySelector('.friend-actions');
+      if(!p || !p.ts || (Date.now()-p.ts)>3600000){
+        statusEl.textContent='Offline';statusEl.style.color='var(--text-dim)';
+      } else if(p.live){
+        statusEl.innerHTML=`<span style="color:#f87171">🔴 AO VIVO</span> — ${p.game||'jogando'}`;
+        // Watch button
+        const watchBtn = document.createElement('button');
+        watchBtn.textContent='Assistir';
+        watchBtn.style.cssText='padding:4px 11px;border-radius:6px;background:rgba(239,68,68,.15);color:#f87171;border:1px solid rgba(239,68,68,.3);font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font);transition:all .15s;white-space:nowrap';
+        watchBtn.onmouseenter=()=>watchBtn.style.filter='brightness(1.2)';
+        watchBtn.onmouseleave=()=>watchBtn.style.filter='';
+        watchBtn.onclick=()=>{
+          const watchUrl = `${location.origin}${location.pathname}?watch=${p.live}`;
+          window.open(watchUrl,'_blank');
+        };
+        actionsEl.appendChild(watchBtn);
+      } else if(p.game){
+        statusEl.innerHTML=`<span style="color:var(--green)">🎮 Jogando</span> ${p.game}`;
+      } else {
+        statusEl.textContent='Online';statusEl.style.color='var(--green)';
+      }
+    });
+  }
+}
+
+function setupFriends(){
+  const panelBackdrop = document.getElementById('friends-panel-backdrop');
+  const closeBtn      = document.getElementById('friends-panel-close');
+  const addBtn        = document.getElementById('friend-add-btn');
+  const addInput      = document.getElementById('friend-username-input');
+  const addStatus     = document.getElementById('friend-add-status');
+
+  document.getElementById('btn-friends').onclick=()=>{
+    panelBackdrop.style.display='flex';
+    renderFriends();
+  };
+  closeBtn.onclick=()=>{ panelBackdrop.style.display='none'; };
+  panelBackdrop.onclick=e=>{ if(e.target===panelBackdrop) panelBackdrop.style.display='none'; };
+
+  const doAdd=()=>{
+    const val = addInput.value.trim();
+    if(!val){ addStatus.style.display='block';addStatus.style.color='#fca5a5';addStatus.textContent='Digite um nome de usuário.';return; }
+    if(val===myUsername){ addStatus.style.display='block';addStatus.style.color='#fca5a5';addStatus.textContent='Você não pode adicionar a si mesmo.';return; }
+    if(friendsData.includes(val)){ addStatus.style.display='block';addStatus.style.color='#fcd34d';addStatus.textContent='Esse usuário já é seu amigo.';return; }
+    friendsData.push(val);
+    saveFriends();
+    addInput.value='';
+    addStatus.style.display='block';addStatus.style.color='#6ee7b7';addStatus.textContent=`✓ ${val} adicionado!`;
+    setTimeout(()=>{ addStatus.style.display='none'; },2500);
+    renderFriends();
+  };
+  addBtn.onclick=doAdd;
+  addInput.onkeydown=e=>{ if(e.key==='Enter') doAdd(); };
 }
 
 /* ═══ INIT ═══ */
 async function init(){
   await openDB();
   games=await dbGetAll();
-  games.forEach(g=>{if(!g.console)g.console=detectConsole(g.romName||'',null)});
+  games.forEach(g=>{if(!g.console)g.console=detectConsole(g.romName||'',null)||'gba'});
   try{const s=localStorage.getItem('ra_creds');if(s)raCredentials=JSON.parse(s)}catch(e){}
   renderLibrary();
   document.getElementById('close-emu-btn').onclick=closeEmulator;
@@ -2182,6 +2420,9 @@ async function init(){
   setupFilterBar();setupConsoleSelector();setupModal();
   setupOverlayControls();bindOverlayEvents();setupKeyboard();updateRomAccept();
   setupSpectatorMode();
+  setupFriends();
+  // Sync myUsername from localStorage (set via chat username modal)
+  myUsername = localStorage.getItem('rs_username')||'';
   const isMobile=/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
   if(!isMobile){
     overlayVisible=false;
