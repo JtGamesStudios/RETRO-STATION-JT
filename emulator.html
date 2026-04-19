@@ -1392,7 +1392,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
     </div>
     <div id="mp-modal-body">
       <div style="padding:10px 12px;background:rgba(109,86,245,.07);border:1px solid rgba(109,86,245,.2);border-radius:10px;font-size:11.5px;color:var(--accent2);line-height:1.7;margin-bottom:16px">
-        🎮 Multiplayer via <strong>Input-Sync</strong>. O <strong>P1 (criador)</strong> joga normalmente — seus inputs são enviados em tempo real pelo Firebase para o P2. O <strong>P2 (convidado)</strong> recebe os inputs do P1 e joga como Player 2. Ambos precisam ter a <strong>mesma ROM</strong>.
+        🎮 <strong>Como funciona:</strong> O P1 (criador) transmite a tela via WebRTC para o P2. Os dois veem a <strong>mesma tela</strong>. O P2 manda seus inputs pelo Firebase e eles são injetados como Player 2 no emulador do P1. Ambos precisam da <strong>mesma ROM</strong>.
       </div>
       <div class="mp-tabs">
         <button class="mp-tab active" data-mptab="create">➕ Criar Sala</button>
@@ -1887,7 +1887,7 @@ function launchGame(game, netplayOpts){
       loading.classList.add('hidden');URL.revokeObjectURL(romUrl);
       startAchPolling(game);publishPresence(game.name,null);
       rsOnGamePlayed(game.name,game.console);rsStartPlayTimer();publishRsPoints();
-      if(netplayOpts) _startInputSync(netplayOpts.roomId, netplayOpts.role);
+      if(netplayOpts) _mpNetplayStart(netplayOpts.roomId, netplayOpts.role);
     }
   });
   try{delete window.EJS_threads}catch(e){}
@@ -1899,198 +1899,319 @@ function launchGame(game, netplayOpts){
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   INPUT-SYNC NETPLAY — Firebase como canal de transporte
+   MP NETPLAY REAL — WebRTC stream + Firebase input channel
    ─────────────────────────────────────────────────────────────
-   Arquitetura:
-   • P1 (host)  → captura TODOS os seus keydown/keyup (jogadores 1)
-                  publica em Firebase: mp_rooms/{id}/inputs/{ts} = {k, t}
-   • P2 (guest) → lê o stream de inputs do P1 via .on('child_added')
-                  injeta os eventos como se viessem do teclado (Player 1 no emulador)
-                  enquanto P2 joga normalmente com o teclado DELE (Player 2)
+   Como funciona de verdade:
 
-   Mapeamento de teclas P2 → Player 2 do emulador:
-   • EmulatorJS usa jogador 2 via gamepad index 1 OU teclas separadas
-   • Injetamos via GamepadAPI virtual (melhor compatibilidade)
+   P1 (HOST):
+   ① Captura o canvas do emulador com captureStream(30)
+   ② Transmite via WebRTC para o P2 (igual ao modo espectador)
+   ③ Escuta o canal Firebase mp_rooms/{id}/p2_inputs
+   ④ Injeta os inputs recebidos como Player 2 no emulador local
+      usando KeyboardEvent nas teclas P2 do EmulatorJS (IJKL/numpad)
+
+   P2 (GUEST):
+   ① Recebe o stream de vídeo/áudio do P1 via WebRTC
+   ② Exibe a tela do P1 num overlay sobre o próprio emulador
+      (ou esconde o emulador local e mostra só o vídeo do P1)
+   ③ Captura seus próprios inputs (teclado/overlay mobile)
+   ④ Publica no Firebase → o P1 injeta como P2
+
+   Resultado: os dois veem a MESMA tela (a do P1) e jogam juntos.
 ═══════════════════════════════════════════════════════════════ */
 
-// Estado do input-sync
-let _nsRef=null, _nsRole=null, _nsRoomId=null;
-let _nsListenerActive=false;
-let _nsVGamepad=null;   // gamepad virtual para P2 receber inputs do P1
+// ── Estado MP Netplay ────────────────────────────────────────
+let _mpNpRoomId=null, _mpNpRole=null;
+let _mpNpPc=null;          // RTCPeerConnection (ambos os lados)
+let _mpNpStream=null;      // MediaStream capturado (host)
+let _mpNpInputRef=null;    // Firebase ref para inputs do P2
+let _mpNpCleanups=[];      // lista de funções de limpeza
 
-// Mapa de keyCode → índice do botão no Gamepad padrão (para injeção virtual)
-const _KEYCODE_TO_GP = {
-  38:12, // ArrowUp    → D-Pad Up
-  40:13, // ArrowDown  → D-Pad Down
-  37:14, // ArrowLeft  → D-Pad Left
-  39:15, // ArrowRight → D-Pad Right
-  90:0,  // Z          → A (confirmação)
-  88:1,  // X          → B
-  83:2,  // S          → X
-  65:3,  // A          → Y
-  67:4,  // C          → LB (Mega Drive: C)
-  68:5,  // D          → RB
-  13:9,  // Enter      → Start
-  16:8,  // Shift      → Select
-  81:6,  // Q          → L2
-  69:7,  // E          → R2
+// Mapa keyCode → teclas P2 padrão do EmulatorJS
+// EmulatorJS usa por padrão para P2: I(up) K(down) J(left) L(right) + outros
+const _MP_P2_KEYS = {
+  38: {code:'KeyI',   key:'i',   keyCode:73},  // ArrowUp   → I
+  40: {code:'KeyK',   key:'k',   keyCode:75},  // ArrowDown  → K
+  37: {code:'KeyJ',   key:'j',   keyCode:74},  // ArrowLeft  → J
+  39: {code:'KeyL',   key:'l',   keyCode:76},  // ArrowRight → L
+  90: {code:'KeyF',   key:'f',   keyCode:70},  // Z (A)      → F
+  88: {code:'KeyG',   key:'g',   keyCode:71},  // X (B)      → G
+  83: {code:'KeyH',   key:'h',   keyCode:72},  // S (X)      → H
+  65: {code:'KeyV',   key:'v',   keyCode:86},  // A (Y)      → V
+  67: {code:'KeyB',   key:'b',   keyCode:66},  // C          → B
+  13: {code:'Numpad3',key:'3',   keyCode:99},  // Enter=Start→ Numpad3
+  16: {code:'Numpad1',key:'1',   keyCode:97},  // Shift=Sel  → Numpad1
 };
 
-function _startInputSync(roomId, role){
-  _nsRoomId = roomId;
-  _nsRole   = role;
-  _nsRef    = fbDb ? fbDb.ref('mp_rooms/'+roomId+'/inputs') : null;
-  if(!_nsRef){ showToast('⚠️ Sem Firebase — NetPlay desativado',true); return; }
+async function _mpNetplayStart(roomId, role){
+  _mpNpRoomId = roomId;
+  _mpNpRole   = role;
+  if(!fbDb){ showToast('⚠️ Firebase não conectado — MP desativado',true); return; }
 
   if(role === 'host'){
-    // ── P1 (HOST): captura inputs locais e publica no Firebase ──
-    _setupP1Capture();
-    showToast('🎮 NetPlay ativo! Você é o Player 1 👑');
+    await _mpNpHostStart(roomId);
   } else {
-    // ── P2 (GUEST): recebe inputs do P1 e injeta no emulador ──
-    _setupP2Injection();
-    showToast('🎮 NetPlay ativo! Você é o Player 2 🎮');
+    await _mpNpGuestStart(roomId);
+  }
+}
+
+// ════════════════════════════════════════
+// HOST: captura canvas → WebRTC → P2
+//       recebe inputs P2 via Firebase → injeta no emulador
+// ════════════════════════════════════════
+async function _mpNpHostStart(roomId){
+  const sigRef = fbDb.ref('mp_rooms/'+roomId+'/rtc');
+  _mpNpInputRef = fbDb.ref('mp_rooms/'+roomId+'/p2_inputs');
+
+  // 1. Captura o canvas do emulador
+  const canvas = getEmulatorCanvas();
+  if(!canvas){ showToast('⚠️ Canvas não encontrado — tente novamente',true); return; }
+
+  try{
+    const vidStream = canvas.captureStream(30);
+    const tracks = [...vidStream.getVideoTracks()];
+    // Tenta capturar áudio também
+    try{
+      const audioEl = document.querySelector('#emulator-container audio')
+                   || document.querySelector('#emulator-container video');
+      if(audioEl?.captureStream){
+        const as = audioEl.captureStream();
+        as.getAudioTracks().forEach(t=>tracks.push(t));
+      }
+    }catch(_){}
+    _mpNpStream = new MediaStream(tracks);
+  }catch(e){
+    showToast('⚠️ captureStream não suportado: '+e.message,true); return;
   }
 
-  // Sinaliza presença no Firebase
-  fbDb.ref('mp_rooms/'+roomId+'/netplay_ready/'+myUsername)
-      .set({role, ts:Date.now()}).catch(()=>{});
-}
+  // 2. Cria RTCPeerConnection e adiciona as tracks
+  _mpNpPc = new RTCPeerConnection({iceServers: ICE_SERVERS});
+  _mpNpStream.getTracks().forEach(t=>_mpNpPc.addTrack(t, _mpNpStream));
 
-// ── P1: intercepta keydown/keyup e envia para Firebase ──────────────────────
-function _setupP1Capture(){
-  if(_nsListenerActive) return;
-  _nsListenerActive = true;
-
-  // Throttle: não envia mais de 1 evento a cada ~16ms (60fps)
-  let _lastSent = 0;
-
-  const _onKey = (e) => {
-    if(!_nsRef) return;
-    // Só captura teclas mapeadas para o emulador
-    const code = e.keyCode || e.which;
-    if(!_KEYCODE_TO_GP[code]) return;
-    const now = Date.now();
-    // Envia o evento com timestamp para manter ordem
-    _nsRef.push({k: code, t: e.type==='keydown'?1:0, ts: now}).catch(()=>{});
+  // 3. ICE → Firebase
+  _mpNpPc.onicecandidate = e=>{
+    if(e.candidate) sigRef.child('ice_h').push(e.candidate.toJSON()).catch(()=>{});
   };
 
-  document.addEventListener('keydown', _onKey, true);
-  document.addEventListener('keyup',   _onKey, true);
-  // Guarda referência para cleanup ao fechar emulador
-  window._nsCleanup = ()=>{
-    document.removeEventListener('keydown', _onKey, true);
-    document.removeEventListener('keyup',   _onKey, true);
-    _nsListenerActive = false;
-  };
-
-  // Limpa inputs antigos do Firebase a cada 30s para não acumular
-  setInterval(()=>{
-    if(!_nsRef) return;
-    const cutoff = Date.now() - 5000;
-    _nsRef.orderByChild('ts').endAt(cutoff).once('value', snap=>{
-      snap.forEach(child=>child.ref.remove());
-    }).catch(()=>{});
-  }, 30000);
-}
-
-// ── P2: escuta inputs do P1 e injeta no emulador como Player 1 ──────────────
-function _setupP2Injection(){
-  if(!_nsRef) return;
-
-  // Cria um gamepad virtual para representar o P1 (index 0) no emulador
-  // Usamos a GamepadAPI shim apenas se disponível; senão fazemos inject de keyboard
-  _nsVGamepad = _createVirtualGamepad(0);
-
-  // Registra timestamp do momento que P2 entra — ignora inputs anteriores
-  const joinTs = Date.now();
-
-  _nsRef.orderByChild('ts').startAt(joinTs).on('child_added', snap=>{
-    const d = snap.val();
-    if(!d || typeof d.k !== 'number') return;
-    const pressed = d.t === 1;
-    _injectP1Input(d.k, pressed);
+  // 4. Aguarda answer do P2
+  sigRef.child('answer').on('value', async snap=>{
+    const ans = snap.val();
+    if(!ans || _mpNpPc.signalingState !== 'have-local-offer') return;
+    try{
+      await _mpNpPc.setRemoteDescription(new RTCSessionDescription(ans));
+    }catch(_){}
+  });
+  // ICE do P2 → adiciona ao host
+  sigRef.child('ice_g').on('child_added', async snap=>{
+    const c = snap.val();
+    if(c?.candidate && _mpNpPc.remoteDescription){
+      try{ await _mpNpPc.addIceCandidate(new RTCIceCandidate(c)); }catch(_){}
+    }
   });
 
-  window._nsCleanup = ()=>{
-    if(_nsRef) _nsRef.off();
-    _nsListenerActive = false;
+  // 5. Cria offer e publica
+  const offer = await _mpNpPc.createOffer();
+  await _mpNpPc.setLocalDescription(offer);
+  await sigRef.child('offer').set({type:offer.type, sdp:offer.sdp});
+
+  // 6. Escuta inputs do P2 e injeta no emulador local como Player 2
+  const joinTs = Date.now();
+  _mpNpInputRef.orderByChild('ts').startAt(joinTs).on('child_added', snap=>{
+    const d = snap.val();
+    if(!d) return;
+    _injectAsP2(d.kc, d.t===1); // kc=keyCode original do P2, t=1 down / 0 up
+  });
+
+  _mpNpPc.onconnectionstatechange = ()=>{
+    if(_mpNpPc.connectionState==='connected'){
+      showToast('🎮 P2 conectado! Jogando juntos agora 🎮');
+      // Mostra badge de netplay no header do emulador
+      _showNetplayBadge('HOST · P1');
+    }
   };
+
+  showToast('🎮 Aguardando P2 conectar... sala: '+roomId);
 }
 
-// Injeta um input do P1 no emulador via dois métodos em cascata:
-// 1. Gamepad virtual (melhor — emulador lê como controle físico P1)
-// 2. Keyboard event (fallback — funciona em jogos que aceitam teclado)
-function _injectP1Input(keyCode, pressed){
-  // Método 1: Gamepad virtual
-  if(_nsVGamepad && _KEYCODE_TO_GP[keyCode] !== undefined){
-    const btnIdx = _KEYCODE_TO_GP[keyCode];
-    _nsVGamepad.buttons[btnIdx] = pressed
-      ? {pressed:true, touched:true, value:1}
-      : {pressed:false,touched:false,value:0};
-    // Dispara evento gamepadconnected/update para o emulador perceber
-    try{
-      window.dispatchEvent(new Event('gamepadconnected'));
-    }catch(_){}
-  }
+// ════════════════════════════════════════
+// GUEST: recebe stream do P1 → exibe overlay
+//        envia seus inputs via Firebase → P1 injeta como P2
+// ════════════════════════════════════════
+async function _mpNpGuestStart(roomId){
+  const sigRef = fbDb.ref('mp_rooms/'+roomId+'/rtc');
+  _mpNpInputRef = fbDb.ref('mp_rooms/'+roomId+'/p2_inputs');
 
-  // Método 2: Keyboard event no canvas/document (fallback robusto)
+  // 1. Cria peer connection
+  _mpNpPc = new RTCPeerConnection({iceServers: ICE_SERVERS});
+  const remoteStream = new MediaStream();
+
+  // 2. Quando chegar track de vídeo, exibe sobre o emulador
+  _mpNpPc.ontrack = e=>{
+    e.streams[0].getTracks().forEach(t=>remoteStream.addTrack(t));
+    _showP2VideoOverlay(remoteStream);
+  };
+
+  // 3. ICE do guest → Firebase
+  _mpNpPc.onicecandidate = e=>{
+    if(e.candidate) sigRef.child('ice_g').push(e.candidate.toJSON()).catch(()=>{});
+  };
+
+  // 4. Aguarda offer do host
+  sigRef.child('offer').on('value', async snap=>{
+    const offer = snap.val();
+    if(!offer || _mpNpPc.signalingState !== 'stable') return;
+    try{
+      await _mpNpPc.setRemoteDescription(new RTCSessionDescription(offer));
+      const answer = await _mpNpPc.createAnswer();
+      await _mpNpPc.setLocalDescription(answer);
+      await sigRef.child('answer').set({type:answer.type, sdp:answer.sdp});
+    }catch(_){}
+  });
+  // ICE do host
+  sigRef.child('ice_h').on('child_added', async snap=>{
+    const c = snap.val();
+    if(c?.candidate && _mpNpPc.remoteDescription){
+      try{ await _mpNpPc.addIceCandidate(new RTCIceCandidate(c)); }catch(_){}
+    }
+  });
+
+  // 5. Captura inputs do P2 e envia ao Firebase
+  _setupP2InputCapture(roomId);
+
+  _mpNpPc.onconnectionstatechange = ()=>{
+    if(_mpNpPc.connectionState==='connected'){
+      showToast('🎮 Conectado ao P1! Seus inputs controlam o Player 2 🎮');
+      _showNetplayBadge('GUEST · P2');
+    }
+    if(_mpNpPc.connectionState==='failed'||_mpNpPc.connectionState==='disconnected'){
+      showToast('⚠️ Conexão com P1 perdida',true);
+    }
+  };
+
+  showToast('🎮 Conectando ao P1...');
+}
+
+// ── Exibe o vídeo do P1 sobre o emulador do P2 ──────────────────────────────
+function _showP2VideoOverlay(stream){
+  let vid = document.getElementById('mp-p1-video');
+  if(!vid){
+    vid = document.createElement('video');
+    vid.id = 'mp-p1-video';
+    vid.autoplay = true;
+    vid.playsInline = true;
+    vid.muted = false;
+    Object.assign(vid.style,{
+      position:'absolute', inset:'0', width:'100%', height:'100%',
+      zIndex:'20', objectFit:'contain', background:'#000',
+      pointerEvents:'none'
+    });
+    // Coloca sobre o canvas do emulador
+    const wrap = document.getElementById('canvas-wrap');
+    if(wrap) wrap.appendChild(vid);
+  }
+  vid.srcObject = stream;
+  vid.style.display = 'block';
+  vid.play().catch(()=>{ vid.muted=true; vid.play().catch(()=>{}); });
+}
+
+// ── Captura inputs do P2 e publica no Firebase ──────────────────────────────
+function _setupP2InputCapture(roomId){
+  const ref = fbDb.ref('mp_rooms/'+roomId+'/p2_inputs');
+  const VALID = new Set(Object.keys(_MP_P2_KEYS).map(Number));
+
+  const onKey = e=>{
+    const kc = e.keyCode||e.which;
+    if(!VALID.has(kc)) return;
+    ref.push({kc, t: e.type==='keydown'?1:0, ts: Date.now()}).catch(()=>{});
+  };
+  document.addEventListener('keydown', onKey, true);
+  document.addEventListener('keyup',   onKey, true);
+
+  // Também captura os botões do overlay mobile (P2 usa os mesmos botões)
+  // mas envia ao Firebase em vez de despachar localmente
+  _mpNpCleanups.push(()=>{
+    document.removeEventListener('keydown', onKey, true);
+    document.removeEventListener('keyup',   onKey, true);
+    ref.remove().catch(()=>{});
+  });
+
+  // Limpa inputs antigos a cada 10s
+  setInterval(()=>{
+    const cutoff = Date.now()-3000;
+    ref.orderByChild('ts').endAt(cutoff).once('value',snap=>{
+      snap.forEach(c=>c.ref.remove());
+    }).catch(()=>{});
+  }, 10000);
+}
+
+// ── Injeta input do P2 no emulador do HOST ──────────────────────────────────
+// EmulatorJS usa teclas específicas para Player 2. Aqui mapeamos as teclas
+// P1 recebidas para o equivalente P2 do EJS e as despachamos no canvas.
+function _injectAsP2(originalKeyCode, pressed){
+  const map = _MP_P2_KEYS[originalKeyCode];
+  if(!map) return;
   const type = pressed ? 'keydown' : 'keyup';
-  const opts = {keyCode, which:keyCode, bubbles:true, cancelable:true, composed:true};
-  const ev   = new KeyboardEvent(type, opts);
-  // Injeta no canvas do emulador (Player 1 — as mesmas teclas do host)
-  const cvs  = document.querySelector('#emulator-container canvas');
+  const opts = {
+    key: map.key, code: map.code,
+    keyCode: map.keyCode, which: map.keyCode,
+    bubbles:true, cancelable:true, composed:true
+  };
+  const ev = new KeyboardEvent(type, opts);
+  const cvs = document.querySelector('#emulator-container canvas');
   if(cvs) cvs.dispatchEvent(ev);
-  const ifr  = document.querySelector('#emulator-container iframe');
+  document.dispatchEvent(ev);
+  const ifr = document.querySelector('#emulator-container iframe');
   if(ifr){ try{ ifr.contentDocument?.dispatchEvent(new KeyboardEvent(type,opts)); }catch(_){} }
 }
 
-// Cria um objeto de gamepad virtual que o navegador retorna via getGamepads()
-function _createVirtualGamepad(index){
-  const gp = {
-    id:`RetroStation Virtual P${index+1}`,
-    index, connected:true, timestamp:0,
-    mapping:'standard', axes:[0,0,0,0],
-    buttons: Array.from({length:17}, ()=>({pressed:false,touched:false,value:0}))
-  };
-  // Shimeia navigator.getGamepads para incluir nosso gamepad virtual
-  const _origGetGamepads = navigator.getGamepads?.bind(navigator) || (()=>[]);
-  navigator.getGamepads = function(){
-    const real = Array.from(_origGetGamepads()||[]);
-    real[index] = gp; // substitui o slot do P1 pelo virtual
-    gp.timestamp = performance.now();
-    return real;
-  };
-  return gp;
-}
-
-// Cleanup global do netplay (chamado ao fechar emulador)
-function _stopInputSync(){
-  if(window._nsCleanup){ try{ window._nsCleanup(); }catch(_){} window._nsCleanup=null; }
-  if(_nsRef && _nsRole==='host'){
-    // Remove inputs ao sair
-    _nsRef.remove().catch(()=>{});
+// ── Badge visual de netplay no header ───────────────────────────────────────
+function _showNetplayBadge(label){
+  let badge = document.getElementById('mp-netplay-badge');
+  if(!badge){
+    badge = document.createElement('div');
+    badge.id = 'mp-netplay-badge';
+    Object.assign(badge.style,{
+      display:'flex', alignItems:'center', gap:'5px',
+      padding:'3px 10px', borderRadius:'99px', fontSize:'10px', fontWeight:'700',
+      background:'rgba(109,86,245,.18)', border:'1px solid rgba(109,86,245,.45)',
+      color:'#c4b5fd', marginLeft:'4px', letterSpacing:'.3px'
+    });
+    const row = document.getElementById('emu-controls-row');
+    if(row) row.prepend(badge);
   }
-  if(_nsRef) _nsRef.off();
-  _nsRef=null; _nsRole=null; _nsRoomId=null; _nsVGamepad=null;
-  // Restaura getGamepads original se foi shimado
-  try{
-    const real = navigator._origGetGamepads;
-    if(real) navigator.getGamepads = real;
-  }catch(_){}
+  badge.innerHTML = `<div style="width:6px;height:6px;border-radius:50%;background:#6d56f5;animation:blink 1s ease infinite"></div> NETPLAY · ${label}`;
+  badge.style.display = 'flex';
 }
 
-// injectNetplay mantido por compatibilidade com chamadas antigas
-function injectNetplay(roomId,role){
-  _startInputSync(roomId, role);
+// ── Limpeza geral do netplay ─────────────────────────────────────────────────
+function _stopInputSync(){
+  try{ _mpNpPc?.close(); }catch(_){}
+  _mpNpPc = null;
+  _mpNpStream?.getTracks().forEach(t=>t.stop());
+  _mpNpStream = null;
+  if(_mpNpInputRef){ try{ _mpNpInputRef.off(); }catch(_){} _mpNpInputRef=null; }
+  _mpNpCleanups.forEach(fn=>{ try{fn()}catch(_){} });
+  _mpNpCleanups = [];
+  // Remove overlay de vídeo do P2
+  document.getElementById('mp-p1-video')?.remove();
+  document.getElementById('mp-netplay-badge')?.remove();
+  // Limpa listeners Firebase de sinalização
+  if(fbDb && _mpNpRoomId){
+    try{ fbDb.ref('mp_rooms/'+_mpNpRoomId+'/rtc').off(); }catch(_){}
+    try{ fbDb.ref('mp_rooms/'+_mpNpRoomId+'/p2_inputs').off(); }catch(_){}
+  }
+  _mpNpRoomId=null; _mpNpRole=null;
 }
+
+// compat com chamadas antigas
+function injectNetplay(roomId,role){ _mpNetplayStart(roomId,role); }
 
 /* ═══ CLOSE EMULATOR ═══ */
 function closeEmulator(){
   rsStopPlayTimer();
   stopAchPolling();
   publishPresence(null, null);
-  _stopInputSync(); // para o netplay de input-sync
+  _stopInputSync(); // para o netplay MP (WebRTC + inputs)
 
   // 1. Para o emulador pelo API do EJS antes de destruir o DOM
   try{ window.EJS_emulator?.stop?.(); }catch(e){}
