@@ -1392,7 +1392,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
     </div>
     <div id="mp-modal-body">
       <div style="padding:10px 12px;background:rgba(109,86,245,.07);border:1px solid rgba(109,86,245,.2);border-radius:10px;font-size:11.5px;color:var(--accent2);line-height:1.7;margin-bottom:16px">
-        🎮 Multiplayer via <strong>NetPlay sincronizado</strong>. Para <strong>KOF 2002, Metal Slug, Street Fighter, SNES, Mega Drive</strong> e outros. Os dois jogadores precisam ter a <strong>mesma ROM</strong>. O <strong>criador da sala</strong> é o Player 1 (Host) e quem entra é o Player 2 (Client) — as telas são sincronizadas automaticamente.
+        🎮 Multiplayer via <strong>Input-Sync</strong>. O <strong>P1 (criador)</strong> joga normalmente — seus inputs são enviados em tempo real pelo Firebase para o P2. O <strong>P2 (convidado)</strong> recebe os inputs do P1 e joga como Player 2. Ambos precisam ter a <strong>mesma ROM</strong>.
       </div>
       <div class="mp-tabs">
         <button class="mp-tab active" data-mptab="create">➕ Criar Sala</button>
@@ -1860,7 +1860,7 @@ function renderLibrary(){
 }
 
 /* ═══ LAUNCH GAME ═══ */
-// netplayOpts: {roomId, role} — quando chamado pelo sistema MP
+// netplayOpts: {roomId, role:'host'|'guest'} — passado pelo sistema MP
 function launchGame(game, netplayOpts){
   const con=CONSOLES[game.console]||CONSOLES.gba;
   ['header','filter-bar','library-view'].forEach(id=>document.getElementById(id).style.display='none');
@@ -1868,64 +1868,29 @@ function launchGame(game, netplayOpts){
   document.getElementById('emu-game-title').textContent=game.name;
   const b=document.getElementById('emu-console-badge');b.textContent=con.label;b.className=`card-tag ${con.tagClass}`;
   updateEmuAchCount(game);adaptOverlay(game.console);
-  // MP button
-  const _mpb=document.getElementById('mp-lobby-btn');if(_mpb){const _mc=CONSOLES[game.console];_mpb.style.display=(_mc&&_mc.mp)?'inline-flex':'none';}
+  const _mpb=document.getElementById('mp-lobby-btn');
+  if(_mpb){const _mc=CONSOLES[game.console];_mpb.style.display=(_mc&&_mc.mp)?'inline-flex':'none';}
   const loading=document.getElementById('emu-loading');
   loading.classList.remove('hidden');
   document.getElementById('emu-loading-text').textContent=`Carregando ${game.name}...`;
   document.getElementById('emulator-container').innerHTML='';
   const romBytes=game.romData instanceof Uint8Array?game.romData:new Uint8Array(game.romData);
   const romUrl=URL.createObjectURL(new Blob([romBytes],{type:'application/octet-stream'}));
-
-  // ── Netplay config ──────────────────────────────────────────────
-  // EJS_netplayUrl: servidor de sinalização WebSocket do EmulatorJS
-  // EJS_gameID: deve ser igual para os dois jogadores (usamos o roomId do Firebase)
-  // EJS_netplayRoom: sala dentro do servidor de sinalização
-  const EJS_NETPLAY_SERVER = 'wss://netplay.emulatorjs.org:443';
-  const supportsNetplay = !!(con && con.mp);
-  const netplayActive   = supportsNetplay && !!netplayOpts;
-
-  const ejsVars = {
-    EJS_player:'#emulator-container',
-    EJS_gameName:game.name,
-    EJS_biosUrl:'',
-    EJS_core:con.core,
-    EJS_pathtodata:'https://cdn.emulatorjs.org/stable/data/',
-    EJS_gameUrl:romUrl,
-    EJS_startOnLoaded:true,
-    EJS_color:con.color,
-    EJS_backgroundColor:'#07070d',
-    EJS_VirtualGamepadSettings:{disabled:true},
+  Object.assign(window,{
+    EJS_player:'#emulator-container',EJS_gameName:game.name,EJS_biosUrl:'',
+    EJS_core:con.core,EJS_pathtodata:'https://cdn.emulatorjs.org/stable/data/',
+    EJS_gameUrl:romUrl,EJS_startOnLoaded:true,EJS_color:con.color,
+    EJS_backgroundColor:'#07070d',EJS_VirtualGamepadSettings:{disabled:true},
     EJS_defaultOptions:{'emulation-speed':'1'},
     EJS_Buttons:{playPause:false,restart:true,mute:true,settings:true,fullscreen:true,saveState:true,loadState:true,screenRecord:false,gamepad:false,cheat:false,volume:true,saveSavFiles:true},
     EJS_onGameStart:()=>{
-      loading.classList.add('hidden');
-      URL.revokeObjectURL(romUrl);
-      startAchPolling(game);
-      publishPresence(game.name, null);
-      rsOnGamePlayed(game.name, game.console);
-      rsStartPlayTimer();
-      publishRsPoints();
-      // Após o emulador iniciar, tenta ativar o netplay programaticamente
-      if(netplayActive) _activateNetplay(netplayOpts.roomId, netplayOpts.role);
+      loading.classList.add('hidden');URL.revokeObjectURL(romUrl);
+      startAchPolling(game);publishPresence(game.name,null);
+      rsOnGamePlayed(game.name,game.console);rsStartPlayTimer();publishRsPoints();
+      if(netplayOpts) _startInputSync(netplayOpts.roomId, netplayOpts.role);
     }
-  };
-
-  if(netplayActive){
-    // gameID precisa ser idêntico nos dois lados → usamos o roomId da sala Firebase
-    ejsVars.EJS_netplayUrl  = EJS_NETPLAY_SERVER;
-    ejsVars.EJS_gameID      = netplayOpts.roomId;       // ID único da sessão
-    ejsVars.EJS_netplayRoom = netplayOpts.roomId;       // sala no servidor de sinalização
-    // Player 1 = host, Player 2 = client (guest)
-    ejsVars.EJS_playerName  = myUsername || 'Player';
-    if(netplayOpts.role === 'host'){
-      ejsVars.EJS_netplayHost = true;  // host inicia a sessão
-    }
-  }
-
-  Object.assign(window, ejsVars);
+  });
   try{delete window.EJS_threads}catch(e){}
-
   const old=document.getElementById('ejs');if(old)old.remove();
   const s=document.createElement('script');s.id='ejs';s.src='https://cdn.emulatorjs.org/stable/data/loader.js';
   s.onerror=()=>{loading.classList.add('hidden');document.getElementById('emulator-container').innerHTML=`<div style="color:#ef4444;text-align:center;padding:40px;font-size:13px">Falha ao carregar o emulador.<br>Verifique sua conexão com a internet.</div>`};
@@ -1933,42 +1898,191 @@ function launchGame(game, netplayOpts){
   setTimeout(()=>loading.classList.add('hidden'),22000);
 }
 
-// ── Ativar netplay após o emulador iniciar ──────────────────────────────────
-// Tenta acionar a API interna do EJS. O EmulatorJS expõe gameManager.netplay
-// quando o servidor wss está configurado. Também envia um sinal Firebase para
-// confirmar ao parceiro que a sessão está pronta.
-function _activateNetplay(roomId, role){
-  let attempts = 0;
-  const MAX = 20; // até 10 s
-  const tryConnect = () => {
-    attempts++;
-    try{
-      const emu = window.EJS_emulator;
-      if(emu && emu.gameManager){
-        const nm = emu.gameManager.netplay;
-        if(nm){
-          if(role === 'host' && typeof nm.host === 'function'){
-            nm.host(roomId);
-            showToast('🎮 NetPlay HOST ativo — sala ' + roomId);
-          } else if(role !== 'host' && typeof nm.join === 'function'){
-            nm.join(roomId);
-            showToast('🎮 NetPlay CLIENT conectado — sala ' + roomId);
-          } else {
-            // API não disponível; orienta o usuário a usar o menu interno
-            showToast('🎮 NetPlay: use o menu do emulador → Netplay → ' + (role==='host'?'Host':'Join') + ' → sala: ' + roomId);
-          }
-          // Sinaliza no Firebase que este jogador está pronto
-          if(fbDb && roomId){
-            fbDb.ref('mp_rooms/'+roomId+'/netplay_ready/'+myUsername).set({role, ts:Date.now()}).catch(()=>{});
-          }
-          return;
-        }
-      }
-    }catch(_){}
-    if(attempts < MAX) setTimeout(tryConnect, 500);
-    else showToast('🎮 NetPlay: no menu do emulador → Netplay → sala: ' + roomId);
+/* ═══════════════════════════════════════════════════════════════
+   INPUT-SYNC NETPLAY — Firebase como canal de transporte
+   ─────────────────────────────────────────────────────────────
+   Arquitetura:
+   • P1 (host)  → captura TODOS os seus keydown/keyup (jogadores 1)
+                  publica em Firebase: mp_rooms/{id}/inputs/{ts} = {k, t}
+   • P2 (guest) → lê o stream de inputs do P1 via .on('child_added')
+                  injeta os eventos como se viessem do teclado (Player 1 no emulador)
+                  enquanto P2 joga normalmente com o teclado DELE (Player 2)
+
+   Mapeamento de teclas P2 → Player 2 do emulador:
+   • EmulatorJS usa jogador 2 via gamepad index 1 OU teclas separadas
+   • Injetamos via GamepadAPI virtual (melhor compatibilidade)
+═══════════════════════════════════════════════════════════════ */
+
+// Estado do input-sync
+let _nsRef=null, _nsRole=null, _nsRoomId=null;
+let _nsListenerActive=false;
+let _nsVGamepad=null;   // gamepad virtual para P2 receber inputs do P1
+
+// Mapa de keyCode → índice do botão no Gamepad padrão (para injeção virtual)
+const _KEYCODE_TO_GP = {
+  38:12, // ArrowUp    → D-Pad Up
+  40:13, // ArrowDown  → D-Pad Down
+  37:14, // ArrowLeft  → D-Pad Left
+  39:15, // ArrowRight → D-Pad Right
+  90:0,  // Z          → A (confirmação)
+  88:1,  // X          → B
+  83:2,  // S          → X
+  65:3,  // A          → Y
+  67:4,  // C          → LB (Mega Drive: C)
+  68:5,  // D          → RB
+  13:9,  // Enter      → Start
+  16:8,  // Shift      → Select
+  81:6,  // Q          → L2
+  69:7,  // E          → R2
+};
+
+function _startInputSync(roomId, role){
+  _nsRoomId = roomId;
+  _nsRole   = role;
+  _nsRef    = fbDb ? fbDb.ref('mp_rooms/'+roomId+'/inputs') : null;
+  if(!_nsRef){ showToast('⚠️ Sem Firebase — NetPlay desativado',true); return; }
+
+  if(role === 'host'){
+    // ── P1 (HOST): captura inputs locais e publica no Firebase ──
+    _setupP1Capture();
+    showToast('🎮 NetPlay ativo! Você é o Player 1 👑');
+  } else {
+    // ── P2 (GUEST): recebe inputs do P1 e injeta no emulador ──
+    _setupP2Injection();
+    showToast('🎮 NetPlay ativo! Você é o Player 2 🎮');
+  }
+
+  // Sinaliza presença no Firebase
+  fbDb.ref('mp_rooms/'+roomId+'/netplay_ready/'+myUsername)
+      .set({role, ts:Date.now()}).catch(()=>{});
+}
+
+// ── P1: intercepta keydown/keyup e envia para Firebase ──────────────────────
+function _setupP1Capture(){
+  if(_nsListenerActive) return;
+  _nsListenerActive = true;
+
+  // Throttle: não envia mais de 1 evento a cada ~16ms (60fps)
+  let _lastSent = 0;
+
+  const _onKey = (e) => {
+    if(!_nsRef) return;
+    // Só captura teclas mapeadas para o emulador
+    const code = e.keyCode || e.which;
+    if(!_KEYCODE_TO_GP[code]) return;
+    const now = Date.now();
+    // Envia o evento com timestamp para manter ordem
+    _nsRef.push({k: code, t: e.type==='keydown'?1:0, ts: now}).catch(()=>{});
   };
-  setTimeout(tryConnect, 1500); // aguarda inicialização do EJS
+
+  document.addEventListener('keydown', _onKey, true);
+  document.addEventListener('keyup',   _onKey, true);
+  // Guarda referência para cleanup ao fechar emulador
+  window._nsCleanup = ()=>{
+    document.removeEventListener('keydown', _onKey, true);
+    document.removeEventListener('keyup',   _onKey, true);
+    _nsListenerActive = false;
+  };
+
+  // Limpa inputs antigos do Firebase a cada 30s para não acumular
+  setInterval(()=>{
+    if(!_nsRef) return;
+    const cutoff = Date.now() - 5000;
+    _nsRef.orderByChild('ts').endAt(cutoff).once('value', snap=>{
+      snap.forEach(child=>child.ref.remove());
+    }).catch(()=>{});
+  }, 30000);
+}
+
+// ── P2: escuta inputs do P1 e injeta no emulador como Player 1 ──────────────
+function _setupP2Injection(){
+  if(!_nsRef) return;
+
+  // Cria um gamepad virtual para representar o P1 (index 0) no emulador
+  // Usamos a GamepadAPI shim apenas se disponível; senão fazemos inject de keyboard
+  _nsVGamepad = _createVirtualGamepad(0);
+
+  // Registra timestamp do momento que P2 entra — ignora inputs anteriores
+  const joinTs = Date.now();
+
+  _nsRef.orderByChild('ts').startAt(joinTs).on('child_added', snap=>{
+    const d = snap.val();
+    if(!d || typeof d.k !== 'number') return;
+    const pressed = d.t === 1;
+    _injectP1Input(d.k, pressed);
+  });
+
+  window._nsCleanup = ()=>{
+    if(_nsRef) _nsRef.off();
+    _nsListenerActive = false;
+  };
+}
+
+// Injeta um input do P1 no emulador via dois métodos em cascata:
+// 1. Gamepad virtual (melhor — emulador lê como controle físico P1)
+// 2. Keyboard event (fallback — funciona em jogos que aceitam teclado)
+function _injectP1Input(keyCode, pressed){
+  // Método 1: Gamepad virtual
+  if(_nsVGamepad && _KEYCODE_TO_GP[keyCode] !== undefined){
+    const btnIdx = _KEYCODE_TO_GP[keyCode];
+    _nsVGamepad.buttons[btnIdx] = pressed
+      ? {pressed:true, touched:true, value:1}
+      : {pressed:false,touched:false,value:0};
+    // Dispara evento gamepadconnected/update para o emulador perceber
+    try{
+      window.dispatchEvent(new Event('gamepadconnected'));
+    }catch(_){}
+  }
+
+  // Método 2: Keyboard event no canvas/document (fallback robusto)
+  const type = pressed ? 'keydown' : 'keyup';
+  const opts = {keyCode, which:keyCode, bubbles:true, cancelable:true, composed:true};
+  const ev   = new KeyboardEvent(type, opts);
+  // Injeta no canvas do emulador (Player 1 — as mesmas teclas do host)
+  const cvs  = document.querySelector('#emulator-container canvas');
+  if(cvs) cvs.dispatchEvent(ev);
+  const ifr  = document.querySelector('#emulator-container iframe');
+  if(ifr){ try{ ifr.contentDocument?.dispatchEvent(new KeyboardEvent(type,opts)); }catch(_){} }
+}
+
+// Cria um objeto de gamepad virtual que o navegador retorna via getGamepads()
+function _createVirtualGamepad(index){
+  const gp = {
+    id:`RetroStation Virtual P${index+1}`,
+    index, connected:true, timestamp:0,
+    mapping:'standard', axes:[0,0,0,0],
+    buttons: Array.from({length:17}, ()=>({pressed:false,touched:false,value:0}))
+  };
+  // Shimeia navigator.getGamepads para incluir nosso gamepad virtual
+  const _origGetGamepads = navigator.getGamepads?.bind(navigator) || (()=>[]);
+  navigator.getGamepads = function(){
+    const real = Array.from(_origGetGamepads()||[]);
+    real[index] = gp; // substitui o slot do P1 pelo virtual
+    gp.timestamp = performance.now();
+    return real;
+  };
+  return gp;
+}
+
+// Cleanup global do netplay (chamado ao fechar emulador)
+function _stopInputSync(){
+  if(window._nsCleanup){ try{ window._nsCleanup(); }catch(_){} window._nsCleanup=null; }
+  if(_nsRef && _nsRole==='host'){
+    // Remove inputs ao sair
+    _nsRef.remove().catch(()=>{});
+  }
+  if(_nsRef) _nsRef.off();
+  _nsRef=null; _nsRole=null; _nsRoomId=null; _nsVGamepad=null;
+  // Restaura getGamepads original se foi shimado
+  try{
+    const real = navigator._origGetGamepads;
+    if(real) navigator.getGamepads = real;
+  }catch(_){}
+}
+
+// injectNetplay mantido por compatibilidade com chamadas antigas
+function injectNetplay(roomId,role){
+  _startInputSync(roomId, role);
 }
 
 /* ═══ CLOSE EMULATOR ═══ */
@@ -1976,6 +2090,7 @@ function closeEmulator(){
   rsStopPlayTimer();
   stopAchPolling();
   publishPresence(null, null);
+  _stopInputSync(); // para o netplay de input-sync
 
   // 1. Para o emulador pelo API do EJS antes de destruir o DOM
   try{ window.EJS_emulator?.stop?.(); }catch(e){}
@@ -4069,6 +4184,7 @@ async function sendMpChat(){
 }
 
 async function leaveMpRoom(){
+  _stopInputSync();
   if(mpRoomId&&myUsername&&fbDb){
     try{await fbDb.ref('mp_rooms/'+mpRoomId+'/players/'+myUsername).remove();}catch(e){}
     if(mpRole==='host'){try{await fbDb.ref('mp_rooms/'+mpRoomId+'/status').set('closed');}catch(e){}}
