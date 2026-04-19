@@ -774,6 +774,88 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
 .rs-notif-eyebrow{font-size:9px;font-weight:800;letter-spacing:2px;color:var(--accent2);text-transform:uppercase;margin-bottom:4px;display:flex;align-items:center;gap:4px}
 .rs-notif-title{font-size:14px;font-weight:800;color:#fff;margin-bottom:2px}
 .rs-notif-pts{font-size:11px;font-weight:700;color:var(--gold)}
+
+.tag-arcade{background:rgba(251,146,60,.14);color:#fdba74;border:1px solid rgba(251,146,60,.3)}
+.tag-neogeo{background:rgba(234,179,8,.14);color:#fde047;border:1px solid rgba(234,179,8,.3)}
+.tag-nds{background:rgba(236,72,153,.14);color:#f9a8d4;border:1px solid rgba(236,72,153,.3)}
+.tag-psp{background:rgba(14,165,233,.14);color:#7dd3fc;border:1px solid rgba(14,165,233,.3)}
+.tag-atari{background:rgba(132,204,22,.14);color:#bef264;border:1px solid rgba(132,204,22,.3)}
+
+/* ═══ NEW CONSOLE FILTER CHIP ACTIVE COLORS ═══ */
+.filter-chip.chip-arcade.active{background:#c2410c;border-color:#c2410c}
+.filter-chip.chip-neogeo.active{background:#92400e;border-color:#92400e}
+.filter-chip.chip-nds.active{background:#9d174d;border-color:#9d174d}
+.filter-chip.chip-psp.active{background:#075985;border-color:#075985}
+.filter-chip.chip-atari.active{background:#4d7c0f;border-color:#4d7c0f}
+
+/* ═══ LARGE FILE WARNING ═══ */
+#large-file-warning-backdrop{display:none;position:fixed;inset:0;z-index:9998;background:rgba(0,0,0,.75);backdrop-filter:blur(8px)}
+#large-file-warning{
+  display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:9999;
+  background:linear-gradient(135deg,#1a0e08 0%,#120c08 100%);
+  border:1px solid rgba(251,146,60,.55);border-radius:18px;
+  padding:28px 28px 24px;width:min(420px,94vw);
+  box-shadow:0 8px 48px rgba(0,0,0,.75),0 0 40px rgba(251,146,60,.12);text-align:center;
+}
+.lfw-icon{font-size:44px;margin-bottom:12px;display:block}
+.lfw-title{font-size:17px;font-weight:900;color:#fb923c;margin-bottom:10px}
+.lfw-size-badge{display:inline-block;background:rgba(251,146,60,.12);border:1px solid rgba(251,146,60,.3);border-radius:8px;padding:4px 14px;font-size:13px;font-weight:800;color:#fb923c;margin-bottom:14px}
+.lfw-body{font-size:12.5px;color:var(--text-muted);line-height:1.7;margin-bottom:16px}
+.lfw-body strong{color:var(--text)}
+.lfw-tips{background:rgba(255,255,255,.035);border:1px solid var(--border);border-radius:10px;padding:12px 14px;text-align:left;font-size:11.5px;color:var(--text-muted);line-height:1.9;margin-bottom:18px;list-style:none}
+.lfw-actions{display:flex;gap:10px;justify-content:center}
+
+/* ═══ MULTIPLAYER MODAL ═══ */
+#mp-modal-backdrop{display:none;position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.84);backdrop-filter:blur(14px);align-items:center;justify-content:center}
+#mp-modal{background:linear-gradient(135deg,var(--surface) 0%,var(--surface2) 100%);border:1px solid var(--border-accent);border-radius:20px;width:min(520px,96vw);max-height:90vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 20px 80px rgba(0,0,0,.6)}
+#mp-modal-header{padding:20px 22px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:linear-gradient(135deg,rgba(109,86,245,.09),rgba(109,86,245,.03))}
+#mp-modal-header h2{font-size:16px;font-weight:900;color:var(--accent2);display:flex;align-items:center;gap:9px}
+#mp-modal-close{width:30px;height:30px;border-radius:8px;background:var(--surface3);border:1px solid var(--border);color:var(--text-muted);cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center}
+#mp-modal-body{flex:1;overflow-y:auto;padding:20px 22px}
+.mp-tabs{display:flex;gap:6px;margin-bottom:18px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:4px}
+.mp-tab{flex:1;padding:8px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;border:none;background:transparent;color:var(--text-muted);font-family:var(--font);transition:all .15s;text-align:center}
+.mp-tab.active{background:var(--accent);color:#fff;box-shadow:0 2px 8px rgba(109,86,245,.3)}
+.mp-tab-content{display:none}.mp-tab-content.active{display:block}
+.mp-game-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:16px;max-height:200px;overflow-y:auto}
+.mp-game-card{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:12px;cursor:pointer;transition:all .15s}
+.mp-game-card:hover,.mp-game-card.selected{border-color:var(--border-accent);background:rgba(109,86,245,.08)}
+.mp-game-card.selected{border-color:var(--accent);box-shadow:0 0 0 2px rgba(109,86,245,.2)}
+.mp-game-title{font-size:12px;font-weight:800;color:var(--text);margin-bottom:3px}
+.mp-game-console{font-size:10px;color:var(--text-muted)}
+.mp-game-icon{font-size:22px;margin-bottom:6px}
+.mp-room-form label{font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px;display:block}
+.mp-room-form input{width:100%;padding:10px 13px;background:var(--surface2);border:1px solid var(--border);border-radius:9px;color:var(--text);font-size:13px;font-family:var(--font);outline:none;margin-bottom:12px;transition:border-color .15s}
+.mp-room-form input:focus{border-color:var(--border-accent);box-shadow:0 0 0 3px var(--accent-glow2)}
+.mp-room-list{display:flex;flex-direction:column;gap:8px;max-height:260px;overflow-y:auto}
+.mp-room-item{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:12px;transition:all .15s}
+.mp-room-item:hover{border-color:var(--border-accent)}
+.mp-room-item-info{flex:1;min-width:0}
+.mp-room-name{font-size:13px;font-weight:800;color:var(--text)}
+.mp-room-game{font-size:11px;color:var(--accent2);margin-top:2px}
+.mp-room-players{font-size:10.5px;color:var(--text-muted);margin-top:2px}
+.mp-room-join-btn{padding:7px 16px;border-radius:7px;background:var(--accent);color:#fff;border:none;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font);white-space:nowrap;flex-shrink:0}
+.mp-empty-rooms{text-align:center;padding:32px 0;color:var(--text-dim);font-size:12.5px}
+.mp-empty-rooms span{font-size:36px;display:block;margin-bottom:10px;opacity:.4}
+.mp-pcount-btn{flex:1;padding:8px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);color:var(--text-muted);font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font);transition:all .15s}
+.mp-pcount-btn.active{background:var(--accent);border-color:var(--accent);color:#fff}
+
+/* ═══ MP LOBBY IN-GAME BAR ═══ */
+#mp-lobby{display:none;position:fixed;bottom:0;left:0;right:0;z-index:110;background:rgba(7,7,13,.97);backdrop-filter:blur(16px);border-top:1px solid var(--border-accent);padding:10px 16px}
+#mp-lobby-inner{display:flex;align-items:center;gap:10px;max-width:900px;margin:0 auto;flex-wrap:wrap}
+#mp-lobby-label{font-size:10px;font-weight:800;color:var(--accent2);letter-spacing:.5px;white-space:nowrap}
+#mp-lobby-room-code{font-size:11px;color:var(--text-muted);background:var(--surface3);border:1px solid var(--border);border-radius:6px;padding:4px 10px;cursor:pointer;white-space:nowrap;transition:all .15s}
+#mp-lobby-room-code:hover{border-color:var(--border-accent);color:var(--accent2)}
+#mp-players-row{display:flex;gap:7px;flex:1;overflow-x:auto}
+.mp-player-slot{display:flex;align-items:center;gap:5px;padding:5px 10px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);font-size:11px;white-space:nowrap}
+.mp-player-slot.p1{border-color:rgba(109,86,245,.4);color:var(--accent2)}
+.mp-player-slot.p2{border-color:rgba(16,185,129,.4);color:#6ee7b7}
+.mp-player-slot.p3{border-color:rgba(245,158,11,.4);color:#fcd34d}
+.mp-player-slot.p4{border-color:rgba(239,68,68,.4);color:#fca5a5}
+.mp-player-avatar{width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;background:rgba(109,86,245,.25)}
+.mp-chat-mini{display:flex;gap:6px}
+.mp-chat-mini input{padding:5px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:7px;color:var(--text);font-size:11px;font-family:var(--font);outline:none;width:160px}
+.mp-chat-mini button{padding:5px 10px;border-radius:7px;background:var(--accent);border:none;color:#fff;font-size:11px;cursor:pointer;font-family:var(--font)}
+
 </style>
 </head>
 <body>
@@ -799,15 +881,20 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
 <!-- ════ FILTER BAR ════ -->
 <div id="filter-bar">
   <div class="filter-chip active" data-console="all">Todos</div>
-  <div class="filter-chip chip-gba"  data-console="gba">GBA</div>
-  <div class="filter-chip chip-snes" data-console="snes">SNES</div>
-  <div class="filter-chip chip-nes"  data-console="nes">NES</div>
-  <div class="filter-chip chip-md"   data-console="md">Mega Drive</div>
-  <div class="filter-chip chip-ps1"  data-console="ps1">PlayStation</div>
-  <div class="filter-chip chip-n64"  data-console="n64">Nintendo 64</div>
-  <div class="filter-chip chip-gg"   data-console="gg">Game Gear</div>
-  <div class="filter-chip chip-gb"   data-console="gb">Game Boy</div>
-  <div class="filter-chip chip-gbc"  data-console="gbc">GBC</div>
+  <div class="filter-chip chip-gba"    data-console="gba">GBA</div>
+  <div class="filter-chip chip-snes"   data-console="snes">SNES</div>
+  <div class="filter-chip chip-nes"    data-console="nes">NES</div>
+  <div class="filter-chip chip-md"     data-console="md">Mega Drive</div>
+  <div class="filter-chip chip-ps1"    data-console="ps1">PlayStation</div>
+  <div class="filter-chip chip-n64"    data-console="n64">Nintendo 64</div>
+  <div class="filter-chip chip-gg"     data-console="gg">Game Gear</div>
+  <div class="filter-chip chip-gb"     data-console="gb">Game Boy</div>
+  <div class="filter-chip chip-gbc"    data-console="gbc">GBC</div>
+  <div class="filter-chip chip-arcade" data-console="arcade">🕹 Arcade</div>
+  <div class="filter-chip chip-neogeo" data-console="neogeo">Neo Geo</div>
+  <div class="filter-chip chip-nds"    data-console="nds">NDS</div>
+  <div class="filter-chip chip-psp"    data-console="psp">PSP</div>
+  <div class="filter-chip chip-atari"  data-console="atari">Atari</div>
 </div>
 
 <!-- ════ LIBRARY ════ -->
@@ -839,6 +926,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
     </div>
     <div id="emu-controls-row">
       <div id="emu-ach-count" style="display:none">🏆 <span id="emu-ach-text">—</span></div>
+      <button id="mp-lobby-btn" title="Multiplayer" style="display:none;font-size:10px;padding:4px 11px;border-radius:6px;background:rgba(109,86,245,.18);border:1px solid rgba(109,86,245,.4);color:var(--accent2);cursor:pointer;font-family:var(--font);font-weight:700">🎮 Multiplayer</button>
       <button id="share-stream-btn" title="Compartilhar gameplay ao vivo">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
         Compartilhar
@@ -995,6 +1083,16 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
               <circle cx="46" cy="22" r="3" fill="#22c55e"/>
             </svg>
           </span>GBC</div>
+        <div class="console-opt" data-val="arcade">
+          <span class="co-icon"><svg viewBox="0 0 56 32" fill="none" xmlns="http://www.w3.org/2000/svg" width="48" height="28"><rect x="0" y="0" width="56" height="32" rx="4" fill="#1a0800"/><text x="3" y="15" font-family="'Arial Black',Arial,sans-serif" font-weight="900" font-size="9" fill="#fdba74">MAME</text><text x="3" y="28" font-family="'Arial Black',Arial,sans-serif" font-weight="900" font-size="9" fill="#fb923c">FBNeo</text><circle cx="46" cy="11" r="5" fill="#fb923c" opacity=".7"/><circle cx="46" cy="24" r="5" fill="#f97316" opacity=".4"/></svg></span>Arcade</div>
+        <div class="console-opt" data-val="neogeo">
+          <span class="co-icon"><svg viewBox="0 0 56 32" fill="none" xmlns="http://www.w3.org/2000/svg" width="48" height="28"><rect x="0" y="0" width="56" height="32" rx="4" fill="#120e00"/><text x="3" y="15" font-family="'Arial Black',Arial,sans-serif" font-weight="900" font-size="9" fill="#fde047">NEO</text><text x="3" y="28" font-family="'Arial Black',Arial,sans-serif" font-weight="900" font-size="9" fill="#eab308">GEO</text><rect x="36" y="4" width="17" height="24" rx="3" fill="none" stroke="#eab308" stroke-width="1.5"/><text x="38" y="21" font-family="'Arial Black',Arial,sans-serif" font-weight="900" font-size="12" fill="#fde047">M</text></svg></span>Neo Geo</div>
+        <div class="console-opt" data-val="nds">
+          <span class="co-icon"><svg viewBox="0 0 56 32" fill="none" xmlns="http://www.w3.org/2000/svg" width="48" height="28"><rect x="0" y="0" width="56" height="32" rx="4" fill="#1a001a"/><text x="3" y="22" font-family="'Arial Black',Arial,sans-serif" font-weight="900" font-size="18" fill="#f9a8d4">NDS</text><rect x="38" y="3" width="15" height="10" rx="2" fill="none" stroke="#ec4899" stroke-width="1.3"/><rect x="38" y="17" width="15" height="10" rx="2" fill="none" stroke="#ec4899" stroke-width="1.3"/></svg></span>NDS</div>
+        <div class="console-opt" data-val="psp">
+          <span class="co-icon"><svg viewBox="0 0 56 32" fill="none" xmlns="http://www.w3.org/2000/svg" width="48" height="28"><rect x="0" y="0" width="56" height="32" rx="4" fill="#001524"/><text x="3" y="22" font-family="'Arial Black',Arial,sans-serif" font-weight="900" font-size="18" fill="#7dd3fc">PSP</text><rect x="36" y="7" width="18" height="11" rx="2" fill="none" stroke="#0ea5e9" stroke-width="1.3"/><circle cx="46" cy="25" r="4" fill="none" stroke="#7dd3fc" stroke-width="1.3"/></svg></span>PSP</div>
+        <div class="console-opt" data-val="atari">
+          <span class="co-icon"><svg viewBox="0 0 56 32" fill="none" xmlns="http://www.w3.org/2000/svg" width="48" height="28"><rect x="0" y="0" width="56" height="32" rx="4" fill="#0a1200"/><text x="2" y="22" font-family="'Arial Black',Arial,sans-serif" font-weight="900" font-size="12" fill="#bef264">ATARI</text><path d="M40 5 L46 27 M37 15 L49 15" stroke="#84cc16" stroke-width="2.5" stroke-linecap="round"/></svg></span>Atari</div>
       </div>
       <div id="console-required-warning" style="display:none;margin-top:6px;padding:6px 10px;background:rgba(239,68,68,.09);border:1px solid rgba(239,68,68,.28);border-radius:7px;font-size:11px;color:#fca5a5;">⚠️ Selecione o console antes de salvar.</div>
     </div>
@@ -1265,6 +1363,96 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
   </div>
 </div>
 
+
+<!-- ════ LARGE FILE WARNING ════ -->
+<div id="large-file-warning-backdrop"></div>
+<div id="large-file-warning">
+  <span class="lfw-icon">⚠️</span>
+  <div class="lfw-title">Arquivo Grande Detectado!</div>
+  <div class="lfw-size-badge" id="lfw-size-display">— MB</div>
+  <div class="lfw-body">Este arquivo tem <strong id="lfw-size-text">—</strong>. Arquivos grandes podem <strong>travar ou fechar o navegador</strong>.</div>
+  <ul class="lfw-tips">
+    <li>🔴 Risco de crash do Chrome/Firefox</li>
+    <li>🐢 Carregamento muito lento (minutos)</li>
+    <li>💾 Alto consumo de RAM — feche outras abas</li>
+    <li>✅ Para PS1/PSP prefira .CHD ou .PBP comprimido</li>
+  </ul>
+  <div class="lfw-actions">
+    <button class="btn btn-ghost" id="lfw-cancel" style="font-size:12px">Cancelar</button>
+    <button class="btn" id="lfw-proceed" style="background:rgba(251,146,60,.18);color:#fb923c;border:1px solid rgba(251,146,60,.4);font-size:12px;font-weight:700">Continuar mesmo assim</button>
+  </div>
+</div>
+
+<!-- ════ MULTIPLAYER MODAL ════ -->
+<div id="mp-modal-backdrop">
+  <div id="mp-modal">
+    <div id="mp-modal-header">
+      <h2>🎮 Multiplayer — Salas Online</h2>
+      <button id="mp-modal-close">✕</button>
+    </div>
+    <div id="mp-modal-body">
+      <div style="padding:10px 12px;background:rgba(109,86,245,.07);border:1px solid rgba(109,86,245,.2);border-radius:10px;font-size:11.5px;color:var(--accent2);line-height:1.7;margin-bottom:16px">
+        🎮 Multiplayer via <strong>NetPlay</strong>. Para <strong>KOF 2002, Metal Slug, Street Fighter</strong> e outros. Os dois jogadores precisam ter a <strong>mesma ROM</strong>.
+      </div>
+      <div class="mp-tabs">
+        <button class="mp-tab active" data-mptab="create">➕ Criar Sala</button>
+        <button class="mp-tab" data-mptab="join">🔗 Entrar por Código</button>
+        <button class="mp-tab" data-mptab="browse">📋 Salas Ativas</button>
+      </div>
+      <!-- CREATE -->
+      <div class="mp-tab-content active" id="mp-tab-create">
+        <div class="mp-room-form">
+          <label>Nome da Sala</label>
+          <input type="text" id="mp-room-name-input" placeholder="Ex: KOF 2002 — partida rápida!" maxlength="40">
+          <label>Jogo (da sua biblioteca)</label>
+          <div id="mp-game-select-list" class="mp-game-grid"></div>
+          <label style="margin-top:4px">Máx. jogadores</label>
+          <div style="display:flex;gap:8px;margin-bottom:14px">
+            <button class="mp-pcount-btn active" data-count="2">2 Jogadores</button>
+            <button class="mp-pcount-btn" data-count="4">4 Jogadores</button>
+          </div>
+          <button class="btn btn-primary" id="mp-create-btn" style="width:100%;justify-content:center;padding:11px;font-size:13px">🎮 Criar Sala</button>
+          <div id="mp-create-status" style="margin-top:10px;font-size:11.5px;text-align:center;display:none"></div>
+        </div>
+      </div>
+      <!-- JOIN -->
+      <div class="mp-tab-content" id="mp-tab-join">
+        <div class="mp-room-form">
+          <label>Código da Sala</label>
+          <input type="text" id="mp-join-code-input" placeholder="Ex: ABC123" maxlength="10" style="text-transform:uppercase;letter-spacing:3px;font-size:18px;font-weight:800;text-align:center">
+          <div style="font-size:11px;color:var(--text-muted);margin-bottom:14px;text-align:center">Peça o código ao criador da sala</div>
+          <button class="btn btn-primary" id="mp-join-btn" style="width:100%;justify-content:center;padding:11px;font-size:13px">🔗 Entrar na Sala</button>
+          <div id="mp-join-status" style="margin-top:10px;font-size:11.5px;text-align:center;display:none"></div>
+        </div>
+      </div>
+      <!-- BROWSE -->
+      <div class="mp-tab-content" id="mp-tab-browse">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+          <span style="font-size:12px;font-weight:700;color:var(--text-muted)">Salas abertas agora</span>
+          <button id="mp-refresh-rooms" class="btn btn-ghost" style="font-size:10px;padding:5px 12px">🔄 Atualizar</button>
+        </div>
+        <div id="mp-room-list" class="mp-room-list">
+          <div class="mp-empty-rooms"><span>🎮</span>Nenhuma sala aberta.<br>Crie uma e chame seus amigos!</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════ MP LOBBY IN-GAME BAR ════ -->
+<div id="mp-lobby">
+  <div id="mp-lobby-inner">
+    <span id="mp-lobby-label">👥 SALA</span>
+    <span id="mp-lobby-room-code" title="Clique para copiar">📋 —</span>
+    <div id="mp-players-row"></div>
+    <div class="mp-chat-mini">
+      <input type="text" id="mp-chat-input" placeholder="Chat da sala..." maxlength="100">
+      <button id="mp-chat-send">➤</button>
+    </div>
+    <button id="mp-leave-btn" style="padding:5px 12px;border-radius:7px;background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.28);color:var(--red);font-size:10px;font-weight:700;cursor:pointer;font-family:var(--font);white-space:nowrap">Sair</button>
+  </div>
+</div>
+
 <div id="toast"></div>
 
 <script>
@@ -1274,15 +1462,20 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
    CONSOLES
 ═══════════════════════════════════════ */
 const CONSOLES = {
-  gba: {label:'GBA',         core:'mgba',            exts:['gba'],                        tagClass:'tag-gba',  color:'#6d56f5', raId:5,  raSupport:true,  rawgPlatform:'game-boy-advance'},
-  gb:  {label:'Game Boy',    core:'gambatte',         exts:['gb'],                         tagClass:'tag-gb',   color:'#047857', raId:4,  raSupport:true,  rawgPlatform:'gameboy'},
-  gbc: {label:'GBC',         core:'gambatte',         exts:['gbc'],                        tagClass:'tag-gbc',  color:'#059669', raId:6,  raSupport:true,  rawgPlatform:'gameboy-color'},
-  snes:{label:'SNES',        core:'snes9x',           exts:['sfc','smc','zip'],            tagClass:'tag-snes', color:'#1d4ed8', raId:3,  raSupport:true,  rawgPlatform:'snes'},
-  nes: {label:'NES',         core:'fceumm',           exts:['nes','zip'],                  tagClass:'tag-nes',  color:'#b91c1c', raId:7,  raSupport:true,  rawgPlatform:'nes'},
-  md:  {label:'Mega Drive',  core:'genesis_plus_gx',  exts:['md','gen','bin','zip'],       tagClass:'tag-md',   color:'#9d174d', raId:1,  raSupport:true,  rawgPlatform:'sega-genesis'},
-  gg:  {label:'Game Gear',   core:'genesis_plus_gx',  exts:['gg'],                        tagClass:'tag-gg',   color:'#b45309', raId:15, raSupport:true,  rawgPlatform:'game-gear'},
-  ps1: {label:'PlayStation', core:'pcsx_rearmed',     exts:['bin','cue','img','pbp','chd','zip'], tagClass:'tag-ps1', color:'#1e40af', raId:12, raSupport:true, rawgPlatform:'playstation'},
-  n64: {label:'Nintendo 64', core:'mupen64plus_next', exts:['n64','z64','v64','zip'],      tagClass:'tag-n64',  color:'#991b1b', raId:2,  raSupport:true,  rawgPlatform:'nintendo64'},
+  gba:    {label:'GBA',          core:'mgba',              exts:['gba'],                               tagClass:'tag-gba',    color:'#6d56f5', raId:5,  raSupport:true,  rawgPlatform:'game-boy-advance', mp:false},
+  gb:     {label:'Game Boy',     core:'gambatte',           exts:['gb'],                                tagClass:'tag-gb',     color:'#047857', raId:4,  raSupport:true,  rawgPlatform:'gameboy',          mp:false},
+  gbc:    {label:'GBC',          core:'gambatte',           exts:['gbc'],                               tagClass:'tag-gbc',    color:'#059669', raId:6,  raSupport:true,  rawgPlatform:'gameboy-color',    mp:false},
+  snes:   {label:'SNES',         core:'snes9x',             exts:['sfc','smc','zip'],                   tagClass:'tag-snes',   color:'#1d4ed8', raId:3,  raSupport:true,  rawgPlatform:'snes',             mp:true},
+  nes:    {label:'NES',          core:'fceumm',             exts:['nes','zip'],                         tagClass:'tag-nes',    color:'#b91c1c', raId:7,  raSupport:true,  rawgPlatform:'nes',              mp:true},
+  md:     {label:'Mega Drive',   core:'genesis_plus_gx',    exts:['md','gen','bin','zip'],              tagClass:'tag-md',     color:'#9d174d', raId:1,  raSupport:true,  rawgPlatform:'sega-genesis',     mp:true},
+  gg:     {label:'Game Gear',    core:'genesis_plus_gx',    exts:['gg'],                                tagClass:'tag-gg',     color:'#b45309', raId:15, raSupport:true,  rawgPlatform:'game-gear',        mp:false},
+  ps1:    {label:'PlayStation',  core:'pcsx_rearmed',       exts:['bin','cue','img','pbp','chd','zip'], tagClass:'tag-ps1',    color:'#1e40af', raId:12, raSupport:true,  rawgPlatform:'playstation',      mp:false},
+  n64:    {label:'Nintendo 64',  core:'mupen64plus_next',   exts:['n64','z64','v64','zip'],             tagClass:'tag-n64',    color:'#991b1b', raId:2,  raSupport:true,  rawgPlatform:'nintendo64',       mp:true},
+  arcade: {label:'Arcade',       core:'mame2003',           exts:['zip','7z'],                          tagClass:'tag-arcade', color:'#c2410c', raId:27, raSupport:false, rawgPlatform:'arcade',           mp:true},
+  neogeo: {label:'Neo Geo',      core:'fbalpha2012_neogeo', exts:['zip','7z'],                          tagClass:'tag-neogeo', color:'#a16207', raId:36, raSupport:false, rawgPlatform:'neo-geo',          mp:true},
+  nds:    {label:'Nintendo DS',  core:'melonds',            exts:['nds','zip'],                         tagClass:'tag-nds',    color:'#9d174d', raId:18, raSupport:false, rawgPlatform:'nintendo-ds',      mp:false},
+  psp:    {label:'PSP',          core:'ppsspp',             exts:['iso','cso','pbp','zip'],             tagClass:'tag-psp',    color:'#075985', raId:41, raSupport:false, rawgPlatform:'psp',              mp:false},
+  atari:  {label:'Atari 2600',   core:'stella2014',         exts:['a26','bin','rom','zip'],             tagClass:'tag-atari',  color:'#4d7c0f', raId:25, raSupport:false, rawgPlatform:'atari-2600',       mp:true},
 };
 
 const KEY_MAP={ArrowUp:38,ArrowDown:40,ArrowLeft:37,ArrowRight:39,KeyZ:90,KeyX:88,KeyS:83,KeyA:65,KeyC:67,KeyD:68,Enter:13,ShiftLeft:16,KeyQ:81,KeyE:69};
@@ -1674,6 +1867,8 @@ function launchGame(game){
   document.getElementById('emu-game-title').textContent=game.name;
   const b=document.getElementById('emu-console-badge');b.textContent=con.label;b.className=`card-tag ${con.tagClass}`;
   updateEmuAchCount(game);adaptOverlay(game.console);
+  // MP button
+  const _mpb=document.getElementById('mp-lobby-btn');if(_mpb){const _mc=CONSOLES[game.console];_mpb.style.display=(_mc&&_mc.mp)?'inline-flex':'none';}
   const loading=document.getElementById('emu-loading');
   loading.classList.remove('hidden');
   document.getElementById('emu-loading-text').textContent=`Carregando ${game.name}...`;
@@ -1816,13 +2011,15 @@ function setupConsoleSelector(){
 }
 const RA_NOTES={
   gba:'✅ GBA',gb:'✅ Game Boy',gbc:'✅ GBC',snes:'✅ SNES',nes:'✅ NES',
-  md:'✅ Mega Drive',gg:'✅ Game Gear',ps1:'✅ PlayStation',n64:'✅ N64'
+  md:'✅ Mega Drive',gg:'✅ Game Gear',ps1:'✅ PlayStation',n64:'✅ N64',
+  arcade:'⚠️ Arcade — sem suporte RA',neogeo:'⚠️ Neo Geo — sem suporte RA',
+  nds:'⚠️ NDS — sem suporte RA',psp:'⚠️ PSP — sem suporte RA',atari:'⚠️ Atari — sem suporte RA'
 };
 const RA_GLOBAL=' — conquistas visíveis nos cards. ⚠️ Desbloqueio em tempo real não é suportado pelo EmulatorJS.';
 function updateRomAccept(){
   const con=CONSOLES[selectedConsole];
   if(!con){
-    document.getElementById('inp-rom').accept='.gba,.gb,.gbc,.sfc,.smc,.nes,.md,.gen,.bin,.cue,.img,.pbp,.chd,.n64,.z64,.v64,.gg,.zip';
+    document.getElementById('inp-rom').accept='.gba,.gb,.gbc,.sfc,.smc,.nes,.md,.gen,.bin,.cue,.img,.pbp,.chd,.n64,.z64,.v64,.gg,.zip,.7z,.nds,.iso,.cso,.a26,.rom';
     document.getElementById('rom-wrap').querySelector('.file-label').textContent='Clique para selecionar a ROM';
     const banner=document.getElementById('ra-info-banner');
     if(banner){banner.className='ra-info-banner';document.getElementById('ra-info-text').textContent='Selecione o console para ver suporte a conquistas.';}
@@ -1865,23 +2062,43 @@ function setupModal(){
   inpRom.addEventListener('change',()=>{
     if(!inpRom.files[0])return;
     const f=inpRom.files[0];
-    romSel.style.display='block';romSel.textContent=`✓ ${f.name}`;
-    document.getElementById('rom-wrap').querySelector('.file-label').style.display='none';
-    if(!inpName.value){
-      inpName.value=f.name.replace(/\.[^.]+$/,'').replace(/[_\-]/g,' ').replace(/\(.*?\)/g,'').replace(/\[.*?\]/g,'').trim();
-    }
-    const det=detectConsole(f.name,null);
-    if(det&&det!==selectedConsole){
-      document.querySelectorAll('.console-opt').forEach(o=>o.classList.remove('selected'));
-      const tgt=document.querySelector(`.console-opt[data-val="${det}"]`);
-      if(tgt){tgt.classList.add('selected');selectedConsole=det;updateRomAccept()}
-      document.getElementById('console-required-warning').style.display='none';
-    }
-    // Auto-fetch cover after name is set
-    setTimeout(()=>{
-      const name=inpName.value.trim();
-      autofetchCover(name);
-    },100);
+    const sizeMB=f.size/1048576;
+    const doLoad=()=>{
+      romSel.style.display='block';romSel.textContent=`✓ ${f.name} (${sizeMB.toFixed(0)}MB)`;
+      document.getElementById('rom-wrap').querySelector('.file-label').style.display='none';
+      if(!inpName.value){
+        inpName.value=f.name.replace(/\.[^.]+$/,'').replace(/[_\-]/g,' ').replace(/\(.*?\)/g,'').replace(/\[.*?\]/g,'').trim();
+      }
+      const det=detectConsole(f.name,null);
+      if(det&&det!==selectedConsole){
+        document.querySelectorAll('.console-opt').forEach(o=>o.classList.remove('selected'));
+        const tgt=document.querySelector(`.console-opt[data-val="${det}"]`);
+        if(tgt){tgt.classList.add('selected');selectedConsole=det;updateRomAccept()}
+        document.getElementById('console-required-warning').style.display='none';
+      }
+      setTimeout(()=>autofetchCover(inpName.value.trim()),100);
+    };
+    if(sizeMB>300){
+      document.getElementById('lfw-size-display').textContent=sizeMB.toFixed(1)+' MB';
+      document.getElementById('lfw-size-text').textContent=sizeMB.toFixed(1)+' MB';
+      document.getElementById('large-file-warning-backdrop').style.display='block';
+      document.getElementById('large-file-warning').style.display='block';
+      document.getElementById('lfw-proceed').onclick=()=>{
+        document.getElementById('large-file-warning-backdrop').style.display='none';
+        document.getElementById('large-file-warning').style.display='none';
+        doLoad();
+      };
+      document.getElementById('lfw-cancel').onclick=()=>{
+        document.getElementById('large-file-warning-backdrop').style.display='none';
+        document.getElementById('large-file-warning').style.display='none';
+        inpRom.value='';
+      };
+      document.getElementById('large-file-warning-backdrop').onclick=()=>{
+        document.getElementById('large-file-warning-backdrop').style.display='none';
+        document.getElementById('large-file-warning').style.display='none';
+        inpRom.value='';
+      };
+    } else { doLoad(); }
   });
 
   inpCover.addEventListener('change',()=>{
@@ -1945,7 +2162,7 @@ function resetModal(){
   // Reset RA banner to neutral state
   const banner=document.getElementById('ra-info-banner');
   if(banner){banner.className='ra-info-banner';document.getElementById('ra-info-text').textContent='Selecione o console para ver suporte a conquistas.';}
-  document.getElementById('inp-rom').accept='.gba,.gb,.gbc,.sfc,.smc,.nes,.md,.gen,.bin,.cue,.img,.pbp,.chd,.n64,.z64,.v64,.gg,.zip';
+  document.getElementById('inp-rom').accept='.gba,.gb,.gbc,.sfc,.smc,.nes,.md,.gen,.bin,.cue,.img,.pbp,.chd,.n64,.z64,.v64,.gg,.zip,.7z,.nds,.iso,.cso,.a26,.rom';
   document.getElementById('rom-wrap').querySelector('.file-label').textContent='Clique para selecionar a ROM';
 }
 
@@ -3588,6 +3805,206 @@ async function publishRsPoints(){
 }
 
 
+
+/* ═══════════════════════════════════════
+   LARGE FILE WARNING
+═══════════════════════════════════════ */
+// (inline in setupModal — see ROM handler above)
+
+/* ═══════════════════════════════════════
+   MULTIPLAYER SYSTEM
+═══════════════════════════════════════ */
+let mpRoomId=null,mpRole=null,mpMaxPlayers=2,mpSelectedGame=null;
+let mpPlayersRef=null,mpChatRef=null,_mpGameItems=[];
+
+const MP_SHOWCASE=[
+  {name:'KOF 2002',console:'neogeo',icon:'🥊'},{name:'Metal Slug',console:'neogeo',icon:'💣'},
+  {name:'Metal Slug 2',console:'neogeo',icon:'💣'},{name:'Metal Slug 3',console:'neogeo',icon:'💣'},
+  {name:'Street Fighter II',console:'snes',icon:'🥋'},{name:'Streets of Rage 2',console:'md',icon:'👊'},
+  {name:'Contra',console:'nes',icon:'🔫'},{name:'Double Dragon',console:'nes',icon:'🥊'},
+];
+
+function openMpModal(){
+  const bd=document.getElementById('mp-modal-backdrop');
+  bd.style.display='flex';
+  renderMpGameList();refreshMpRooms();
+  document.querySelectorAll('.mp-tab').forEach(t=>{
+    t.onclick=()=>{
+      document.querySelectorAll('.mp-tab').forEach(x=>x.classList.remove('active'));
+      document.querySelectorAll('.mp-tab-content').forEach(x=>x.classList.remove('active'));
+      t.classList.add('active');
+      document.getElementById('mp-tab-'+t.dataset.mptab).classList.add('active');
+      if(t.dataset.mptab==='browse')refreshMpRooms();
+    };
+  });
+  document.querySelectorAll('.mp-pcount-btn').forEach(b=>{
+    b.onclick=()=>{
+      document.querySelectorAll('.mp-pcount-btn').forEach(x=>x.classList.remove('active'));
+      b.classList.add('active');mpMaxPlayers=parseInt(b.dataset.count);
+    };
+  });
+  document.getElementById('mp-create-btn').onclick=mpCreateRoom;
+  document.getElementById('mp-join-btn').onclick=()=>mpJoinByCode(document.getElementById('mp-join-code-input').value.trim().toUpperCase());
+  document.getElementById('mp-refresh-rooms').onclick=refreshMpRooms;
+  document.getElementById('mp-modal-close').onclick=closeMpModal;
+  bd.onclick=e=>{if(e.target===bd)closeMpModal()};
+}
+
+function closeMpModal(){document.getElementById('mp-modal-backdrop').style.display='none';}
+
+function renderMpGameList(){
+  const el=document.getElementById('mp-game-select-list');
+  const libGames=games.filter(g=>CONSOLES[g.console]&&CONSOLES[g.console].mp);
+  _mpGameItems=[
+    ...libGames.map(g=>({name:g.name,console:g.console,icon:'🎮',fromLib:true,id:g.id})),
+    ...MP_SHOWCASE.filter(s=>!libGames.find(l=>l.name.toLowerCase()===s.name.toLowerCase()))
+  ];
+  if(!_mpGameItems.length){
+    el.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:16px;color:var(--text-dim);font-size:12px">Adicione jogos Arcade, Neo Geo, SNES, NES, MD, N64 ou Atari para ver aqui.</div>';
+    return;
+  }
+  el.innerHTML=_mpGameItems.map((g,i)=>`
+    <div class="mp-game-card" onclick="selectMpGame(${i})">
+      <div class="mp-game-icon">${g.icon||'🎮'}</div>
+      <div class="mp-game-title">${g.name}</div>
+      <div class="mp-game-console">${(CONSOLES[g.console]&&CONSOLES[g.console].label)||g.console}${g.fromLib?' · Biblioteca':' · Exemplo'}</div>
+    </div>
+  `).join('');
+}
+
+function selectMpGame(idx){
+  document.querySelectorAll('.mp-game-card').forEach((c,i)=>c.classList.toggle('selected',i===idx));
+  mpSelectedGame=_mpGameItems[idx];
+}
+
+async function mpCreateRoom(){
+  const roomName=document.getElementById('mp-room-name-input').value.trim();
+  const st=document.getElementById('mp-create-status');
+  if(!roomName){showToast('Digite um nome para a sala!',true);return}
+  if(!mpSelectedGame){showToast('Selecione um jogo!',true);return}
+  if(!myUsername){showToast('Defina seu usuário no menu lateral!',true);return}
+  st.style.display='block';st.style.color='var(--accent2)';st.textContent='⏳ Criando sala...';
+  try{
+    await loadFirebase();
+    const id=genRoomId();
+    const room={id,name:roomName,game:mpSelectedGame.name,console:mpSelectedGame.console,
+      host:myUsername,maxPlayers:mpMaxPlayers,
+      players:{[myUsername]:{name:myUsername,role:'host',joinedAt:Date.now()}},
+      createdAt:Date.now(),status:'waiting'};
+    await fbDb.ref('mp_rooms/'+id).set(room);
+    closeMpModal();mpRoomId=id;mpRole='host';
+    showMpLobby(id,room);
+    const libGame=games.find(g=>g.name===mpSelectedGame.name||(mpSelectedGame.id&&g.id===mpSelectedGame.id));
+    if(libGame){launchGame(libGame);setTimeout(()=>injectNetplay(id,'host'),3000);}
+    else showToast('Sala criada! Código: '+id+' — Adicione "'+mpSelectedGame.name+'" à biblioteca para jogar.');
+    st.style.display='none';
+  }catch(e){st.style.color='var(--red)';st.textContent='❌ Erro: '+e.message;}
+}
+
+async function mpJoinByCode(code){
+  const st=document.getElementById('mp-join-status');
+  if(!code||code.length<4){showToast('Código inválido!',true);return}
+  if(!myUsername){showToast('Defina seu usuário no menu lateral!',true);return}
+  st.style.display='block';st.style.color='var(--accent2)';st.textContent='⏳ Entrando...';
+  try{
+    await loadFirebase();
+    const snap=await fbDb.ref('mp_rooms/'+code).once('value');
+    const room=snap.val();
+    if(!room){st.style.color='var(--red)';st.textContent='❌ Sala não encontrada!';return}
+    const pc=Object.keys(room.players||{}).length;
+    if(pc>=room.maxPlayers){st.style.color='var(--red)';st.textContent='❌ Sala cheia!';return}
+    await fbDb.ref('mp_rooms/'+code+'/players/'+myUsername).set({name:myUsername,role:'guest',joinedAt:Date.now()});
+    closeMpModal();mpRoomId=code;mpRole='guest';
+    showMpLobby(code,room);
+    const libGame=games.find(g=>g.name===room.game);
+    if(libGame){launchGame(libGame);setTimeout(()=>injectNetplay(code,'guest'),3000);}
+    else showToast('Entrou na sala! Adicione "'+room.game+'" à biblioteca para jogar.');
+    st.style.display='none';
+  }catch(e){st.style.color='var(--red)';st.textContent='❌ Erro: '+e.message;}
+}
+
+async function refreshMpRooms(){
+  const el=document.getElementById('mp-room-list');
+  el.innerHTML='<div class="mp-empty-rooms"><span style="font-size:20px;opacity:.4">🔄</span><br>Buscando salas...</div>';
+  try{
+    await loadFirebase();
+    const snap=await fbDb.ref('mp_rooms').orderByChild('createdAt').limitToLast(20).once('value');
+    const raw=snap.val();
+    const active=raw?Object.values(raw).filter(r=>r.status==='waiting'&&(Date.now()-r.createdAt)<3600000):[];
+    if(!active.length){el.innerHTML='<div class="mp-empty-rooms"><span>🎮</span>Nenhuma sala aberta.<br>Crie uma e chame seus amigos!</div>';return}
+    el.innerHTML=active.sort((a,b)=>b.createdAt-a.createdAt).map(r=>{
+      const pc=Object.keys(r.players||{}).length;
+      const con=CONSOLES[r.console]||{};
+      const ico=con.tagClass&&con.tagClass.includes('arcade')?'🕹':con.tagClass&&con.tagClass.includes('neogeo')?'👾':'🎮';
+      return `<div class="mp-room-item"><div style="font-size:26px;flex-shrink:0">${ico}</div><div class="mp-room-item-info"><div class="mp-room-name">${r.name}</div><div class="mp-room-game">${r.game} &middot; ${con.label||r.console}</div><div class="mp-room-players">&#x1F465; ${pc}/${r.maxPlayers} &middot; C&oacute;digo: <strong>${r.id}</strong></div></div><button class="mp-room-join-btn" onclick="mpJoinByCode('${r.id}')">Entrar</button></div>`;
+    }).join('');
+  }catch(e){el.innerHTML='<div class="mp-empty-rooms"><span>⚠️</span>Erro ao buscar salas.</div>';}
+}
+
+function showMpLobby(roomId,room){
+  const lobby=document.getElementById('mp-lobby');
+  lobby.style.display='block';
+  const codeEl=document.getElementById('mp-lobby-room-code');
+  codeEl.textContent='📋 Código: '+roomId;
+  codeEl.onclick=()=>{try{navigator.clipboard.writeText(roomId)}catch(e){}showToast('Código copiado: '+roomId);};
+  renderMpPlayers(room.players||{});
+  if(fbDb){
+    if(mpPlayersRef)mpPlayersRef.off();
+    mpPlayersRef=fbDb.ref('mp_rooms/'+roomId+'/players');
+    mpPlayersRef.on('value',snap=>{const p=snap.val();if(p)renderMpPlayers(p);});
+    if(mpChatRef)mpChatRef.off();
+    mpChatRef=fbDb.ref('mp_rooms/'+roomId+'/chat');
+    mpChatRef.limitToLast(30).on('child_added',snap=>{const m=snap.val();if(m)showToast('💬 '+m.user+': '+m.text);});
+  }
+  document.getElementById('mp-chat-send').onclick=sendMpChat;
+  document.getElementById('mp-chat-input').onkeydown=e=>{if(e.key==='Enter')sendMpChat();};
+  document.getElementById('mp-leave-btn').onclick=leaveMpRoom;
+}
+
+function renderMpPlayers(players){
+  const row=document.getElementById('mp-players-row');
+  const colors=['p1','p2','p3','p4'];
+  row.innerHTML=Object.values(players).map((p,i)=>'<div class="mp-player-slot '+colors[i%4]+'"><div class="mp-player-avatar">'+p.name[0].toUpperCase()+'</div>'+p.name+(p.role==='host'?' 👑':'')+'</div>').join('');
+  const maxP=mpMaxPlayers||2;
+  for(let i=Object.keys(players).length;i<maxP;i++){
+    row.innerHTML+='<div class="mp-player-slot" style="opacity:.3;border-style:dashed"><span style="color:var(--text-dim);font-size:10px">Aguardando...</span></div>';
+  }
+}
+
+async function sendMpChat(){
+  const inp=document.getElementById('mp-chat-input');
+  const msg=inp.value.trim();if(!msg||!mpRoomId)return;inp.value='';
+  try{if(fbDb)await fbDb.ref('mp_rooms/'+mpRoomId+'/chat').push({user:myUsername||'Anônimo',text:msg,ts:Date.now()});}catch(e){}
+}
+
+async function leaveMpRoom(){
+  if(mpRoomId&&myUsername&&fbDb){
+    try{await fbDb.ref('mp_rooms/'+mpRoomId+'/players/'+myUsername).remove();}catch(e){}
+    if(mpRole==='host'){try{await fbDb.ref('mp_rooms/'+mpRoomId+'/status').set('closed');}catch(e){}}
+  }
+  if(mpPlayersRef){mpPlayersRef.off();mpPlayersRef=null;}
+  if(mpChatRef){mpChatRef.off();mpChatRef=null;}
+  mpRoomId=null;mpRole=null;
+  document.getElementById('mp-lobby').style.display='none';
+}
+
+function injectNetplay(roomId,role){
+  try{
+    if(window.EJS_emulator&&window.EJS_emulator.gameManager&&window.EJS_emulator.gameManager.netplay){
+      const nm=window.EJS_emulator.gameManager.netplay;
+      if(role==='host'&&nm.host)nm.host(roomId);
+      else if(nm.join)nm.join(roomId);
+      showToast('🎮 NetPlay ativo! Sala: '+roomId);return;
+    }
+    showToast('🎮 Sala: '+roomId+' — Use o menu NetPlay do emulador para conectar.');
+  }catch(e){}
+}
+
+function setupMpButton(){
+  const btn=document.getElementById('mp-lobby-btn');
+  if(btn)btn.onclick=openMpModal;
+}
+
 async function init(){
   await openDB();
   games=await dbGetAll();
@@ -3601,6 +4018,7 @@ async function init(){
   setupSpectatorMode();
   setupFriends();
   setupSideDrawer();
+  setupMpButton();
   // Sync myUsername from localStorage (set via chat username modal)
   myUsername = localStorage.getItem('rs_username')||'';
   if(myUsername){
