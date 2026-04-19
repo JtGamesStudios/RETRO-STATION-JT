@@ -1392,7 +1392,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
     </div>
     <div id="mp-modal-body">
       <div style="padding:10px 12px;background:rgba(109,86,245,.07);border:1px solid rgba(109,86,245,.2);border-radius:10px;font-size:11.5px;color:var(--accent2);line-height:1.7;margin-bottom:16px">
-        🎮 Multiplayer via <strong>NetPlay</strong>. Para <strong>KOF 2002, Metal Slug, Street Fighter</strong> e outros. Os dois jogadores precisam ter a <strong>mesma ROM</strong>.
+        🎮 Multiplayer via <strong>NetPlay sincronizado</strong>. Para <strong>KOF 2002, Metal Slug, Street Fighter, SNES, Mega Drive</strong> e outros. Os dois jogadores precisam ter a <strong>mesma ROM</strong>. O <strong>criador da sala</strong> é o Player 1 (Host) e quem entra é o Player 2 (Client) — as telas são sincronizadas automaticamente.
       </div>
       <div class="mp-tabs">
         <button class="mp-tab active" data-mptab="create">➕ Criar Sala</button>
@@ -1462,9 +1462,9 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
    CONSOLES
 ═══════════════════════════════════════ */
 const CONSOLES = {
-  gba:    {label:'GBA',          core:'mgba',              exts:['gba'],                               tagClass:'tag-gba',    color:'#6d56f5', raId:5,  raSupport:true,  rawgPlatform:'game-boy-advance', mp:false},
+  gba:    {label:'GBA',          core:'mgba',              exts:['gba'],                               tagClass:'tag-gba',    color:'#6d56f5', raId:5,  raSupport:true,  rawgPlatform:'game-boy-advance', mp:true},
   gb:     {label:'Game Boy',     core:'gambatte',           exts:['gb'],                                tagClass:'tag-gb',     color:'#047857', raId:4,  raSupport:true,  rawgPlatform:'gameboy',          mp:false},
-  gbc:    {label:'GBC',          core:'gambatte',           exts:['gbc'],                               tagClass:'tag-gbc',    color:'#059669', raId:6,  raSupport:true,  rawgPlatform:'gameboy-color',    mp:false},
+  gbc:    {label:'GBC',          core:'gambatte',           exts:['gbc'],                               tagClass:'tag-gbc',    color:'#059669', raId:6,  raSupport:true,  rawgPlatform:'gameboy-color',    mp:true},
   snes:   {label:'SNES',         core:'snes9x',             exts:['sfc','smc','zip'],                   tagClass:'tag-snes',   color:'#1d4ed8', raId:3,  raSupport:true,  rawgPlatform:'snes',             mp:true},
   nes:    {label:'NES',          core:'fceumm',             exts:['nes','zip'],                         tagClass:'tag-nes',    color:'#b91c1c', raId:7,  raSupport:true,  rawgPlatform:'nes',              mp:true},
   md:     {label:'Mega Drive',   core:'genesis_plus_gx',    exts:['md','gen','bin','zip'],              tagClass:'tag-md',     color:'#9d174d', raId:1,  raSupport:true,  rawgPlatform:'sega-genesis',     mp:true},
@@ -1860,7 +1860,8 @@ function renderLibrary(){
 }
 
 /* ═══ LAUNCH GAME ═══ */
-function launchGame(game){
+// netplayOpts: {roomId, role} — quando chamado pelo sistema MP
+function launchGame(game, netplayOpts){
   const con=CONSOLES[game.console]||CONSOLES.gba;
   ['header','filter-bar','library-view'].forEach(id=>document.getElementById(id).style.display='none');
   document.getElementById('emulator-view').style.display='flex';
@@ -1875,21 +1876,99 @@ function launchGame(game){
   document.getElementById('emulator-container').innerHTML='';
   const romBytes=game.romData instanceof Uint8Array?game.romData:new Uint8Array(game.romData);
   const romUrl=URL.createObjectURL(new Blob([romBytes],{type:'application/octet-stream'}));
-  Object.assign(window,{
-    EJS_player:'#emulator-container',EJS_gameName:game.name,EJS_biosUrl:'',
-    EJS_core:con.core,EJS_pathtodata:'https://cdn.emulatorjs.org/stable/data/',
-    EJS_gameUrl:romUrl,EJS_startOnLoaded:true,EJS_color:con.color,
-    EJS_backgroundColor:'#07070d',EJS_VirtualGamepadSettings:{disabled:true},
-    EJS_defaultOptions:{'emulation-speed':'1'}, // lock default speed to normal; user can change in-game
+
+  // ── Netplay config ──────────────────────────────────────────────
+  // EJS_netplayUrl: servidor de sinalização WebSocket do EmulatorJS
+  // EJS_gameID: deve ser igual para os dois jogadores (usamos o roomId do Firebase)
+  // EJS_netplayRoom: sala dentro do servidor de sinalização
+  const EJS_NETPLAY_SERVER = 'wss://netplay.emulatorjs.org:443';
+  const supportsNetplay = !!(con && con.mp);
+  const netplayActive   = supportsNetplay && !!netplayOpts;
+
+  const ejsVars = {
+    EJS_player:'#emulator-container',
+    EJS_gameName:game.name,
+    EJS_biosUrl:'',
+    EJS_core:con.core,
+    EJS_pathtodata:'https://cdn.emulatorjs.org/stable/data/',
+    EJS_gameUrl:romUrl,
+    EJS_startOnLoaded:true,
+    EJS_color:con.color,
+    EJS_backgroundColor:'#07070d',
+    EJS_VirtualGamepadSettings:{disabled:true},
+    EJS_defaultOptions:{'emulation-speed':'1'},
     EJS_Buttons:{playPause:false,restart:true,mute:true,settings:true,fullscreen:true,saveState:true,loadState:true,screenRecord:false,gamepad:false,cheat:false,volume:true,saveSavFiles:true},
-    EJS_onGameStart:()=>{loading.classList.add('hidden');URL.revokeObjectURL(romUrl);startAchPolling(game);publishPresence(game.name, null);rsOnGamePlayed(game.name, game.console);rsStartPlayTimer();publishRsPoints();}
-  });
+    EJS_onGameStart:()=>{
+      loading.classList.add('hidden');
+      URL.revokeObjectURL(romUrl);
+      startAchPolling(game);
+      publishPresence(game.name, null);
+      rsOnGamePlayed(game.name, game.console);
+      rsStartPlayTimer();
+      publishRsPoints();
+      // Após o emulador iniciar, tenta ativar o netplay programaticamente
+      if(netplayActive) _activateNetplay(netplayOpts.roomId, netplayOpts.role);
+    }
+  };
+
+  if(netplayActive){
+    // gameID precisa ser idêntico nos dois lados → usamos o roomId da sala Firebase
+    ejsVars.EJS_netplayUrl  = EJS_NETPLAY_SERVER;
+    ejsVars.EJS_gameID      = netplayOpts.roomId;       // ID único da sessão
+    ejsVars.EJS_netplayRoom = netplayOpts.roomId;       // sala no servidor de sinalização
+    // Player 1 = host, Player 2 = client (guest)
+    ejsVars.EJS_playerName  = myUsername || 'Player';
+    if(netplayOpts.role === 'host'){
+      ejsVars.EJS_netplayHost = true;  // host inicia a sessão
+    }
+  }
+
+  Object.assign(window, ejsVars);
   try{delete window.EJS_threads}catch(e){}
+
   const old=document.getElementById('ejs');if(old)old.remove();
   const s=document.createElement('script');s.id='ejs';s.src='https://cdn.emulatorjs.org/stable/data/loader.js';
   s.onerror=()=>{loading.classList.add('hidden');document.getElementById('emulator-container').innerHTML=`<div style="color:#ef4444;text-align:center;padding:40px;font-size:13px">Falha ao carregar o emulador.<br>Verifique sua conexão com a internet.</div>`};
   document.head.appendChild(s);
   setTimeout(()=>loading.classList.add('hidden'),22000);
+}
+
+// ── Ativar netplay após o emulador iniciar ──────────────────────────────────
+// Tenta acionar a API interna do EJS. O EmulatorJS expõe gameManager.netplay
+// quando o servidor wss está configurado. Também envia um sinal Firebase para
+// confirmar ao parceiro que a sessão está pronta.
+function _activateNetplay(roomId, role){
+  let attempts = 0;
+  const MAX = 20; // até 10 s
+  const tryConnect = () => {
+    attempts++;
+    try{
+      const emu = window.EJS_emulator;
+      if(emu && emu.gameManager){
+        const nm = emu.gameManager.netplay;
+        if(nm){
+          if(role === 'host' && typeof nm.host === 'function'){
+            nm.host(roomId);
+            showToast('🎮 NetPlay HOST ativo — sala ' + roomId);
+          } else if(role !== 'host' && typeof nm.join === 'function'){
+            nm.join(roomId);
+            showToast('🎮 NetPlay CLIENT conectado — sala ' + roomId);
+          } else {
+            // API não disponível; orienta o usuário a usar o menu interno
+            showToast('🎮 NetPlay: use o menu do emulador → Netplay → ' + (role==='host'?'Host':'Join') + ' → sala: ' + roomId);
+          }
+          // Sinaliza no Firebase que este jogador está pronto
+          if(fbDb && roomId){
+            fbDb.ref('mp_rooms/'+roomId+'/netplay_ready/'+myUsername).set({role, ts:Date.now()}).catch(()=>{});
+          }
+          return;
+        }
+      }
+    }catch(_){}
+    if(attempts < MAX) setTimeout(tryConnect, 500);
+    else showToast('🎮 NetPlay: no menu do emulador → Netplay → sala: ' + roomId);
+  };
+  setTimeout(tryConnect, 1500); // aguarda inicialização do EJS
 }
 
 /* ═══ CLOSE EMULATOR ═══ */
@@ -1926,7 +2005,9 @@ function closeEmulator(){
   ['EJS_player','EJS_gameName','EJS_core','EJS_gameUrl','EJS_pathtodata','EJS_startOnLoaded',
    'EJS_onGameStart','EJS_color','EJS_backgroundColor','EJS_threads','EJS_emulator',
    'EJS_Buttons','EJS_VirtualGamepadSettings','EJS_defaultOptions','EJS_biosUrl',
-   'EJS_startOnLoaded','EJS_gameParentElement'].forEach(k=>{try{delete window[k]}catch(e){}});
+   'EJS_startOnLoaded','EJS_gameParentElement',
+   'EJS_netplayUrl','EJS_gameID','EJS_netplayRoom','EJS_netplayHost','EJS_playerName'
+  ].forEach(k=>{try{delete window[k]}catch(e){}});
 
   document.getElementById('emulator-view').style.display='none';
   ['library-view','header','filter-bar'].forEach(id=>document.getElementById(id).style.display='');
@@ -3895,7 +3976,11 @@ async function mpCreateRoom(){
     closeMpModal();mpRoomId=id;mpRole='host';
     showMpLobby(id,room);
     const libGame=games.find(g=>g.name===mpSelectedGame.name||(mpSelectedGame.id&&g.id===mpSelectedGame.id));
-    if(libGame){launchGame(libGame);setTimeout(()=>injectNetplay(id,'host'),3000);}
+    if(libGame){
+      // Grava o papel (host = Player 1) na sala Firebase antes de lançar
+      await fbDb.ref('mp_rooms/'+id+'/netplay').set({server:'wss://netplay.emulatorjs.org:443',gameID:id,roomId:id});
+      launchGame(libGame, {roomId:id, role:'host'});
+    }
     else showToast('Sala criada! Código: '+id+' — Adicione "'+mpSelectedGame.name+'" à biblioteca para jogar.');
     st.style.display='none';
   }catch(e){st.style.color='var(--red)';st.textContent='❌ Erro: '+e.message;}
@@ -3917,7 +4002,13 @@ async function mpJoinByCode(code){
     closeMpModal();mpRoomId=code;mpRole='guest';
     showMpLobby(code,room);
     const libGame=games.find(g=>g.name===room.game);
-    if(libGame){launchGame(libGame);setTimeout(()=>injectNetplay(code,'guest'),3000);}
+    if(libGame){
+      // Lê config de netplay gravada pelo host, usa o roomId como gameID
+      const netSnap=await fbDb.ref('mp_rooms/'+code+'/netplay').once('value').catch(()=>null);
+      const netCfg=netSnap?netSnap.val():null;
+      const roomId=netCfg?netCfg.roomId:code;
+      launchGame(libGame, {roomId, role:'guest'});
+    }
     else showToast('Entrou na sala! Adicione "'+room.game+'" à biblioteca para jogar.');
     st.style.display='none';
   }catch(e){st.style.color='var(--red)';st.textContent='❌ Erro: '+e.message;}
@@ -3989,15 +4080,8 @@ async function leaveMpRoom(){
 }
 
 function injectNetplay(roomId,role){
-  try{
-    if(window.EJS_emulator&&window.EJS_emulator.gameManager&&window.EJS_emulator.gameManager.netplay){
-      const nm=window.EJS_emulator.gameManager.netplay;
-      if(role==='host'&&nm.host)nm.host(roomId);
-      else if(nm.join)nm.join(roomId);
-      showToast('🎮 NetPlay ativo! Sala: '+roomId);return;
-    }
-    showToast('🎮 Sala: '+roomId+' — Use o menu NetPlay do emulador para conectar.');
-  }catch(e){}
+  // Mantido por compatibilidade — agora delega para _activateNetplay
+  _activateNetplay(roomId, role);
 }
 
 function setupMpButton(){
