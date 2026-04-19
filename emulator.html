@@ -1242,6 +1242,9 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
       <button class="rs-cat-btn" data-cat="coleção">📦 Coleção</button>
       <button class="rs-cat-btn" data-cat="gameplay">🎮 Gameplay</button>
       <button class="rs-cat-btn" data-cat="especial">⭐ Especiais</button>
+      <button class="rs-cat-btn" data-cat="difícil">🏆 Difíceis</button>
+      <button class="rs-cat-btn" data-cat="social">👥 Social</button>
+      <button class="rs-cat-btn" data-cat="easter">🎲 Easter Eggs</button>
     </div>
 
     <!-- Achievement grid -->
@@ -1591,6 +1594,11 @@ function renderLibrary(){
   let filtered=games;
   if(activeFilter!=='all')filtered=filtered.filter(g=>g.console===activeFilter);
   if(search)filtered=filtered.filter(g=>g.name.toLowerCase().includes(search));
+  // Easter egg: empty search
+  if(search && !filtered.length){
+    const s=rsGetState();
+    if(!s.searchEmptyDone){s.searchEmptyDone=true;rsSaveState(s);rsRunChecks();}
+  }
   badge.textContent=`${games.length} jogo${games.length!==1?'s':''}`;
   cnt.textContent=filtered.length!==games.length?`${filtered.length} resultados`:'';
   grid.innerHTML='';
@@ -1637,7 +1645,16 @@ function renderLibrary(){
 
     card.querySelector('.card-ach-badge').addEventListener('click',e=>{e.stopPropagation();showAchPanel(game)});
     card.querySelector('.card-delete').addEventListener('click',async e=>{
-      e.stopPropagation();await dbDel(game.id);games=games.filter(g=>g.id!==game.id);renderLibrary();showToast('Jogo removido');
+      e.stopPropagation();
+      // Easter egg tracking before deletion
+      const s=rsGetState();
+      if(!s.firstDeleteDone){s.firstDeleteDone=true;}
+      if(!s.deletedGamesSet) s.deletedGamesSet=[];
+      const delName=(game.name||'').toLowerCase();
+      if(!s.deletedGamesSet.includes(delName)) s.deletedGamesSet.push(delName);
+      rsSaveState(s);
+      await dbDel(game.id);games=games.filter(g=>g.id!==game.id);renderLibrary();showToast('Jogo removido');
+      rsRunChecks();
     });
     card.addEventListener('click',()=>launchGame(game));
     grid.appendChild(card);
@@ -1670,7 +1687,7 @@ function launchGame(game){
     EJS_backgroundColor:'#07070d',EJS_VirtualGamepadSettings:{disabled:true},
     EJS_defaultOptions:{'emulation-speed':'1'}, // lock default speed to normal; user can change in-game
     EJS_Buttons:{playPause:false,restart:true,mute:true,settings:true,fullscreen:true,saveState:true,loadState:true,screenRecord:false,gamepad:false,cheat:false,volume:true,saveSavFiles:true},
-    EJS_onGameStart:()=>{loading.classList.add('hidden');URL.revokeObjectURL(romUrl);startAchPolling(game);publishPresence(game.name, null);rsOnGamePlayed(game.name);rsStartPlayTimer();publishRsPoints();}
+    EJS_onGameStart:()=>{loading.classList.add('hidden');URL.revokeObjectURL(romUrl);startAchPolling(game);publishPresence(game.name, null);rsOnGamePlayed(game.name, game.console);rsStartPlayTimer();publishRsPoints();}
   });
   try{delete window.EJS_threads}catch(e){}
   const old=document.getElementById('ejs');if(old)old.remove();
@@ -1685,9 +1702,37 @@ function closeEmulator(){
   rsStopPlayTimer();
   stopAchPolling();
   publishPresence(null, null);
+
+  // 1. Para o emulador pelo API do EJS antes de destruir o DOM
+  try{ window.EJS_emulator?.stop?.(); }catch(e){}
+  try{ window.EJS_emulator?.pause?.(); }catch(e){}
+
+  // 2. Para todos os elementos de mídia dentro do container
+  document.querySelectorAll('#emulator-container audio, #emulator-container video').forEach(m=>{
+    try{ m.pause(); m.src=''; m.load(); }catch(e){}
+  });
+
+  // 3. Suspende qualquer AudioContext aberto pelo EJS
+  try{
+    if(window.EJS_emulator && window.EJS_emulator.Module && window.EJS_emulator.Module.SDL2){
+      const actx = window.EJS_emulator.Module.SDL2.audioContext;
+      if(actx && actx.state!=='closed') actx.close();
+    }
+  }catch(e){}
+
+  // 4. Destroi o container (remove canvas, iframes, etc.)
   document.getElementById('emulator-container').innerHTML='';
-  const s=document.getElementById('ejs');if(s)s.remove();
-  ['EJS_player','EJS_gameName','EJS_core','EJS_gameUrl','EJS_pathtodata','EJS_startOnLoaded','EJS_onGameStart','EJS_color','EJS_backgroundColor','EJS_threads'].forEach(k=>{try{delete window[k]}catch(e){}});
+
+  // 5. Remove o script principal do EJS e todos os scripts carregados por ele
+  const ejsScript=document.getElementById('ejs');if(ejsScript)ejsScript.remove();
+  document.querySelectorAll('script[src*="emulatorjs.org"]').forEach(s=>s.remove());
+
+  // 6. Limpa todas as variáveis globais do EJS
+  ['EJS_player','EJS_gameName','EJS_core','EJS_gameUrl','EJS_pathtodata','EJS_startOnLoaded',
+   'EJS_onGameStart','EJS_color','EJS_backgroundColor','EJS_threads','EJS_emulator',
+   'EJS_Buttons','EJS_VirtualGamepadSettings','EJS_defaultOptions','EJS_biosUrl',
+   'EJS_startOnLoaded','EJS_gameParentElement'].forEach(k=>{try{delete window[k]}catch(e){}});
+
   document.getElementById('emulator-view').style.display='none';
   ['library-view','header','filter-bar'].forEach(id=>document.getElementById(id).style.display='');
 }
@@ -1737,10 +1782,22 @@ function setupOverlayControls(){
 
 /* ═══ FILTER BAR ═══ */
 function setupFilterBar(){
+  const allChips = document.querySelectorAll('.filter-chip[data-console]');
+  const totalConsoles = allChips.length - 1; // exclude "Todos"
   document.querySelectorAll('.filter-chip').forEach(chip=>{
     chip.addEventListener('click',()=>{
       document.querySelectorAll('.filter-chip').forEach(c=>c.classList.remove('active'));
       chip.classList.add('active');activeFilter=chip.dataset.console;renderLibrary();
+      // Easter egg: track all filters clicked
+      if(chip.dataset.console!=='all'){
+        const s=rsGetState();
+        if(!s.filtersClickedSet) s.filtersClickedSet=[];
+        const cv=chip.dataset.console;
+        if(!s.filtersClickedSet.includes(cv)) s.filtersClickedSet.push(cv);
+        if(s.filtersClickedSet.length>=totalConsoles) s.allFiltersClicked=true;
+        rsSaveState(s);
+        rsRunChecks();
+      }
     });
   });
 }
@@ -2095,6 +2152,8 @@ async function startStreaming(){
 
   streamRoomId = genRoomId();
   streamRole   = 'host';
+  // Social achievement: stream count
+  { const s=rsGetState(); s.streamsStarted=(s.streamsStarted||0)+1; rsSaveState(s); rsRunChecks(); }
 
   // Capture canvas stream + audio
   try{
@@ -2292,6 +2351,8 @@ async function joinStream(roomId){
   connText.textContent = 'Verificando sala...';
   streamRoomId = roomId;
   streamRole   = 'viewer';
+  // Social achievement: watched a stream
+  { const s=rsGetState(); s.streamsWatched=(s.streamsWatched||0)+1; rsSaveState(s); rsRunChecks(); }
   // viewerId: alphanumeric only — Firebase keys cannot have special chars
   const viewerId = (chatUsername + '_' + Date.now().toString(36)).replace(/[^a-zA-Z0-9_]/g,'_');
 
@@ -2565,6 +2626,9 @@ function askUsername(prompt='Seu nome:'){
       chatUsername=val;
       myUsername=val;
       localStorage.setItem('rs_username',val);
+      // Social achievement: set username
+      const s=rsGetState();
+      if(!s.usernameSet){s.usernameSet=true;rsSaveState(s);rsRunChecks();}
       document.getElementById('username-modal-backdrop').style.display='none';
       res(val);
     };
@@ -2716,6 +2780,7 @@ async function renderFriends(){
       <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#9b59d6);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;color:#fff;flex-shrink:0">${uname[0].toUpperCase()}</div>
       <div style="flex:1;min-width:0">
         <div style="font-size:12.5px;font-weight:700;color:var(--text)">${uname}</div>
+        <div style="display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:700;color:var(--gold);background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.2);padding:1px 6px;border-radius:99px;margin-top:3px">⭐ <span class="friend-pts-val">—</span> pts</div>
         <div class="friend-status" style="font-size:11px;color:var(--text-dim);margin-top:2px">Carregando...</div>
       </div>
       <div class="friend-actions" style="display:flex;gap:6px;flex-shrink:0"></div>
@@ -2731,6 +2796,10 @@ async function renderFriends(){
     fetchFriendPresence(uname).then(p=>{
       const statusEl = card.querySelector('.friend-status');
       const actionsEl = card.querySelector('.friend-actions');
+      const ptsEl = card.querySelector('.friend-pts-val');
+      if(ptsEl){
+        ptsEl.textContent = (p && p.rs_pts) ? Number(p.rs_pts).toLocaleString('pt-BR') : '—';
+      }
       if(!p || !p.ts || (Date.now()-p.ts)>3600000){
         statusEl.textContent='Offline';statusEl.style.color='var(--text-dim)';
       } else if(p.live){
@@ -2775,6 +2844,8 @@ function setupFriends(){
     addInput.value='';
     addStatus.style.display='block';addStatus.style.color='#6ee7b7';addStatus.textContent=`✓ ${val} adicionado!`;
     setTimeout(()=>{ addStatus.style.display='none'; },2500);
+    // Social achievement: track friends count
+    { const s=rsGetState(); s.friendsAdded=friendsData.length; rsSaveState(s); rsRunChecks(); }
     renderFriends();
   };
   addBtn.onclick=doAdd;
@@ -2787,40 +2858,170 @@ function setupFriends(){
 ═══════════════════════════════════════════════════════════════ */
 
 const RS_ACHIEVEMENTS_DEF = [
-  // TEMPO
-  { id:'time_1m',     cat:'tempo',    icon:'⏱',  title:'Primeiro Minuto',        desc:'Jogar por 1 minuto no RetroStation.',      pts:50   },
-  { id:'time_5m',     cat:'tempo',    icon:'⏰',  title:'Aquecendo os Motores',   desc:'Jogar por 5 minutos no total.',            pts:100  },
-  { id:'time_30m',    cat:'tempo',    icon:'🔥',  title:'No Ritmo Retro',         desc:'Jogar por 30 minutos no total.',           pts:250  },
-  { id:'time_1h',     cat:'tempo',    icon:'🕐',  title:'Maratonista de Pixels',  desc:'Jogar por 1 hora no total.',               pts:500  },
-  { id:'time_5h',     cat:'tempo',    icon:'💥',  title:'Viciado em Pixels',      desc:'Jogar por 5 horas no total.',              pts:1000 },
-  { id:'time_24h',    cat:'tempo',    icon:'👑',  title:'Lenda dos Arcades',      desc:'Jogar por 24 horas no total.',             pts:2500 },
-  // COLEÇÃO
-  { id:'add_1',       cat:'coleção',  icon:'📦',  title:'Colecionador Iniciante', desc:'Adicionar o primeiro jogo à coleção.',     pts:50   },
-  { id:'add_5',       cat:'coleção',  icon:'🗂',  title:'Pequena Coleção',        desc:'Ter 5 jogos na biblioteca.',               pts:150  },
-  { id:'add_15',      cat:'coleção',  icon:'📚',  title:'Bibliofilia Gamer',      desc:'Ter 15 jogos na biblioteca.',              pts:400  },
-  { id:'add_30',      cat:'coleção',  icon:'🏛',  title:'Acervo Completo',        desc:'Ter 30 jogos na biblioteca.',              pts:800  },
-  { id:'add_50',      cat:'coleção',  icon:'🌟',  title:'Museu Retro',            desc:'Ter 50 jogos na biblioteca.',              pts:1500 },
-  { id:'consoles_3',  cat:'coleção',  icon:'🌐',  title:'Multi-Plataforma',       desc:'Ter jogos de 3 consoles diferentes.',      pts:300  },
-  { id:'consoles_all',cat:'coleção',  icon:'💎',  title:'Colecionador de Eras',   desc:'Ter jogos de todos os 9 consoles.',        pts:1000 },
-  // GAMEPLAY
-  { id:'play_1',      cat:'gameplay', icon:'▶',   title:'Curioso Digital',        desc:'Jogar qualquer jogo pela primeira vez.',   pts:75   },
-  { id:'play_5',      cat:'gameplay', icon:'🎯',  title:'Explorador de Mundos',   desc:'Jogar 5 jogos diferentes.',               pts:300  },
-  { id:'play_10',     cat:'gameplay', icon:'🏆',  title:'Mestre do Retro',        desc:'Jogar 10 jogos diferentes.',              pts:750  },
-  { id:'play_25',     cat:'gameplay', icon:'🌠',  title:'Veterano dos Pixels',    desc:'Jogar 25 jogos diferentes.',              pts:1500 },
-  // ESPECIAL — jogos específicos
-  { id:'mario_world', cat:'especial', icon:'🍄',  title:'É-a-Me, Mario!',         desc:'Adicionou Super Mario World à coleção.',   pts:200  },
-  { id:'zelda',       cat:'especial', icon:'🗡',  title:'It\'s Dangerous Alone!', desc:'Adicionou um jogo Zelda à coleção.',       pts:200  },
-  { id:'sonic',       cat:'especial', icon:'💨',  title:'Gotta Go Fast!',         desc:'Adicionou Sonic the Hedgehog.',            pts:200  },
-  { id:'pokemon',     cat:'especial', icon:'⚡',  title:'Pegue Todos!',           desc:'Adicionou um jogo Pokémon.',               pts:200  },
-  { id:'ff',          cat:'especial', icon:'🌀',  title:'One-Winged Angel',       desc:'Adicionou Final Fantasy à coleção.',       pts:200  },
-  { id:'megaman',     cat:'especial', icon:'🤖',  title:'Rock... MAN!',           desc:'Adicionou Mega Man à coleção.',            pts:200  },
-  { id:'street_fghtr',cat:'especial', icon:'👊',  title:'Hadouken!',              desc:'Adicionou Street Fighter à coleção.',      pts:200  },
-  { id:'mk',          cat:'especial', icon:'💀',  title:'FATALITY!',              desc:'Adicionou Mortal Kombat à coleção.',       pts:200  },
-  { id:'castlevania', cat:'especial', icon:'🧛',  title:'Caçador de Vampiros',    desc:'Adicionou Castlevania à coleção.',         pts:200  },
-  { id:'contra',      cat:'especial', icon:'🔫',  title:'↑↑↓↓←→←→BA',           desc:'Adicionou Contra à coleção.',              pts:200  },
-  { id:'mario64',     cat:'especial', icon:'⭐',  title:'Let\'s-a-Go!',           desc:'Adicionou Super Mario 64 à coleção.',      pts:250  },
-  { id:'zelda_oot',   cat:'especial', icon:'🎵',  title:'HEY! LISTEN!',           desc:'Adicionou Ocarina of Time à coleção.',     pts:250  },
-  { id:'chrono',      cat:'especial', icon:'⏳',  title:'Viajante do Tempo',      desc:'Adicionou Chrono Trigger à coleção.',      pts:250  },
+  // ── TEMPO ──────────────────────────────────────────────────────────
+  { id:'time_1m',     cat:'tempo',    icon:'⏱',  title:'Primeiro Minuto',          desc:'Jogar por 1 minuto no RetroStation.',             pts:50    },
+  { id:'time_5m',     cat:'tempo',    icon:'⏰',  title:'Aquecendo os Motores',     desc:'Jogar por 5 minutos no total.',                  pts:100   },
+  { id:'time_30m',    cat:'tempo',    icon:'🔥',  title:'No Ritmo Retro',           desc:'Jogar por 30 minutos no total.',                 pts:250   },
+  { id:'time_1h',     cat:'tempo',    icon:'🕐',  title:'Maratonista de Pixels',    desc:'Jogar por 1 hora no total.',                     pts:500   },
+  { id:'time_5h',     cat:'tempo',    icon:'💥',  title:'Viciado em Pixels',        desc:'Jogar por 5 horas no total.',                    pts:1000  },
+  { id:'time_24h',    cat:'tempo',    icon:'👑',  title:'Lenda dos Arcades',        desc:'Jogar por 24 horas no total.',                   pts:2500  },
+  { id:'time_2h',     cat:'tempo',    icon:'🕑',  title:'Sem Parar',                desc:'Jogar por 2 horas no total.',                    pts:750   },
+  { id:'time_10h',    cat:'tempo',    icon:'🌙',  title:'Além do Horizonte',        desc:'Jogar por 10 horas no total.',                   pts:2000  },
+  { id:'time_50h',    cat:'tempo',    icon:'🧠',  title:'Sem Vida Social',          desc:'Jogar por 50 horas no total.',                   pts:4000  },
+  { id:'time_100h',   cat:'tempo',    icon:'💫',  title:'Centenário de Pixels',     desc:'Jogar por 100 horas.',                           pts:7500  },
+  { id:'time_200h',   cat:'tempo',    icon:'🤯',  title:'Asceta Digital',           desc:'Jogar 200 horas — você existe?',                 pts:15000 },
+  { id:'time_500h',   cat:'tempo',    icon:'🌌',  title:'O Último Ser Humano',      desc:'500 horas. Lenda absoluta.',                     pts:30000 },
+  { id:'session_2h',  cat:'tempo',    icon:'⏳',  title:'Maratona Ininterrupta',    desc:'Jogar por 2h em uma única sessão.',               pts:500   },
+  { id:'session_5h',  cat:'tempo',    icon:'😵',  title:'Você Precisa Dormir',      desc:'5h em uma sessão só.',                           pts:1500  },
+  // ── COLEÇÃO ────────────────────────────────────────────────────────
+  { id:'add_1',       cat:'coleção',  icon:'📦',  title:'Colecionador Iniciante',   desc:'Adicionar o primeiro jogo à coleção.',           pts:50    },
+  { id:'add_3',       cat:'coleção',  icon:'📂',  title:'Trio Eletrizante',         desc:'Ter 3 jogos na biblioteca.',                     pts:100   },
+  { id:'add_5',       cat:'coleção',  icon:'🗂',  title:'Pequena Coleção',          desc:'Ter 5 jogos na biblioteca.',                     pts:150   },
+  { id:'add_10',      cat:'coleção',  icon:'📋',  title:'Uma Prateleira',           desc:'Ter 10 jogos.',                                  pts:250   },
+  { id:'add_15',      cat:'coleção',  icon:'📚',  title:'Bibliofilia Gamer',        desc:'Ter 15 jogos na biblioteca.',                    pts:400   },
+  { id:'add_25',      cat:'coleção',  icon:'🗃',  title:'Colecionador Sério',       desc:'Ter 25 jogos.',                                  pts:600   },
+  { id:'add_30',      cat:'coleção',  icon:'🏛',  title:'Acervo Completo',          desc:'Ter 30 jogos na biblioteca.',                    pts:800   },
+  { id:'add_50',      cat:'coleção',  icon:'🌟',  title:'Museu Retro',              desc:'Ter 50 jogos na biblioteca.',                    pts:1500  },
+  { id:'add_75',      cat:'coleção',  icon:'🏰',  title:'Grande Acervo',            desc:'Ter 75 jogos.',                                  pts:2000  },
+  { id:'add_100',     cat:'coleção',  icon:'💯',  title:'Centena Retro',            desc:'Ter 100 jogos.',                                 pts:3500  },
+  { id:'add_200',     cat:'coleção',  icon:'📖',  title:'Biblioteca Lendária',      desc:'Ter 200 jogos.',                                 pts:8000  },
+  { id:'consoles_2',  cat:'coleção',  icon:'🔀',  title:'Dois Mundos',              desc:'Ter jogos de 2 consoles diferentes.',            pts:150   },
+  { id:'consoles_3',  cat:'coleção',  icon:'🌐',  title:'Multi-Plataforma',         desc:'Ter jogos de 3 consoles diferentes.',            pts:300   },
+  { id:'consoles_5',  cat:'coleção',  icon:'🗺',  title:'Sem Favoritos',            desc:'Ter jogos de 5 consoles diferentes.',            pts:500   },
+  { id:'consoles_7',  cat:'coleção',  icon:'🌍',  title:'Quase Tudo',               desc:'Ter jogos de 7 consoles diferentes.',            pts:800   },
+  { id:'consoles_all',cat:'coleção',  icon:'💎',  title:'Colecionador de Eras',     desc:'Ter jogos de todos os 9 consoles.',              pts:1000  },
+  { id:'col_gba_only',cat:'coleção',  icon:'🟣',  title:'Fã do GBA',                desc:'Ter 10 jogos de GBA.',                           pts:400   },
+  { id:'col_snes_only',cat:'coleção', icon:'🔵',  title:'Amor ao SNES',             desc:'Ter 10 jogos de SNES.',                          pts:400   },
+  { id:'col_nes_only',cat:'coleção',  icon:'🔴',  title:'Old School Puro',          desc:'Ter 10 jogos de NES.',                           pts:400   },
+  { id:'col_ps1_only',cat:'coleção',  icon:'⬜',  title:'PlayStation Fan',          desc:'Ter 10 jogos de PS1.',                           pts:400   },
+  { id:'col_n64_only',cat:'coleção',  icon:'🟤',  title:'N64 Life',                 desc:'Ter 10 jogos de Nintendo 64.',                   pts:400   },
+  { id:'col_md_only', cat:'coleção',  icon:'🩷',  title:'Sega Fiel',                desc:'Ter 10 jogos de Mega Drive.',                    pts:400   },
+  // ── GAMEPLAY ───────────────────────────────────────────────────────
+  { id:'play_1',      cat:'gameplay', icon:'▶',   title:'Curioso Digital',          desc:'Jogar qualquer jogo pela primeira vez.',         pts:75    },
+  { id:'play_2',      cat:'gameplay', icon:'🎲',  title:'Curioso Veterano',         desc:'Jogar 2 jogos diferentes.',                      pts:100   },
+  { id:'play_3',      cat:'gameplay', icon:'🎯',  title:'Trio de Aventuras',        desc:'Jogar 3 jogos diferentes.',                      pts:150   },
+  { id:'play_5',      cat:'gameplay', icon:'🎮',  title:'Explorador de Mundos',     desc:'Jogar 5 jogos diferentes.',                      pts:300   },
+  { id:'play_7',      cat:'gameplay', icon:'🕹',  title:'Gamer Eclético',           desc:'Jogar 7 jogos diferentes.',                      pts:400   },
+  { id:'play_10',     cat:'gameplay', icon:'🏆',  title:'Mestre do Retro',          desc:'Jogar 10 jogos diferentes.',                     pts:750   },
+  { id:'play_15',     cat:'gameplay', icon:'🌠',  title:'Sem Favoritos (play)',     desc:'Jogar 15 jogos diferentes.',                     pts:900   },
+  { id:'play_20',     cat:'gameplay', icon:'🚀',  title:'Explorador Total',         desc:'Jogar 20 jogos diferentes.',                     pts:1200  },
+  { id:'play_25',     cat:'gameplay', icon:'⚡',  title:'Veterano dos Pixels',      desc:'Jogar 25 jogos diferentes.',                     pts:1500  },
+  { id:'play_30',     cat:'gameplay', icon:'🌀',  title:'Maratonista (play)',       desc:'Jogar 30 jogos diferentes.',                     pts:2000  },
+  { id:'play_50',     cat:'gameplay', icon:'🔮',  title:'Lendário Explorador',      desc:'Jogar 50 jogos diferentes.',                     pts:4000  },
+  { id:'play_gba',    cat:'gameplay', icon:'🟣',  title:'Gameboy Advance Lover',    desc:'Jogar um jogo de GBA.',                          pts:75    },
+  { id:'play_snes',   cat:'gameplay', icon:'🔵',  title:'Na Época do SNES',         desc:'Jogar um jogo de SNES.',                         pts:75    },
+  { id:'play_nes',    cat:'gameplay', icon:'🔴',  title:'Origens',                  desc:'Jogar um jogo de NES.',                          pts:75    },
+  { id:'play_md',     cat:'gameplay', icon:'🩷',  title:'Sega Representa',          desc:'Jogar um jogo de Mega Drive.',                   pts:75    },
+  { id:'play_ps1',    cat:'gameplay', icon:'⬜',  title:'PS1 na Veia',              desc:'Jogar um jogo de PlayStation.',                  pts:75    },
+  { id:'play_n64',    cat:'gameplay', icon:'🟤',  title:'N64 Forever',              desc:'Jogar um jogo de Nintendo 64.',                  pts:75    },
+  { id:'play_gb',     cat:'gameplay', icon:'🟢',  title:'Classicão',                desc:'Jogar um Game Boy.',                             pts:75    },
+  { id:'play_gbc',    cat:'gameplay', icon:'🟩',  title:'Colorido',                 desc:'Jogar um Game Boy Color.',                       pts:75    },
+  { id:'play_gg',     cat:'gameplay', icon:'🟡',  title:'Game Gear Gang',           desc:'Jogar um jogo de Game Gear.',                    pts:75    },
+  { id:'played_all_consoles',cat:'gameplay',icon:'🌈',title:'Sem Fronteiras',       desc:'Jogar em todos os 9 consoles.',                  pts:1500  },
+  // ── ESPECIAL — Jogos Icônicos ───────────────────────────────────────
+  { id:'mario_world', cat:'especial', icon:'🍄',  title:'É-a-Me, Mario!',           desc:'Adicionou Super Mario World.',                   pts:200   },
+  { id:'zelda',       cat:'especial', icon:'🗡',  title:"It's Dangerous Alone!",    desc:'Adicionou um jogo Zelda.',                       pts:200   },
+  { id:'sonic',       cat:'especial', icon:'💨',  title:'Gotta Go Fast!',           desc:'Adicionou Sonic the Hedgehog.',                  pts:200   },
+  { id:'pokemon',     cat:'especial', icon:'⚡',  title:'Pegue Todos!',             desc:'Adicionou um jogo Pokémon.',                     pts:200   },
+  { id:'ff',          cat:'especial', icon:'🌀',  title:'One-Winged Angel',         desc:'Adicionou Final Fantasy.',                       pts:200   },
+  { id:'megaman',     cat:'especial', icon:'🤖',  title:'Rock... MAN!',             desc:'Adicionou Mega Man.',                            pts:200   },
+  { id:'street_fghtr',cat:'especial', icon:'👊',  title:'Hadouken!',                desc:'Adicionou Street Fighter.',                      pts:200   },
+  { id:'mk',          cat:'especial', icon:'💀',  title:'FATALITY!',                desc:'Adicionou Mortal Kombat.',                       pts:200   },
+  { id:'castlevania', cat:'especial', icon:'🧛',  title:'Caçador de Vampiros',      desc:'Adicionou Castlevania.',                         pts:200   },
+  { id:'contra',      cat:'especial', icon:'🔫',  title:'↑↑↓↓←→←→BA',             desc:'Adicionou Contra.',                              pts:200   },
+  { id:'mario64',     cat:'especial', icon:'⭐',  title:"Let's-a-Go!",              desc:'Adicionou Super Mario 64.',                      pts:250   },
+  { id:'zelda_oot',   cat:'especial', icon:'🎵',  title:'HEY! LISTEN!',             desc:'Adicionou Ocarina of Time.',                     pts:250   },
+  { id:'chrono',      cat:'especial', icon:'⏳',  title:'Viajante do Tempo',        desc:'Adicionou Chrono Trigger.',                      pts:250   },
+  { id:'metroid',     cat:'especial', icon:'🚀',  title:'Samus? Quem?',             desc:'Adicionou Metroid.',                             pts:200   },
+  { id:'super_metroid',cat:'especial',icon:'🌑',  title:'Planeta Zebes',            desc:'Adicionou Super Metroid.',                       pts:250   },
+  { id:'kirby',       cat:'especial', icon:'🌸',  title:'Puff Puff',                desc:'Adicionou Kirby.',                               pts:200   },
+  { id:'donkey_kong', cat:'especial', icon:'🍌',  title:'Banana Suprema',           desc:'Adicionou Donkey Kong Country.',                 pts:200   },
+  { id:'mario_kart',  cat:'especial', icon:'🏎',  title:'Primeiro no Grid',         desc:'Adicionou Mario Kart.',                          pts:200   },
+  { id:'mario_rpg',   cat:'especial', icon:'🍄',  title:'Quantum of Mushroom',      desc:'Adicionou Mario RPG.',                           pts:250   },
+  { id:'earthbound',  cat:'especial', icon:'🧢',  title:'Ness, é você?',            desc:'Adicionou EarthBound/Mother.',                   pts:300   },
+  { id:'tetris',      cat:'especial', icon:'🟦',  title:'Tetrominó',                desc:'Adicionou Tetris.',                              pts:150   },
+  { id:'bomberman',   cat:'especial', icon:'💣',  title:'Boooom!',                  desc:'Adicionou Bomberman.',                           pts:200   },
+  { id:'punch_out',   cat:'especial', icon:'🥊',  title:'Float Like a Pixel',       desc:'Adicionou Punch-Out!!',                          pts:200   },
+  { id:'ducktales',   cat:'especial', icon:'🦆',  title:'Woo-oo!',                  desc:'Adicionou DuckTales.',                           pts:200   },
+  { id:'battletoads', cat:'especial', icon:'🐸',  title:'Battletoads?',             desc:'Adicionou Battletoads.',                         pts:250   },
+  { id:'tmnt',        cat:'especial', icon:'🐢',  title:'Cowabunga!',               desc:'Adicionou TMNT.',                                pts:200   },
+  { id:'ghosts_goblins',cat:'especial',icon:'👻', title:'Masoquista',               desc:'Adicionou Ghosts n Goblins.',                    pts:300   },
+  { id:'megaman2',    cat:'especial', icon:'💙',  title:'Dr. Wily Não Para',        desc:'Adicionou Mega Man 2.',                          pts:200   },
+  { id:'megaman_x',   cat:'especial', icon:'🔵',  title:'Maverick Hunter',          desc:'Adicionou Mega Man X.',                          pts:250   },
+  { id:'castlevania_sotn',cat:'especial',icon:'🦇',title:'Alucard Ressurge',        desc:'Adicionou Symphony of the Night.',               pts:300   },
+  { id:'bionic_commando',cat:'especial',icon:'🦾',title:'Braço Biónico',            desc:'Adicionou Bionic Commando.',                     pts:200   },
+  { id:'double_dragon',cat:'especial',icon:'👊',  title:'Irmãos de Rua',            desc:'Adicionou Double Dragon.',                       pts:200   },
+  { id:'streets_of_rage',cat:'especial',icon:'🔥',title:'Ruas em Chamas',           desc:'Adicionou Streets of Rage.',                     pts:200   },
+  { id:'golden_axe',  cat:'especial', icon:'⚔',  title:'Machado Dourado',          desc:'Adicionou Golden Axe.',                          pts:200   },
+  { id:'altered_beast',cat:'especial',icon:'🐺',  title:'Rise From Your Grave!',    desc:'Adicionou Altered Beast.',                       pts:200   },
+  { id:'shinobi',     cat:'especial', icon:'🥷',  title:'Ninja da Sega',            desc:'Adicionou Shinobi.',                             pts:200   },
+  { id:'vectorman',   cat:'especial', icon:'🤖',  title:'Robô Reciclável',          desc:'Adicionou Vectorman.',                           pts:200   },
+  { id:'earthworm_jim',cat:'especial',icon:'🪱',  title:'Groovy!',                  desc:'Adicionou Earthworm Jim.',                       pts:200   },
+  { id:'aladdin',     cat:'especial', icon:'🧞',  title:'Tapete Mágico',            desc:'Adicionou Aladdin.',                             pts:200   },
+  { id:'lion_king',   cat:'especial', icon:'🦁',  title:'Hakuna Matata',            desc:'Adicionou The Lion King.',                       pts:200   },
+  { id:'jungle_book', cat:'especial', icon:'🐻',  title:'Baloo Gamer',              desc:'Adicionou The Jungle Book.',                     pts:150   },
+  { id:'crash',       cat:'especial', icon:'🥏',  title:'Woah!',                    desc:'Adicionou Crash Bandicoot.',                     pts:200   },
+  { id:'spyro',       cat:'especial', icon:'🐉',  title:'Liberta o Dragão',         desc:'Adicionou Spyro.',                               pts:200   },
+  { id:'ff7',         cat:'especial', icon:'🌌',  title:'Nuvem é Foda',             desc:'Adicionou Final Fantasy VII.',                   pts:250   },
+  { id:'ff6',         cat:'especial', icon:'🎭',  title:'Kefka Ri Por Último',      desc:'Adicionou Final Fantasy VI.',                    pts:250   },
+  { id:'ff4',         cat:'especial', icon:'🌙',  title:'Luz das Trevas',           desc:'Adicionou Final Fantasy IV.',                    pts:250   },
+  { id:'ff9',         cat:'especial', icon:'🔮',  title:'Ozma Maldito',             desc:'Adicionou Final Fantasy IX.',                    pts:250   },
+  { id:'chrono_cross', cat:'especial',icon:'⏳',  title:'Serge ou Lynx?',           desc:'Adicionou Chrono Cross.',                        pts:300   },
+  { id:'secret_mana', cat:'especial', icon:'🌿',  title:'Anel da Mana',             desc:'Adicionou Secret of Mana.',                      pts:250   },
+  { id:'lufia',       cat:'especial', icon:'🧝',  title:'Herói Esquecido',          desc:'Adicionou Lufia.',                               pts:250   },
+  { id:'terranigma',  cat:'especial', icon:'🌎',  title:'Alma da Terra',            desc:'Adicionou Terranigma.',                          pts:300   },
+  { id:'metal_gear',  cat:'especial', icon:'📦',  title:'Snake?! SNAKE!!',          desc:'Adicionou Metal Gear Solid.',                    pts:250   },
+  { id:'resident_evil',cat:'especial',icon:'🧟',  title:'Jill Sandwich',            desc:'Adicionou Resident Evil.',                       pts:250   },
+  { id:'re2',         cat:'especial', icon:'🪓',  title:'Mr. X Está Chegando',      desc:'Adicionou Resident Evil 2.',                     pts:250   },
+  { id:'tomb_raider', cat:'especial', icon:'🏺',  title:'Lara, Olha Atrás!',        desc:'Adicionou Tomb Raider.',                         pts:200   },
+  { id:'tekken',      cat:'especial', icon:'🥋',  title:'Mishima Family Therapy',   desc:'Adicionou Tekken.',                              pts:200   },
+  { id:'soul_calibur',cat:'especial', icon:'⚔',  title:'Alma de Espada',           desc:'Adicionou Soul Calibur.',                        pts:200   },
+  { id:'gta1',        cat:'especial', icon:'🚗',  title:'Chefão dos Pixels',        desc:'Adicionou GTA.',                                 pts:200   },
+  { id:'castlevania_2',cat:'especial',icon:'🧛',  title:'Simon Belmont',            desc:'Adicionou Castlevania II.',                      pts:200   },
+  { id:'sonic2',      cat:'especial', icon:'💨',  title:'Two Player Mode',          desc:'Adicionou Sonic 2.',                             pts:200   },
+  { id:'sonic3',      cat:'especial', icon:'🌀',  title:'8-bit Emerald',            desc:'Adicionou Sonic 3.',                             pts:200   },
+  { id:'pokemon_rb',  cat:'especial', icon:'❤️',  title:'Vermelho e Azul',          desc:'Adicionou Pokémon Red ou Blue.',                 pts:250   },
+  { id:'pokemon_gs',  cat:'especial', icon:'✨',  title:'Johto League',             desc:'Adicionou Pokémon Gold ou Silver.',              pts:250   },
+  { id:'pokemon_rse', cat:'especial', icon:'🌊',  title:'Hoenn Champion',           desc:'Adicionou Pokémon R/S/E.',                       pts:250   },
+  { id:'zelda_alttp', cat:'especial', icon:'🗡',  title:'Link ao Passado',          desc:'Adicionou A Link to the Past.',                  pts:250   },
+  { id:'zelda_links_awak',cat:'especial',icon:'🎸',title:'O Sonho de Link',         desc:"Adicionou Link's Awakening.",                    pts:250   },
+  { id:'zelda_minish',cat:'especial', icon:'🗡',  title:'Pequeno Herói',            desc:'Adicionou Minish Cap.',                          pts:250   },
+  { id:'zelda_mm',    cat:'especial', icon:'🌕',  title:'Máscara da Lua',           desc:"Adicionou Majora's Mask.",                       pts:300   },
+  { id:'banjo',       cat:'especial', icon:'🐻',  title:'Bear e Bird',              desc:'Adicionou Banjo-Kazooie.',                       pts:250   },
+  { id:'goldeneye',   cat:'especial', icon:'🔫',  title:'Licença para Jogar',       desc:'Adicionou GoldenEye 007.',                       pts:250   },
+  { id:'mario_party', cat:'especial', icon:'🎉',  title:'Destruidor de Amizades',   desc:'Adicionou Mario Party.',                         pts:250   },
+  { id:'star_fox',    cat:'especial', icon:'🦊',  title:'Do a Barrel Roll!',        desc:'Adicionou Star Fox.',                            pts:250   },
+  { id:'paper_mario', cat:'especial', icon:'📄',  title:'Origami Hero',             desc:'Adicionou Paper Mario.',                         pts:250   },
+  { id:'f_zero',      cat:'especial', icon:'🏎',  title:'Big Blue',                 desc:'Adicionou F-Zero.',                              pts:200   },
+  { id:'excitebike',  cat:'especial', icon:'🏍',  title:'Motoqueiro Pixelado',      desc:'Adicionou Excitebike.',                          pts:150   },
+  { id:'duck_hunt',   cat:'especial', icon:'🦆',  title:'Cadê o Cachorro?',         desc:'Adicionou Duck Hunt.',                           pts:150   },
+  { id:'punchout_tyson',cat:'especial',icon:'🥊', title:'Iron Mike',                desc:"Adicionou Mike Tyson's Punch-Out!!",             pts:300   },
+  // ── DIFÍCEIS / DESAFIO ─────────────────────────────────────────────
+  { id:'add_250',     cat:'difícil',  icon:'📦',  title:'Quarteto de Centenas',     desc:'Ter 250 jogos na biblioteca.',                   pts:12000 },
+  { id:'add_500',     cat:'difícil',  icon:'🏆',  title:'Coleção Impossível',       desc:'Ter 500 jogos na biblioteca.',                   pts:20000 },
+  { id:'time_1000h',  cat:'difícil',  icon:'☠️',  title:'Mil Horas de Vida',        desc:'Jogar 1000 horas. Procure ajuda.',               pts:50000 },
+  { id:'play_100',    cat:'difícil',  icon:'🌠',  title:'Centena de Títulos',       desc:'Jogar 100 jogos diferentes.',                    pts:10000 },
+  { id:'play_all_consoles_10',cat:'difícil',icon:'🌈',title:'Mestre Universal',     desc:'10 jogos jogados em cada console.',              pts:15000 },
+  { id:'secret_all_special',cat:'difícil',icon:'🔑',title:'Caçador de Lendas',     desc:'Desbloquear todas as conquistas especiais.',     pts:5000  },
+  { id:'no_sleep',    cat:'difícil',  icon:'🦉',  title:'Sem Dormir',               desc:'8h em uma única sessão.',                        pts:5000  },
+  { id:'degen',       cat:'difícil',  icon:'💀',  title:'Além do Limite',           desc:'12h em uma única sessão.',                       pts:12000 },
+  // ── SOCIAL ─────────────────────────────────────────────────────────
+  { id:'set_username',  cat:'social', icon:'👤',  title:'Identidade Retro',         desc:'Definir seu nome de usuário.',                   pts:50    },
+  { id:'add_friend',    cat:'social', icon:'👥',  title:'Primeiro Amigo',           desc:'Adicionar um amigo.',                            pts:100   },
+  { id:'add_5_friends', cat:'social', icon:'🫂',  title:'Equipe Montada',           desc:'Ter 5 amigos.',                                  pts:300   },
+  { id:'stream_once',   cat:'social', icon:'📡',  title:'Ao Vivo!',                 desc:'Transmitir gameplay uma vez.',                   pts:200   },
+  { id:'stream_5',      cat:'social', icon:'🎙',  title:'Streamer Retrô',           desc:'Transmitir 5 vezes.',                            pts:500   },
+  { id:'stream_watched',cat:'social', icon:'👁',  title:'Voyeur Pixelado',          desc:'Assistir um stream de amigo.',                   pts:150   },
+  // ── EASTER EGGS ────────────────────────────────────────────────────
+  { id:'search_empty',  cat:'easter', icon:'🔍',  title:'Busca Infrutífera',        desc:'Pesquisar algo que não existe na biblioteca.',   pts:25    },
+  { id:'all_filters',   cat:'easter', icon:'🎛',  title:'Filtro Completo',          desc:'Clicar em todos os filtros de console.',         pts:50    },
+  { id:'midnight_play', cat:'easter', icon:'🦇',  title:'Coruja Noturna',           desc:'Jogar entre meia-noite e 4h da manhã.',          pts:300   },
+  { id:'dawn_play',     cat:'easter', icon:'🌅',  title:'Madrugador Pixelado',      desc:'Jogar antes das 6h da manhã.',                   pts:350   },
+  { id:'weekend_warrior',cat:'easter',icon:'🎮',  title:'Guerreiro de Fim de Semana',desc:'Jogar sábado e domingo na mesma semana.',       pts:200   },
+  { id:'month_streak',  cat:'easter', icon:'📅',  title:'Fiel ao Retro',            desc:'Jogar por 30 dias seguidos.',                    pts:3000  },
+  { id:'new_year_play', cat:'easter', icon:'🎆',  title:'Ano Novo, Pixel Velho',    desc:'Jogar no dia 1 de janeiro.',                     pts:500   },
+  { id:'first_delete',  cat:'easter', icon:'💔',  title:'Coração Partido',          desc:'Deletar um jogo pela primeira vez.',             pts:50    },
+  { id:'readd_game',    cat:'easter', icon:'🔄',  title:'Volta Triunfal',           desc:'Adicionar, deletar e adicionar o mesmo jogo.',   pts:100   },
 ];
 
 // State persisted in localStorage
@@ -2832,52 +3033,252 @@ function rsSaveState(s){ localStorage.setItem('rs_ach_state',JSON.stringify(s));
 function rsGetState(){
   const s = rsLoadState();
   return {
-    totalPlayMs: s.totalPlayMs || 0,
-    gamesAdded:  s.gamesAdded  || 0,
-    gamesPlayed: s.gamesPlayed || 0,
-    consolesUsed: s.consolesUsed || 0,
-    specialGames: s.specialGames || [],
-    gamesPlayedSet: s.gamesPlayedSet || [],
-    consolesSet:   s.consolesSet || [],
-    unlocked: s.unlocked || [],       // array of ach ids
-    unlockedAt: s.unlockedAt || {},   // id → timestamp
+    totalPlayMs:      s.totalPlayMs      || 0,
+    maxSessionMs:     s.maxSessionMs     || 0,
+    gamesAdded:       s.gamesAdded       || 0,
+    gamesPlayed:      s.gamesPlayed      || 0,
+    consolesUsed:     s.consolesUsed     || 0,
+    specialGames:     s.specialGames     || [],
+    gamesPlayedSet:   s.gamesPlayedSet   || [],
+    consolesSet:      s.consolesSet      || [],
+    consolesPlayedSet:s.consolesPlayedSet|| [],
+    consolesPlayedCount: s.consolesPlayedCount || {},
+    gamesPerConsole:  s.gamesPerConsole  || {},
+    streamsStarted:   s.streamsStarted   || 0,
+    streamsWatched:   s.streamsWatched   || 0,
+    friendsAdded:     s.friendsAdded     || 0,
+    usernameSet:      s.usernameSet      || false,
+    searchEmptyDone:  s.searchEmptyDone  || false,
+    allFiltersClicked:s.allFiltersClicked|| false,
+    filtersClickedSet:s.filtersClickedSet|| [],
+    firstDeleteDone:  s.firstDeleteDone  || false,
+    deletedGamesSet:  s.deletedGamesSet  || [],
+    readdDone:        s.readdDone        || false,
+    playDates:        s.playDates        || [],
+    unlocked:         s.unlocked         || [],
+    unlockedAt:       s.unlockedAt       || {},
   };
 }
 
 function rsCheckAchievement(id, state){
+  const sp = state.specialGames || [];
+  const has = (...kws) => kws.some(kw => sp.some(g => g.includes(kw)));
+  const ms = state.totalPlayMs || 0;
+  const mx = state.maxSessionMs || 0;
+  const ga = state.gamesAdded || 0;
+  const gp = state.gamesPlayed || 0;
+  const cu = state.consolesUsed || 0;
+  const gpc = state.gamesPerConsole || {};
+  const cps = state.consolesPlayedSet || [];
+  const cpc = state.consolesPlayedCount || {};
   switch(id){
-    case 'time_1m':     return state.totalPlayMs >= 60000;
-    case 'time_5m':     return state.totalPlayMs >= 300000;
-    case 'time_30m':    return state.totalPlayMs >= 1800000;
-    case 'time_1h':     return state.totalPlayMs >= 3600000;
-    case 'time_5h':     return state.totalPlayMs >= 18000000;
-    case 'time_24h':    return state.totalPlayMs >= 86400000;
-    case 'add_1':       return state.gamesAdded >= 1;
-    case 'add_5':       return state.gamesAdded >= 5;
-    case 'add_15':      return state.gamesAdded >= 15;
-    case 'add_30':      return state.gamesAdded >= 30;
-    case 'add_50':      return state.gamesAdded >= 50;
-    case 'consoles_3':  return state.consolesUsed >= 3;
-    case 'consoles_all':return state.consolesUsed >= 9;
-    case 'play_1':      return state.gamesPlayed >= 1;
-    case 'play_5':      return state.gamesPlayed >= 5;
-    case 'play_10':     return state.gamesPlayed >= 10;
-    case 'play_25':     return state.gamesPlayed >= 25;
-    case 'mario_world': return state.specialGames.some(g=>g.includes('super mario world'));
-    case 'zelda':       return state.specialGames.some(g=>g.includes('zelda'));
-    case 'sonic':       return state.specialGames.some(g=>g.includes('sonic'));
-    case 'pokemon':     return state.specialGames.some(g=>g.includes('pok'));
-    case 'ff':          return state.specialGames.some(g=>g.includes('final fantasy'));
-    case 'megaman':     return state.specialGames.some(g=>g.includes('mega man')||g.includes('megaman'));
-    case 'street_fghtr':return state.specialGames.some(g=>g.includes('street fighter'));
-    case 'mk':          return state.specialGames.some(g=>g.includes('mortal kombat'));
-    case 'castlevania': return state.specialGames.some(g=>g.includes('castlevania'));
-    case 'contra':      return state.specialGames.some(g=>g===('contra')||g.includes('contra'));
-    case 'mario64':     return state.specialGames.some(g=>g.includes('mario 64')||g.includes('mario64')||g.includes('super mario 64'));
-    case 'zelda_oot':   return state.specialGames.some(g=>g.includes('ocarina'));
-    case 'chrono':      return state.specialGames.some(g=>g.includes('chrono trigger'));
+    // TEMPO — total
+    case 'time_1m':     return ms >= 60000;
+    case 'time_5m':     return ms >= 300000;
+    case 'time_30m':    return ms >= 1800000;
+    case 'time_1h':     return ms >= 3600000;
+    case 'time_2h':     return ms >= 7200000;
+    case 'time_5h':     return ms >= 18000000;
+    case 'time_10h':    return ms >= 36000000;
+    case 'time_24h':    return ms >= 86400000;
+    case 'time_50h':    return ms >= 180000000;
+    case 'time_100h':   return ms >= 360000000;
+    case 'time_200h':   return ms >= 720000000;
+    case 'time_500h':   return ms >= 1800000000;
+    // TEMPO — sessão única
+    case 'session_2h':  return mx >= 7200000;
+    case 'session_5h':  return mx >= 18000000;
+    // COLEÇÃO
+    case 'add_1':       return ga >= 1;
+    case 'add_3':       return ga >= 3;
+    case 'add_5':       return ga >= 5;
+    case 'add_10':      return ga >= 10;
+    case 'add_15':      return ga >= 15;
+    case 'add_25':      return ga >= 25;
+    case 'add_30':      return ga >= 30;
+    case 'add_50':      return ga >= 50;
+    case 'add_75':      return ga >= 75;
+    case 'add_100':     return ga >= 100;
+    case 'add_200':     return ga >= 200;
+    case 'consoles_2':  return cu >= 2;
+    case 'consoles_3':  return cu >= 3;
+    case 'consoles_5':  return cu >= 5;
+    case 'consoles_7':  return cu >= 7;
+    case 'consoles_all':return cu >= 9;
+    case 'col_gba_only':return (gpc['gba']||0) >= 10;
+    case 'col_snes_only':return (gpc['snes']||0) >= 10;
+    case 'col_nes_only':return (gpc['nes']||0) >= 10;
+    case 'col_ps1_only':return (gpc['ps1']||0) >= 10;
+    case 'col_n64_only':return (gpc['n64']||0) >= 10;
+    case 'col_md_only': return (gpc['md']||0) >= 10;
+    // GAMEPLAY — quantidade
+    case 'play_1':      return gp >= 1;
+    case 'play_2':      return gp >= 2;
+    case 'play_3':      return gp >= 3;
+    case 'play_5':      return gp >= 5;
+    case 'play_7':      return gp >= 7;
+    case 'play_10':     return gp >= 10;
+    case 'play_15':     return gp >= 15;
+    case 'play_20':     return gp >= 20;
+    case 'play_25':     return gp >= 25;
+    case 'play_30':     return gp >= 30;
+    case 'play_50':     return gp >= 50;
+    // GAMEPLAY — por console
+    case 'play_gba':    return cps.includes('gba');
+    case 'play_snes':   return cps.includes('snes');
+    case 'play_nes':    return cps.includes('nes');
+    case 'play_md':     return cps.includes('md');
+    case 'play_ps1':    return cps.includes('ps1');
+    case 'play_n64':    return cps.includes('n64');
+    case 'play_gb':     return cps.includes('gb');
+    case 'play_gbc':    return cps.includes('gbc');
+    case 'play_gg':     return cps.includes('gg');
+    case 'played_all_consoles': return ['gba','gb','gbc','snes','nes','md','gg','ps1','n64'].every(c=>cps.includes(c));
+    // ESPECIAL — originais
+    case 'mario_world': return has('super mario world');
+    case 'zelda':       return has('zelda');
+    case 'sonic':       return has('sonic');
+    case 'pokemon':     return has('pok');
+    case 'ff':          return has('final fantasy');
+    case 'megaman':     return has('mega man','megaman');
+    case 'street_fghtr':return has('street fighter');
+    case 'mk':          return has('mortal kombat');
+    case 'castlevania': return has('castlevania');
+    case 'contra':      return sp.some(g=>g==='contra'||g.includes('contra'));
+    case 'mario64':     return has('mario 64','mario64','super mario 64');
+    case 'zelda_oot':   return has('ocarina');
+    case 'chrono':      return has('chrono trigger');
+    // ESPECIAL — novos
+    case 'metroid':     return has('metroid') && !has('super metroid');
+    case 'super_metroid':return has('super metroid');
+    case 'kirby':       return has('kirby');
+    case 'donkey_kong': return has('donkey kong');
+    case 'mario_kart':  return has('mario kart');
+    case 'mario_rpg':   return has('mario rpg','super mario rpg');
+    case 'earthbound':  return has('earthbound','mother');
+    case 'tetris':      return has('tetris');
+    case 'bomberman':   return has('bomberman');
+    case 'punch_out':   return has('punch-out','punch out') && !has("tyson");
+    case 'ducktales':   return has('ducktales','duck tales');
+    case 'battletoads': return has('battletoads');
+    case 'tmnt':        return has('tmnt','teenage mutant');
+    case 'ghosts_goblins':return has("ghosts 'n goblins",'ghosts n goblins','ghouls');
+    case 'megaman2':    return has('mega man 2','megaman 2');
+    case 'megaman_x':   return has('mega man x','megaman x');
+    case 'castlevania_sotn': return has('symphony of the night','sotn');
+    case 'bionic_commando': return has('bionic commando');
+    case 'double_dragon': return has('double dragon');
+    case 'streets_of_rage': return has('streets of rage');
+    case 'golden_axe':  return has('golden axe');
+    case 'altered_beast': return has('altered beast');
+    case 'shinobi':     return has('shinobi');
+    case 'vectorman':   return has('vectorman');
+    case 'earthworm_jim': return has('earthworm jim');
+    case 'aladdin':     return has('aladdin');
+    case 'lion_king':   return has('lion king');
+    case 'jungle_book': return has('jungle book');
+    case 'crash':       return has('crash bandicoot');
+    case 'spyro':       return has('spyro');
+    case 'ff7':         return has('final fantasy vii','final fantasy 7');
+    case 'ff6':         return has('final fantasy vi','final fantasy 6');
+    case 'ff4':         return has('final fantasy iv','final fantasy 4');
+    case 'ff9':         return has('final fantasy ix','final fantasy 9');
+    case 'chrono_cross': return has('chrono cross');
+    case 'secret_mana': return has('secret of mana');
+    case 'lufia':       return has('lufia');
+    case 'terranigma':  return has('terranigma');
+    case 'metal_gear':  return has('metal gear');
+    case 'resident_evil': return has('resident evil') && !has('resident evil 2','resident evil 3');
+    case 're2':         return has('resident evil 2');
+    case 'tomb_raider': return has('tomb raider');
+    case 'tekken':      return has('tekken');
+    case 'soul_calibur':return has('soul calibur','soulcalibur');
+    case 'gta1':        return has('grand theft auto','gta');
+    case 'castlevania_2': return has('castlevania ii','castlevania 2','simon');
+    case 'sonic2':      return has('sonic 2','sonic the hedgehog 2');
+    case 'sonic3':      return has('sonic 3','sonic the hedgehog 3');
+    case 'pokemon_rb':  return has('pokemon red','pokémon red','pokemon blue','pokémon blue');
+    case 'pokemon_gs':  return has('pokemon gold','pokémon gold','pokemon silver','pokémon silver');
+    case 'pokemon_rse': return has('pokemon ruby','pokémon ruby','pokemon sapphire','pokémon sapphire','pokemon emerald','pokémon emerald');
+    case 'zelda_alttp': return has('link to the past','a link to the past');
+    case 'zelda_links_awak': return has("link's awakening",'links awakening');
+    case 'zelda_minish':return has('minish cap');
+    case 'zelda_mm':    return has("majora's mask",'majoras mask');
+    case 'banjo':       return has('banjo-kazooie','banjo kazooie');
+    case 'goldeneye':   return has('goldeneye','golden eye 007');
+    case 'mario_party': return has('mario party');
+    case 'star_fox':    return has('star fox','starfox');
+    case 'paper_mario': return has('paper mario');
+    case 'f_zero':      return has('f-zero','f zero');
+    case 'excitebike':  return has('excitebike');
+    case 'duck_hunt':   return has('duck hunt');
+    case 'punchout_tyson': return has("mike tyson",'tyson');
+    // DIFÍCEIS
+    case 'add_250':     return ga >= 250;
+    case 'add_500':     return ga >= 500;
+    case 'time_1000h':  return ms >= 3600000000;
+    case 'play_100':    return gp >= 100;
+    case 'play_all_consoles_10': return ['gba','gb','gbc','snes','nes','md','gg','ps1','n64'].every(c=>(cpc[c]||0)>=10);
+    case 'secret_all_special': {
+      const specialIds = RS_ACHIEVEMENTS_DEF.filter(d=>d.cat==='especial').map(d=>d.id);
+      return specialIds.every(sid=>state.unlocked.includes(sid));
+    }
+    case 'no_sleep':    return mx >= 28800000;
+    case 'degen':       return mx >= 43200000;
+    // SOCIAL
+    case 'set_username':  return state.usernameSet === true;
+    case 'add_friend':    return state.friendsAdded >= 1;
+    case 'add_5_friends': return state.friendsAdded >= 5;
+    case 'stream_once':   return state.streamsStarted >= 1;
+    case 'stream_5':      return state.streamsStarted >= 5;
+    case 'stream_watched':return state.streamsWatched >= 1;
+    // EASTER EGGS
+    case 'search_empty':  return state.searchEmptyDone === true;
+    case 'all_filters':   return state.allFiltersClicked === true;
+    case 'midnight_play': return (state.playDates||[]).some(e=>e.includes('|midnight'));
+    case 'dawn_play':     return (state.playDates||[]).some(e=>e.includes('|dawn'));
+    case 'weekend_warrior': return rsCheckWeekendWarrior(state.playDates||[]);
+    case 'month_streak':  return rsCheckMonthStreak(state.playDates||[]);
+    case 'new_year_play': return (state.playDates||[]).some(e=>e.startsWith('01-01'));
+    case 'first_delete':  return state.firstDeleteDone === true;
+    case 'readd_game':    return state.readdDone === true;
     default: return false;
   }
+}
+
+function rsCheckWeekendWarrior(playDates){
+  const dates = new Set(playDates.map(e=>e.split('|')[0]));
+  const dayMap = {};
+  dates.forEach(d=>{
+    try{
+      const dt = new Date(d.split('-').reverse().join('-'));
+      const dow = dt.getDay();
+      if(dow===0||dow===6){
+        // week key: year + week number
+        const jan1 = new Date(dt.getFullYear(),0,1);
+        const wk = Math.ceil(((dt-jan1)/86400000+jan1.getDay()+1)/7);
+        const key = `${dt.getFullYear()}-${wk}`;
+        if(!dayMap[key]) dayMap[key]=new Set();
+        dayMap[key].add(dow);
+      }
+    }catch(e){}
+  });
+  return Object.values(dayMap).some(s=>s.has(0)&&s.has(6));
+}
+
+function rsCheckMonthStreak(playDates){
+  if(!playDates.length) return false;
+  const uniqueDates = [...new Set(playDates.map(e=>e.split('|')[0]))];
+  const ts = uniqueDates.map(d=>{
+    try{ const p=d.split('-'); return new Date(`${p[2]}-${p[1]}-${p[0]}`).getTime(); }catch{return 0;}
+  }).filter(Boolean).sort((a,b)=>a-b);
+  let streak=1, max=1;
+  for(let i=1;i<ts.length;i++){
+    const diff = (ts[i]-ts[i-1])/(1000*60*60*24);
+    if(diff===1){streak++;max=Math.max(max,streak);}
+    else if(diff>1) streak=1;
+  }
+  return max>=30;
 }
 
 let rsNotifTimer = null;
@@ -2922,6 +3323,7 @@ function rsRunChecks(notify=true){
     newlyUnlocked.forEach((def,i)=>{
       setTimeout(()=>rsShowNotif(def), i*1600);
     });
+    publishRsPoints(); // update Firebase so friends see the new score
   }
   rsRenderAchievements();
   return newlyUnlocked;
@@ -2933,12 +3335,16 @@ function rsTotalPoints(){
 }
 
 function rsRank(pts){
-  if(pts>=5000) return {label:'Lenda Retro',icon:'👑'};
-  if(pts>=2500) return {label:'Mestre',icon:'💎'};
-  if(pts>=1000) return {label:'Veterano',icon:'🔥'};
-  if(pts>=400)  return {label:'Experiente',icon:'⭐'};
-  if(pts>=150)  return {label:'Jogador',icon:'🎮'};
-  return {label:'Iniciante',icon:'🏅'};
+  if(pts>=100000) return {label:'GOAT Absoluto',   icon:'🐐'};
+  if(pts>=50000)  return {label:'Transcendente',   icon:'🌌'};
+  if(pts>=20000)  return {label:'Lenda Suprema',   icon:'💎'};
+  if(pts>=10000)  return {label:'Lenda Retro',     icon:'👑'};
+  if(pts>=5000)   return {label:'Mestre',          icon:'🔥'};
+  if(pts>=2500)   return {label:'Veterano',        icon:'⭐'};
+  if(pts>=1000)   return {label:'Experiente',      icon:'🎮'};
+  if(pts>=400)    return {label:'Jogador',         icon:'🕹'};
+  if(pts>=150)    return {label:'Iniciante',       icon:'🏅'};
+  return {label:'Calouro',icon:'🌱'};
 }
 
 let rsActiveCat = 'all';
@@ -2996,16 +3402,47 @@ function rsOnGameAdded(gameName, consoleKey){
   if(!s.specialGames.includes(nameL)) s.specialGames.push(nameL);
   if(!s.consolesSet.includes(consoleKey)) s.consolesSet.push(consoleKey);
   s.consolesUsed = s.consolesSet.length;
+  // Track per-console collection counts
+  if(consoleKey){
+    if(!s.gamesPerConsole) s.gamesPerConsole={};
+    s.gamesPerConsole[consoleKey] = (s.gamesPerConsole[consoleKey]||0)+1;
+  }
+  // Easter egg: readd (was deleted and now added again)
+  if((s.deletedGamesSet||[]).includes(nameL)) s.readdDone = true;
   rsSaveState(s);
   rsRunChecks();
+  publishRsPoints();
 }
 
 // Called when a game is launched
-function rsOnGamePlayed(gameName){
+function rsOnGamePlayed(gameName, consoleKey){
   const s = rsGetState();
   const nameL = (gameName||'').toLowerCase();
   if(!s.gamesPlayedSet.includes(nameL)) s.gamesPlayedSet.push(nameL);
   s.gamesPlayed = s.gamesPlayedSet.length;
+  // Track per-console plays
+  if(consoleKey){
+    if(!s.consolesPlayedSet.includes(consoleKey)) s.consolesPlayedSet.push(consoleKey);
+    if(!s.consolesPlayedCount) s.consolesPlayedCount={};
+    if(!s.consolesPlayedCount[consoleKey]) s.consolesPlayedCount[consoleKey]=new Set ? 0 : 0;
+    // Track unique games per console played
+    const cpSetKey = 'cps_'+consoleKey;
+    if(!s[cpSetKey]) s[cpSetKey]=[];
+    if(!s[cpSetKey].includes(nameL)) s[cpSetKey].push(nameL);
+    s.consolesPlayedCount[consoleKey] = s[cpSetKey].length;
+  }
+  // Easter egg: date-based plays
+  const now = new Date();
+  const dd = String(now.getDate()).padStart(2,'0');
+  const mm = String(now.getMonth()+1).padStart(2,'0');
+  const yyyy = now.getFullYear();
+  const dateStr = `${dd}-${mm}-${yyyy}`;
+  const h = now.getHours();
+  let tag = dateStr;
+  if(h>=0 && h<4) tag += '|midnight';
+  if(h<6) tag += '|dawn';
+  if(!s.playDates) s.playDates=[];
+  if(!s.playDates.some(e=>e.startsWith(dateStr+'|')||e===dateStr)) s.playDates.push(tag);
   rsSaveState(s);
   rsRunChecks();
 }
@@ -3021,8 +3458,10 @@ function rsStopPlayTimer(){
   rsPlayStartTime = null;
   const s = rsGetState();
   s.totalPlayMs = (s.totalPlayMs||0) + elapsed;
+  s.maxSessionMs = Math.max(s.maxSessionMs||0, elapsed);
   rsSaveState(s);
   rsRunChecks();
+  publishRsPoints();
 }
 
 // Category filter buttons
@@ -3075,6 +3514,8 @@ function setupSideDrawer(){
     inp.value='';
     status.style.display='block';status.style.color='#6ee7b7';status.textContent=`✓ ${val} adicionado!`;
     setTimeout(()=>{status.style.display='none'},2500);
+    // Social achievement: track friends count
+    { const s=rsGetState(); s.friendsAdded=friendsData.length; rsSaveState(s); rsRunChecks(); }
     renderDrawerFriends();
   };
   document.getElementById('sd-friend-add-btn').onclick = doAdd;
@@ -3162,6 +3603,10 @@ async function init(){
   setupSideDrawer();
   // Sync myUsername from localStorage (set via chat username modal)
   myUsername = localStorage.getItem('rs_username')||'';
+  if(myUsername){
+    const s=rsGetState();
+    if(!s.usernameSet){s.usernameSet=true;rsSaveState(s);}
+  }
   const isMobile=/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
   if(!isMobile){
     overlayVisible=false;
@@ -3181,6 +3626,7 @@ async function init(){
   rsS.specialGames = [...new Set([...(rsS.specialGames||[]), ...specials])];
   rsSaveState(rsS);
   rsRunChecks(false); // run without notify on init
+  publishRsPoints();  // sync pts to Firebase so friends can see
 }
 init();
 </script>
