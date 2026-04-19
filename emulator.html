@@ -1925,6 +1925,7 @@ let _mpNpRoomId=null, _mpNpRole=null;
 let _mpNpPc=null;
 let _mpNpStream=null;
 let _mpNpInputRef=null;
+let _mpNpGuestInputRef=null; // ref de escrita do P2 guest → Firebase
 let _mpNpCleanups=[];
 let _mpNpOverlayPatch=null;
 
@@ -2144,6 +2145,7 @@ function _showP2VideoOverlay(stream){
 // ── Captura inputs do P2 (teclado + overlay mobile) → Firebase ──────────────
 function _setupP2InputCapture(roomId){
   const ref = fbDb.ref('mp_rooms/'+roomId+'/p2_inputs');
+  _mpNpGuestInputRef = ref; // expõe para dispatchKey interceptar inputs do overlay
   const VALID = new Set(Object.keys(_MP_P2_KEYS).map(Number));
 
   // Teclado
@@ -2240,6 +2242,7 @@ function _showNetplayBadge(label){
 function _stopInputSync(){
   try{ _mpNpPc?.close(); }catch(_){}
   _mpNpPc = null;
+  _mpNpGuestInputRef = null; // para interceptação do dispatchKey
   _mpNpStream?.getTracks().forEach(t=>t.stop());
   _mpNpStream = null;
   if(_mpNpInputRef){ try{ _mpNpInputRef.off(); }catch(_){} _mpNpInputRef=null; }
@@ -2321,6 +2324,11 @@ function adaptOverlay(c){
   bindOverlayEvents();
 }
 function dispatchKey(code,type){
+  // P2 guest: redireciona input ao Firebase em vez de despachar localmente
+  if(_mpNpRole==='guest' && _mpNpGuestInputRef){
+    _mpNpGuestInputRef.push({kc:code, t:type==='keydown'?1:0, ts:Date.now()}).catch(()=>{});
+    return;
+  }
   const opts={keyCode:code,which:code,bubbles:true,cancelable:true,composed:true};
   const evt=new KeyboardEvent(type,opts);
   document.dispatchEvent(evt);window.dispatchEvent(evt);
