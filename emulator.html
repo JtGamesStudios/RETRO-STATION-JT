@@ -41,9 +41,10 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
   position:fixed;top:0;left:0;right:0;z-index:50;height:58px;
   background:rgba(7,7,13,.92);backdrop-filter:blur(24px) saturate(1.6);
   border-bottom:1px solid var(--border);
-  display:flex;align-items:center;justify-content:space-between;padding:0 22px;gap:14px;
+  display:flex;align-items:center;justify-content:space-between;padding:0 22px;gap:8px;
+  overflow:visible;
 }
-.logo{display:flex;align-items:center;gap:11px;font-weight:900;font-size:.95rem;letter-spacing:-.2px;white-space:nowrap}
+.logo{display:flex;align-items:center;gap:11px;font-weight:900;font-size:.95rem;letter-spacing:-.2px;white-space:nowrap;flex-shrink:0}
 .logo-icon{
   width:34px;height:34px;border-radius:10px;flex-shrink:0;
   background:linear-gradient(135deg,#5b44e8 0%,#9b59d6 100%);
@@ -322,7 +323,8 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
   font-size:9.5px;font-weight:700;color:var(--text-muted);transition:all .12s;user-select:none;
 }
 .console-opt:hover{border-color:var(--border-accent);color:var(--text)}
-.console-opt .co-icon{font-size:18px;display:block;margin-bottom:4px}
+.console-opt .co-icon{font-size:18px;display:flex;align-items:center;justify-content:center;margin-bottom:4px;height:30px}
+.console-opt .co-icon svg{max-width:100%;height:auto;display:block}
 .console-opt.selected{color:#fff}
 .console-opt[data-val="gba"].selected{background:rgba(109,86,245,.24);border-color:#6d56f5}
 .console-opt[data-val="gb"].selected{background:rgba(16,185,129,.17);border-color:#047857}
@@ -558,7 +560,220 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
   #header,#filter-bar{padding-left:14px;padding-right:14px}
   #console-grid{grid-template-columns:repeat(5,1fr)}
   #ach-notification{width:calc(100vw - 24px);right:12px}
+  /* Hide badge on small screens to give room to hamburger */
+  #game-count-badge{display:none}
+  /* Shrink add button to icon only on very small screens */
+  #btn-add .btn-add-label{display:none}
+  #btn-add{padding:8px 10px}
 }
+@media(max-width:360px){
+  .logo-word{display:none}
+}
+
+/* ═══ HAMBURGER BUTTON ═══ */
+#btn-hamburger{
+  width:36px;height:36px;border-radius:9px;
+  background:var(--surface2);border:1px solid var(--border);
+  cursor:pointer;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:4px;
+  padding:0;flex-shrink:0;transition:all .15s;
+}
+#btn-hamburger:hover{background:var(--surface3);border-color:var(--border-accent)}
+#btn-hamburger span{
+  display:block;width:14px;height:1.5px;border-radius:2px;
+  background:var(--text-muted);transition:all .2s;
+}
+#btn-hamburger:hover span{background:var(--text)}
+
+/* ═══ SIDE DRAWER ═══ */
+#side-drawer-backdrop{
+  display:none;position:fixed;inset:0;z-index:400;
+  background:rgba(0,0,0,.75);backdrop-filter:blur(10px);
+  transition:opacity .3s;opacity:0;
+}
+#side-drawer-backdrop.open{display:block;opacity:1}
+#side-drawer{
+  position:fixed;top:0;right:0;bottom:0;z-index:401;
+  width:min(380px,96vw);
+  background:var(--surface);border-left:1px solid var(--border-accent);
+  display:flex;flex-direction:column;overflow:hidden;
+  transform:translateX(100%);transition:transform .32s cubic-bezier(.25,.46,.45,.94);
+}
+#side-drawer.open{transform:translateX(0)}
+
+#side-drawer-header{
+  padding:14px 16px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+  flex-shrink:0;background:var(--surface);
+}
+.side-drawer-logo{display:flex;align-items:center;gap:9px;font-weight:800;font-size:.9rem}
+#side-drawer-close{
+  width:28px;height:28px;border-radius:7px;background:var(--surface3);
+  border:1px solid var(--border);color:var(--text-muted);cursor:pointer;
+  font-size:13px;display:flex;align-items:center;justify-content:center;transition:all .15s;
+}
+#side-drawer-close:hover{background:var(--surface4);color:var(--text)}
+
+#side-drawer-tabs{
+  display:flex;padding:10px 14px;gap:6px;flex-shrink:0;border-bottom:1px solid var(--border);
+}
+.sd-tab{
+  flex:1;padding:8px 0;border-radius:9px;font-size:12px;font-weight:700;
+  cursor:pointer;border:1px solid var(--border);background:var(--surface2);
+  color:var(--text-muted);transition:all .15s;font-family:var(--font);
+  display:flex;align-items:center;justify-content:center;gap:6px;
+}
+.sd-tab:hover{color:var(--text);border-color:var(--border-accent)}
+.sd-tab.active{background:rgba(109,86,245,.15);color:var(--accent2);border-color:var(--border-accent)}
+
+.sd-tab-content{display:none;flex:1;overflow-y:auto;flex-direction:column}
+.sd-tab-content.active{display:flex}
+.sd-tab-content::-webkit-scrollbar{width:3px}
+.sd-tab-content::-webkit-scrollbar-thumb{background:var(--surface4);border-radius:99px}
+
+.sd-section-head{
+  padding:12px 16px;border-bottom:1px solid var(--border);flex-shrink:0;
+}
+.sd-input{
+  flex:1;padding:8px 11px;background:var(--surface2);border:1px solid var(--border);
+  border-radius:var(--r-sm);color:var(--text);font-size:12px;font-family:var(--font);
+  outline:none;transition:border-color .15s;
+}
+.sd-input:focus{border-color:var(--border-accent)}
+.sd-input::placeholder{color:var(--text-dim)}
+
+/* ═══ FRIENDS IN DRAWER ═══ */
+.sd-friend-card{
+  background:var(--surface2);border:1px solid var(--border);border-radius:11px;
+  padding:11px 13px;display:flex;align-items:center;gap:10px;
+  transition:border-color .15s;
+}
+.sd-friend-card:hover{border-color:var(--border-accent)}
+.sd-friend-avatar{
+  width:38px;height:38px;border-radius:50%;
+  background:linear-gradient(135deg,var(--accent),#9b59d6);
+  display:flex;align-items:center;justify-content:center;
+  font-size:15px;font-weight:800;color:#fff;flex-shrink:0;
+  position:relative;
+}
+.sd-friend-pts{
+  display:inline-flex;align-items:center;gap:3px;
+  font-size:10px;font-weight:700;color:var(--gold);
+  background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.2);
+  padding:1px 6px;border-radius:99px;margin-top:3px;
+}
+
+/* ═══ ACHIEVEMENTS PANEL ═══ */
+#rs-ach-points-header{
+  display:flex;align-items:center;gap:12px;
+  padding:14px 16px;border-bottom:1px solid var(--border);
+  flex-shrink:0;background:linear-gradient(135deg,rgba(109,86,245,.08),rgba(245,158,11,.04));
+}
+#rs-ach-rank-icon{font-size:32px;flex-shrink:0}
+#rs-ach-points-val{font-size:22px;font-weight:900;color:var(--gold)}
+#rs-ach-rank-label{font-size:10px;font-weight:700;color:var(--text-muted);letter-spacing:.5px;text-transform:uppercase;margin-top:2px}
+
+#rs-ach-progress-wrap{
+  display:flex;align-items:center;gap:8px;
+  padding:8px 16px;border-bottom:1px solid var(--border);flex-shrink:0;
+}
+#rs-ach-progress-bar{
+  flex:1;height:5px;background:var(--surface4);border-radius:99px;overflow:hidden;
+}
+#rs-ach-progress-fill{
+  height:100%;background:linear-gradient(90deg,var(--accent),var(--gold));
+  border-radius:99px;transition:width .6s ease;width:0%;
+}
+#rs-ach-progress-label{font-size:10px;font-weight:700;color:var(--text-muted);flex-shrink:0}
+
+#rs-ach-cats{
+  display:flex;gap:5px;padding:8px 12px;flex-shrink:0;overflow-x:auto;
+  border-bottom:1px solid var(--border);
+}
+#rs-ach-cats::-webkit-scrollbar{height:0}
+.rs-cat-btn{
+  padding:4px 11px;border-radius:99px;font-size:10.5px;font-weight:600;
+  white-space:nowrap;border:1px solid var(--border);background:var(--surface2);
+  color:var(--text-muted);cursor:pointer;transition:all .15s;font-family:var(--font);
+  flex-shrink:0;
+}
+.rs-cat-btn:hover{color:var(--text)}
+.rs-cat-btn.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+
+#rs-ach-grid{
+  display:flex;flex-direction:column;gap:0;flex:1;
+  padding-bottom:16px;
+}
+
+.rs-ach-item{
+  display:flex;align-items:center;gap:12px;
+  padding:12px 16px;border-bottom:1px solid rgba(255,255,255,.03);
+  transition:background .15s;cursor:default;
+}
+.rs-ach-item:hover{background:rgba(255,255,255,.025)}
+.rs-ach-item.locked{opacity:.45;filter:grayscale(.7)}
+.rs-ach-item.locked .rs-ach-icon{filter:blur(1px)}
+
+.rs-ach-icon{
+  width:46px;height:46px;border-radius:12px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  font-size:22px;position:relative;overflow:hidden;
+  border:1px solid rgba(255,255,255,.07);
+}
+.rs-ach-item.unlocked .rs-ach-icon{
+  background:linear-gradient(135deg,rgba(245,158,11,.25),rgba(245,158,11,.06));
+  border-color:rgba(245,158,11,.35);
+  box-shadow:0 0 16px rgba(245,158,11,.12);
+}
+.rs-ach-item.locked .rs-ach-icon{
+  background:var(--surface3);border-color:var(--border);
+}
+.rs-ach-lock{
+  position:absolute;bottom:1px;right:2px;
+  font-size:10px;opacity:.7;
+}
+.rs-ach-unlock-badge{
+  position:absolute;top:-1px;right:-1px;
+  width:14px;height:14px;border-radius:50%;
+  background:var(--gold);display:flex;align-items:center;justify-content:center;
+  font-size:7px;
+}
+
+.rs-ach-info{flex:1;min-width:0}
+.rs-ach-title{font-size:12.5px;font-weight:700;color:var(--text);margin-bottom:2px}
+.rs-ach-item.locked .rs-ach-title{color:var(--text-muted)}
+.rs-ach-desc{font-size:10.5px;color:var(--text-muted);line-height:1.45;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rs-ach-meta{display:flex;align-items:center;gap:5px;margin-top:3px}
+.rs-ach-pts-badge{
+  font-size:9.5px;font-weight:700;color:var(--gold);
+  background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.2);
+  padding:1px 6px;border-radius:99px;
+}
+.rs-ach-date{font-size:9.5px;color:var(--green)}
+
+/* RS achievement unlock notification (retro style) */
+#rs-ach-notification{
+  position:fixed;top:68px;left:50%;transform:translateX(-50%) translateY(-20px);
+  z-index:1001;width:min(340px,calc(100vw - 24px));
+  background:linear-gradient(135deg,#1a0e38 0%,#120e1e 55%,#0d1018 100%);
+  border:1px solid rgba(109,86,245,.5);border-radius:16px;
+  padding:13px 16px;display:flex;align-items:center;gap:12px;
+  box-shadow:0 8px 32px rgba(0,0,0,.6),0 0 0 1px rgba(109,86,245,.08),0 0 40px rgba(109,86,245,.15);
+  opacity:0;pointer-events:none;
+  transition:opacity .4s,transform .4s cubic-bezier(.25,.46,.45,.94);
+}
+#rs-ach-notification.show{opacity:1;transform:translateX(-50%) translateY(0)}
+#rs-ach-notification.hide{opacity:0;transform:translateX(-50%) translateY(-20px)}
+.rs-notif-icon{
+  width:48px;height:48px;border-radius:12px;flex-shrink:0;
+  background:linear-gradient(135deg,rgba(109,86,245,.3),rgba(109,86,245,.08));
+  border:1px solid rgba(109,86,245,.4);
+  display:flex;align-items:center;justify-content:center;font-size:22px;
+  box-shadow:0 0 20px rgba(109,86,245,.2);
+}
+.rs-notif-eyebrow{font-size:9px;font-weight:800;letter-spacing:2px;color:var(--accent2);text-transform:uppercase;margin-bottom:4px;display:flex;align-items:center;gap:4px}
+.rs-notif-title{font-size:14px;font-weight:800;color:#fff;margin-bottom:2px}
+.rs-notif-pts{font-size:11px;font-weight:700;color:var(--gold)}
 </style>
 </head>
 <body>
@@ -571,13 +786,12 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
   </div>
   <div class="header-right">
     <span id="game-count-badge">0 jogos</span>
-    <button class="btn btn-ghost" id="btn-friends" style="position:relative">
-      👥 Amigos
-      <span id="friends-notif-dot" style="display:none;position:absolute;top:4px;right:4px;width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 6px rgba(16,185,129,.6)"></span>
-    </button>
     <button class="btn btn-primary" id="btn-add">
       <svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M5.5 1v9M1 5.5h9" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-      Adicionar ROM
+      <span class="btn-add-label">Adicionar ROM</span>
+    </button>
+    <button id="btn-hamburger" aria-label="Menu" title="Menu">
+      <span></span><span></span><span></span>
     </button>
   </div>
 </header>
@@ -699,16 +913,88 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
     </h2>
     <div class="form-group">
       <label>Console</label>
-      <div id="console-grid">
-        <div class="console-opt" data-val="gba"><span class="co-icon">🎮</span>GBA</div>
-        <div class="console-opt" data-val="snes"><span class="co-icon">🕹</span>SNES</div>
-        <div class="console-opt" data-val="nes"><span class="co-icon">🎯</span>NES</div>
-        <div class="console-opt" data-val="md"><span class="co-icon">⚡</span>Mega Drive</div>
-        <div class="console-opt" data-val="ps1"><span class="co-icon">🔵</span>PS1</div>
-        <div class="console-opt" data-val="n64"><span class="co-icon">🟥</span>N64</div>
-        <div class="console-opt" data-val="gg"><span class="co-icon">📱</span>Game Gear</div>
-        <div class="console-opt" data-val="gb"><span class="co-icon">🔲</span>Game Boy</div>
-        <div class="console-opt" data-val="gbc"><span class="co-icon">🌈</span>GBC</div>
+    <div id="console-grid">
+        <div class="console-opt" data-val="gba">
+          <span class="co-icon">
+            <svg viewBox="0 0 56 32" fill="none" xmlns="http://www.w3.org/2000/svg" width="48" height="28">
+              <rect x="0" y="0" width="56" height="32" rx="4" fill="#1a0a3a"/>
+              <text x="5" y="21" font-family="'Arial Black',Arial,sans-serif" font-weight="900" font-size="17" fill="#a78bfa">GBA</text>
+              <text x="37" y="21" font-family="Arial,sans-serif" font-weight="400" font-size="9" fill="#6d56f5">adv</text>
+            </svg>
+          </span>GBA</div>
+        <div class="console-opt" data-val="snes">
+          <span class="co-icon">
+            <svg viewBox="0 0 56 32" fill="none" xmlns="http://www.w3.org/2000/svg" width="48" height="28">
+              <rect x="0" y="0" width="56" height="32" rx="4" fill="#0a1a3a"/>
+              <text x="4" y="14" font-family="'Arial Black',Arial,sans-serif" font-weight="900" font-size="9" fill="#93c5fd">SUPER</text>
+              <text x="4" y="27" font-family="'Arial Black',Arial,sans-serif" font-weight="900" font-size="11" fill="#60a5fa">NES</text>
+              <circle cx="44" cy="10" r="4" fill="#ef4444" opacity=".8"/>
+              <circle cx="44" cy="22" r="4" fill="#22c55e" opacity=".8"/>
+            </svg>
+          </span>SNES</div>
+        <div class="console-opt" data-val="nes">
+          <span class="co-icon">
+            <svg viewBox="0 0 56 32" fill="none" xmlns="http://www.w3.org/2000/svg" width="48" height="28">
+              <rect x="0" y="0" width="56" height="32" rx="4" fill="#2a0a0a"/>
+              <text x="6" y="22" font-family="'Arial Black',Arial,sans-serif" font-weight="900" font-size="20" fill="#ef4444">NES</text>
+              <rect x="44" y="8" width="8" height="16" rx="2" fill="#dc2626" opacity=".6"/>
+            </svg>
+          </span>NES</div>
+        <div class="console-opt" data-val="md">
+          <span class="co-icon">
+            <svg viewBox="0 0 56 32" fill="none" xmlns="http://www.w3.org/2000/svg" width="48" height="28">
+              <rect x="0" y="0" width="56" height="32" rx="4" fill="#1a0a2a"/>
+              <text x="3" y="14" font-family="'Arial Black',Arial,sans-serif" font-weight="900" font-size="9" fill="#f9a8d4">SEGA</text>
+              <text x="3" y="27" font-family="'Arial Black',Arial,sans-serif" font-weight="900" font-size="10" fill="#ec4899">GENESIS</text>
+            </svg>
+          </span>Mega Drive</div>
+        <div class="console-opt" data-val="ps1">
+          <span class="co-icon">
+            <svg viewBox="0 0 56 32" fill="none" xmlns="http://www.w3.org/2000/svg" width="48" height="28">
+              <rect x="0" y="0" width="56" height="32" rx="4" fill="#0a0a2a"/>
+              <text x="4" y="22" font-family="'Arial Black',Arial,sans-serif" font-weight="900" font-size="18" fill="#93c5fd">PS1</text>
+              <text x="36" y="12" font-family="Arial,sans-serif" font-size="8" fill="#60a5fa">△</text>
+              <text x="43" y="18" font-family="Arial,sans-serif" font-size="8" fill="#ef4444">○</text>
+              <text x="36" y="24" font-family="Arial,sans-serif" font-size="8" fill="#e879f9">✕</text>
+            </svg>
+          </span>PS1</div>
+        <div class="console-opt" data-val="n64">
+          <span class="co-icon">
+            <svg viewBox="0 0 56 32" fill="none" xmlns="http://www.w3.org/2000/svg" width="48" height="28">
+              <rect x="0" y="0" width="56" height="32" rx="4" fill="#2a0a0a"/>
+              <text x="4" y="22" font-family="'Arial Black',Arial,sans-serif" font-weight="900" font-size="18" fill="#fca5a5">N64</text>
+              <path d="M44 6 L52 16 L44 26 L36 16 Z" fill="#dc2626" opacity=".7"/>
+            </svg>
+          </span>N64</div>
+        <div class="console-opt" data-val="gg">
+          <span class="co-icon">
+            <svg viewBox="0 0 56 32" fill="none" xmlns="http://www.w3.org/2000/svg" width="48" height="28">
+              <rect x="0" y="0" width="56" height="32" rx="4" fill="#1a1200"/>
+              <text x="3" y="14" font-family="'Arial Black',Arial,sans-serif" font-weight="900" font-size="9" fill="#fcd34d">SEGA</text>
+              <text x="3" y="27" font-family="'Arial Black',Arial,sans-serif" font-weight="900" font-size="10" fill="#f59e0b">GAME GEAR</text>
+            </svg>
+          </span>Game Gear</div>
+        <div class="console-opt" data-val="gb">
+          <span class="co-icon">
+            <svg viewBox="0 0 56 32" fill="none" xmlns="http://www.w3.org/2000/svg" width="48" height="28">
+              <rect x="0" y="0" width="56" height="32" rx="4" fill="#0a1a0a"/>
+              <text x="3" y="14" font-family="'Arial Black',Arial,sans-serif" font-weight="900" font-size="9" fill="#6ee7b7">GAME</text>
+              <text x="3" y="27" font-family="'Arial Black',Arial,sans-serif" font-weight="900" font-size="11" fill="#34d399">BOY</text>
+              <rect x="38" y="6" width="14" height="20" rx="3" stroke="#10b981" stroke-width="1.5" fill="none"/>
+              <rect x="41" y="9" width="8" height="12" rx="1" fill="#064e3b" opacity=".7"/>
+            </svg>
+          </span>Game Boy</div>
+        <div class="console-opt" data-val="gbc">
+          <span class="co-icon">
+            <svg viewBox="0 0 56 32" fill="none" xmlns="http://www.w3.org/2000/svg" width="48" height="28">
+              <rect x="0" y="0" width="56" height="32" rx="4" fill="#0a1a0a"/>
+              <text x="3" y="14" font-family="'Arial Black',Arial,sans-serif" font-weight="900" font-size="9" fill="#6ee7b7">GAME BOY</text>
+              <text x="3" y="27" font-family="'Arial Black',Arial,sans-serif" font-weight="900" font-size="11" fill="#34d399">COLOR</text>
+              <circle cx="46" cy="10" r="3" fill="#ef4444"/>
+              <circle cx="50" cy="16" r="3" fill="#3b82f6"/>
+              <circle cx="46" cy="22" r="3" fill="#22c55e"/>
+            </svg>
+          </span>GBC</div>
       </div>
       <div id="console-required-warning" style="display:none;margin-top:6px;padding:6px 10px;background:rgba(239,68,68,.09);border:1px solid rgba(239,68,68,.28);border-radius:7px;font-size:11px;color:#fca5a5;">⚠️ Selecione o console antes de salvar.</div>
     </div>
@@ -884,6 +1170,95 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
     <div id="friends-list" style="flex:1;overflow-y:auto;padding:10px 14px;display:flex;flex-direction:column;gap:8px">
       <div id="friends-empty" style="text-align:center;padding:30px 0;color:var(--text-dim);font-size:12px">Nenhum amigo ainda.<br>Adicione pelo nome de usuário!</div>
     </div>
+  </div>
+</div>
+
+<!-- ════ SIDE DRAWER (Hamburger Menu) ════ -->
+<div id="side-drawer-backdrop"></div>
+<div id="side-drawer">
+  <div id="side-drawer-header">
+    <div class="side-drawer-logo">
+      <div class="logo-icon" style="width:30px;height:30px;font-size:14px">🕹</div>
+      <span><em style="color:var(--accent2)">Retro</em>Station</span>
+    </div>
+    <button id="side-drawer-close">✕</button>
+  </div>
+
+  <!-- Tabs -->
+  <div id="side-drawer-tabs">
+    <button class="sd-tab active" data-tab="friends-tab">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/><path d="M21 21v-2a4 4 0 0 0-3-3.85"/></svg>
+      Amigos
+    </button>
+    <button class="sd-tab" data-tab="achievements-tab">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>
+      Conquistas
+    </button>
+  </div>
+
+  <!-- Friends Tab -->
+  <div id="friends-tab" class="sd-tab-content active">
+    <div class="sd-section-head">
+      <div style="display:flex;gap:8px;margin-bottom:8px">
+        <input type="text" id="sd-friend-input" placeholder="Nome de usuário do amigo" maxlength="30" class="sd-input">
+        <button id="sd-friend-add-btn" class="btn btn-primary" style="padding:7px 12px;font-size:11px;white-space:nowrap">+ Adicionar</button>
+      </div>
+      <div id="sd-friend-status" style="font-size:11px;display:none;margin-bottom:4px"></div>
+      <div style="font-size:11px;color:var(--text-muted);display:flex;align-items:center;gap:5px">
+        Seu usuário: <strong id="sd-my-username" style="color:var(--accent3)">—</strong>
+      </div>
+    </div>
+    <div id="sd-friends-list" style="display:flex;flex-direction:column;gap:8px;padding:0 16px 16px"></div>
+    <div id="sd-friends-empty" style="text-align:center;padding:32px 16px;color:var(--text-dim);font-size:12px;line-height:1.8">
+      👥<br>Nenhum amigo ainda.<br>Adicione pelo nome de usuário!
+    </div>
+  </div>
+
+  <!-- Achievements Tab -->
+  <div id="achievements-tab" class="sd-tab-content">
+    <!-- Points header -->
+    <div id="rs-ach-points-header">
+      <div id="rs-ach-rank-icon">🏅</div>
+      <div>
+        <div id="rs-ach-points-val">0 <span style="font-size:12px;font-weight:600;color:var(--text-muted)">pontos</span></div>
+        <div id="rs-ach-rank-label">Iniciante</div>
+      </div>
+      <div id="rs-ach-unlocked-count" style="margin-left:auto;text-align:right">
+        <div style="font-size:18px;font-weight:800;color:var(--text)">0/<span id="rs-ach-total">0</span></div>
+        <div style="font-size:10px;color:var(--text-muted);letter-spacing:.5px">DESBLOQUEADAS</div>
+      </div>
+    </div>
+
+    <!-- Progress bar -->
+    <div id="rs-ach-progress-wrap">
+      <div id="rs-ach-progress-bar"><div id="rs-ach-progress-fill"></div></div>
+      <div id="rs-ach-progress-label">0%</div>
+    </div>
+
+    <!-- Category filters -->
+    <div id="rs-ach-cats">
+      <button class="rs-cat-btn active" data-cat="all">Todas</button>
+      <button class="rs-cat-btn" data-cat="tempo">⏱ Tempo</button>
+      <button class="rs-cat-btn" data-cat="coleção">📦 Coleção</button>
+      <button class="rs-cat-btn" data-cat="gameplay">🎮 Gameplay</button>
+      <button class="rs-cat-btn" data-cat="especial">⭐ Especiais</button>
+    </div>
+
+    <!-- Achievement grid -->
+    <div id="rs-ach-grid"></div>
+  </div>
+</div>
+
+<!-- ════ RS ACHIEVEMENT NOTIFICATION ════ -->
+<div id="rs-ach-notification">
+  <div class="rs-notif-icon" id="rs-notif-icon">🏆</div>
+  <div>
+    <div class="rs-notif-eyebrow">
+      <svg width="8" height="8" viewBox="0 0 8 8"><circle cx="4" cy="4" r="4" fill="var(--accent2)"/></svg>
+      RetroStation Achievement
+    </div>
+    <div class="rs-notif-title" id="rs-notif-title">—</div>
+    <div class="rs-notif-pts" id="rs-notif-pts">+0 pontos</div>
   </div>
 </div>
 
@@ -1295,7 +1670,7 @@ function launchGame(game){
     EJS_backgroundColor:'#07070d',EJS_VirtualGamepadSettings:{disabled:true},
     EJS_defaultOptions:{'emulation-speed':'1'}, // lock default speed to normal; user can change in-game
     EJS_Buttons:{playPause:false,restart:true,mute:true,settings:true,fullscreen:true,saveState:true,loadState:true,screenRecord:false,gamepad:false,cheat:false,volume:true,saveSavFiles:true},
-    EJS_onGameStart:()=>{loading.classList.add('hidden');URL.revokeObjectURL(romUrl);startAchPolling(game);publishPresence(game.name, null);}
+    EJS_onGameStart:()=>{loading.classList.add('hidden');URL.revokeObjectURL(romUrl);startAchPolling(game);publishPresence(game.name, null);rsOnGamePlayed(game.name);rsStartPlayTimer();publishRsPoints();}
   });
   try{delete window.EJS_threads}catch(e){}
   const old=document.getElementById('ejs');if(old)old.remove();
@@ -1307,6 +1682,7 @@ function launchGame(game){
 
 /* ═══ CLOSE EMULATOR ═══ */
 function closeEmulator(){
+  rsStopPlayTimer();
   stopAchPolling();
   publishPresence(null, null);
   document.getElementById('emulator-container').innerHTML='';
@@ -1491,6 +1867,7 @@ function setupModal(){
       const game={name,console:consoleKey,cover,autoCover,manualCover,romData,romName:romF.name,addedAt:Date.now()};
       const id=await dbAdd(game);game.id=id;games.push(game);
       renderLibrary();bd.style.display='none';resetModal();showToast(`"${name}" adicionado!`);
+      rsOnGameAdded(game.name, game.console);
       loadAchievementsForGame(game).then(renderLibrary);
     }catch(e){showToast('Erro ao salvar o jogo',true)}
     finally{btn.textContent='Salvar Jogo';btn.disabled=false}
@@ -2385,10 +2762,6 @@ function setupFriends(){
   const addInput      = document.getElementById('friend-username-input');
   const addStatus     = document.getElementById('friend-add-status');
 
-  document.getElementById('btn-friends').onclick=()=>{
-    panelBackdrop.style.display='flex';
-    renderFriends();
-  };
   closeBtn.onclick=()=>{ panelBackdrop.style.display='none'; };
   panelBackdrop.onclick=e=>{ if(e.target===panelBackdrop) panelBackdrop.style.display='none'; };
 
@@ -2408,7 +2781,372 @@ function setupFriends(){
   addInput.onkeydown=e=>{ if(e.key==='Enter') doAdd(); };
 }
 
-/* ═══ INIT ═══ */
+/* ═══════════════════════════════════════════════════════════════
+   RETROSTATION ACHIEVEMENT SYSTEM (RS Achievements)
+   Sistema de conquistas próprio do RetroStation — independente do RA
+═══════════════════════════════════════════════════════════════ */
+
+const RS_ACHIEVEMENTS_DEF = [
+  // TEMPO
+  { id:'time_1m',     cat:'tempo',    icon:'⏱',  title:'Primeiro Minuto',        desc:'Jogar por 1 minuto no RetroStation.',      pts:50   },
+  { id:'time_5m',     cat:'tempo',    icon:'⏰',  title:'Aquecendo os Motores',   desc:'Jogar por 5 minutos no total.',            pts:100  },
+  { id:'time_30m',    cat:'tempo',    icon:'🔥',  title:'No Ritmo Retro',         desc:'Jogar por 30 minutos no total.',           pts:250  },
+  { id:'time_1h',     cat:'tempo',    icon:'🕐',  title:'Maratonista de Pixels',  desc:'Jogar por 1 hora no total.',               pts:500  },
+  { id:'time_5h',     cat:'tempo',    icon:'💥',  title:'Viciado em Pixels',      desc:'Jogar por 5 horas no total.',              pts:1000 },
+  { id:'time_24h',    cat:'tempo',    icon:'👑',  title:'Lenda dos Arcades',      desc:'Jogar por 24 horas no total.',             pts:2500 },
+  // COLEÇÃO
+  { id:'add_1',       cat:'coleção',  icon:'📦',  title:'Colecionador Iniciante', desc:'Adicionar o primeiro jogo à coleção.',     pts:50   },
+  { id:'add_5',       cat:'coleção',  icon:'🗂',  title:'Pequena Coleção',        desc:'Ter 5 jogos na biblioteca.',               pts:150  },
+  { id:'add_15',      cat:'coleção',  icon:'📚',  title:'Bibliofilia Gamer',      desc:'Ter 15 jogos na biblioteca.',              pts:400  },
+  { id:'add_30',      cat:'coleção',  icon:'🏛',  title:'Acervo Completo',        desc:'Ter 30 jogos na biblioteca.',              pts:800  },
+  { id:'add_50',      cat:'coleção',  icon:'🌟',  title:'Museu Retro',            desc:'Ter 50 jogos na biblioteca.',              pts:1500 },
+  { id:'consoles_3',  cat:'coleção',  icon:'🌐',  title:'Multi-Plataforma',       desc:'Ter jogos de 3 consoles diferentes.',      pts:300  },
+  { id:'consoles_all',cat:'coleção',  icon:'💎',  title:'Colecionador de Eras',   desc:'Ter jogos de todos os 9 consoles.',        pts:1000 },
+  // GAMEPLAY
+  { id:'play_1',      cat:'gameplay', icon:'▶',   title:'Curioso Digital',        desc:'Jogar qualquer jogo pela primeira vez.',   pts:75   },
+  { id:'play_5',      cat:'gameplay', icon:'🎯',  title:'Explorador de Mundos',   desc:'Jogar 5 jogos diferentes.',               pts:300  },
+  { id:'play_10',     cat:'gameplay', icon:'🏆',  title:'Mestre do Retro',        desc:'Jogar 10 jogos diferentes.',              pts:750  },
+  { id:'play_25',     cat:'gameplay', icon:'🌠',  title:'Veterano dos Pixels',    desc:'Jogar 25 jogos diferentes.',              pts:1500 },
+  // ESPECIAL — jogos específicos
+  { id:'mario_world', cat:'especial', icon:'🍄',  title:'É-a-Me, Mario!',         desc:'Adicionou Super Mario World à coleção.',   pts:200  },
+  { id:'zelda',       cat:'especial', icon:'🗡',  title:'It\'s Dangerous Alone!', desc:'Adicionou um jogo Zelda à coleção.',       pts:200  },
+  { id:'sonic',       cat:'especial', icon:'💨',  title:'Gotta Go Fast!',         desc:'Adicionou Sonic the Hedgehog.',            pts:200  },
+  { id:'pokemon',     cat:'especial', icon:'⚡',  title:'Pegue Todos!',           desc:'Adicionou um jogo Pokémon.',               pts:200  },
+  { id:'ff',          cat:'especial', icon:'🌀',  title:'One-Winged Angel',       desc:'Adicionou Final Fantasy à coleção.',       pts:200  },
+  { id:'megaman',     cat:'especial', icon:'🤖',  title:'Rock... MAN!',           desc:'Adicionou Mega Man à coleção.',            pts:200  },
+  { id:'street_fghtr',cat:'especial', icon:'👊',  title:'Hadouken!',              desc:'Adicionou Street Fighter à coleção.',      pts:200  },
+  { id:'mk',          cat:'especial', icon:'💀',  title:'FATALITY!',              desc:'Adicionou Mortal Kombat à coleção.',       pts:200  },
+  { id:'castlevania', cat:'especial', icon:'🧛',  title:'Caçador de Vampiros',    desc:'Adicionou Castlevania à coleção.',         pts:200  },
+  { id:'contra',      cat:'especial', icon:'🔫',  title:'↑↑↓↓←→←→BA',           desc:'Adicionou Contra à coleção.',              pts:200  },
+  { id:'mario64',     cat:'especial', icon:'⭐',  title:'Let\'s-a-Go!',           desc:'Adicionou Super Mario 64 à coleção.',      pts:250  },
+  { id:'zelda_oot',   cat:'especial', icon:'🎵',  title:'HEY! LISTEN!',           desc:'Adicionou Ocarina of Time à coleção.',     pts:250  },
+  { id:'chrono',      cat:'especial', icon:'⏳',  title:'Viajante do Tempo',      desc:'Adicionou Chrono Trigger à coleção.',      pts:250  },
+];
+
+// State persisted in localStorage
+function rsLoadState(){
+  try{return JSON.parse(localStorage.getItem('rs_ach_state')||'{}')}catch{return{}}
+}
+function rsSaveState(s){ localStorage.setItem('rs_ach_state',JSON.stringify(s)); }
+
+function rsGetState(){
+  const s = rsLoadState();
+  return {
+    totalPlayMs: s.totalPlayMs || 0,
+    gamesAdded:  s.gamesAdded  || 0,
+    gamesPlayed: s.gamesPlayed || 0,
+    consolesUsed: s.consolesUsed || 0,
+    specialGames: s.specialGames || [],
+    gamesPlayedSet: s.gamesPlayedSet || [],
+    consolesSet:   s.consolesSet || [],
+    unlocked: s.unlocked || [],       // array of ach ids
+    unlockedAt: s.unlockedAt || {},   // id → timestamp
+  };
+}
+
+function rsCheckAchievement(id, state){
+  switch(id){
+    case 'time_1m':     return state.totalPlayMs >= 60000;
+    case 'time_5m':     return state.totalPlayMs >= 300000;
+    case 'time_30m':    return state.totalPlayMs >= 1800000;
+    case 'time_1h':     return state.totalPlayMs >= 3600000;
+    case 'time_5h':     return state.totalPlayMs >= 18000000;
+    case 'time_24h':    return state.totalPlayMs >= 86400000;
+    case 'add_1':       return state.gamesAdded >= 1;
+    case 'add_5':       return state.gamesAdded >= 5;
+    case 'add_15':      return state.gamesAdded >= 15;
+    case 'add_30':      return state.gamesAdded >= 30;
+    case 'add_50':      return state.gamesAdded >= 50;
+    case 'consoles_3':  return state.consolesUsed >= 3;
+    case 'consoles_all':return state.consolesUsed >= 9;
+    case 'play_1':      return state.gamesPlayed >= 1;
+    case 'play_5':      return state.gamesPlayed >= 5;
+    case 'play_10':     return state.gamesPlayed >= 10;
+    case 'play_25':     return state.gamesPlayed >= 25;
+    case 'mario_world': return state.specialGames.some(g=>g.includes('super mario world'));
+    case 'zelda':       return state.specialGames.some(g=>g.includes('zelda'));
+    case 'sonic':       return state.specialGames.some(g=>g.includes('sonic'));
+    case 'pokemon':     return state.specialGames.some(g=>g.includes('pok'));
+    case 'ff':          return state.specialGames.some(g=>g.includes('final fantasy'));
+    case 'megaman':     return state.specialGames.some(g=>g.includes('mega man')||g.includes('megaman'));
+    case 'street_fghtr':return state.specialGames.some(g=>g.includes('street fighter'));
+    case 'mk':          return state.specialGames.some(g=>g.includes('mortal kombat'));
+    case 'castlevania': return state.specialGames.some(g=>g.includes('castlevania'));
+    case 'contra':      return state.specialGames.some(g=>g===('contra')||g.includes('contra'));
+    case 'mario64':     return state.specialGames.some(g=>g.includes('mario 64')||g.includes('mario64')||g.includes('super mario 64'));
+    case 'zelda_oot':   return state.specialGames.some(g=>g.includes('ocarina'));
+    case 'chrono':      return state.specialGames.some(g=>g.includes('chrono trigger'));
+    default: return false;
+  }
+}
+
+let rsNotifTimer = null;
+function rsShowNotif(def){
+  const el   = document.getElementById('rs-ach-notification');
+  const icon = document.getElementById('rs-notif-icon');
+  const title= document.getElementById('rs-notif-title');
+  const pts  = document.getElementById('rs-notif-pts');
+  icon.textContent  = def.icon;
+  title.textContent = def.title;
+  pts.textContent   = `+${def.pts} pontos`;
+  el.classList.remove('hide'); el.classList.add('show');
+  clearTimeout(rsNotifTimer);
+  rsNotifTimer = setTimeout(()=>{ el.classList.add('hide'); el.classList.remove('show'); }, 5000);
+  // play mini sound
+  try{
+    const ctx=new(window.AudioContext||window.webkitAudioContext)();
+    [[440,0],[660,.12],[880,.22]].forEach(([f,t])=>{
+      const o=ctx.createOscillator(),g=ctx.createGain();
+      o.connect(g);g.connect(ctx.destination);o.type='sine';o.frequency.value=f;
+      const T=ctx.currentTime+t;
+      g.gain.setValueAtTime(0,T);g.gain.linearRampToValueAtTime(.08,T+.02);g.gain.exponentialRampToValueAtTime(.001,T+.3);
+      o.start(T);o.stop(T+.3);
+    });
+  }catch(e){}
+}
+
+function rsRunChecks(notify=true){
+  const s = rsGetState();
+  const newlyUnlocked = [];
+  for(const def of RS_ACHIEVEMENTS_DEF){
+    if(s.unlocked.includes(def.id)) continue;
+    if(rsCheckAchievement(def.id, s)){
+      s.unlocked.push(def.id);
+      s.unlockedAt[def.id] = Date.now();
+      newlyUnlocked.push(def);
+    }
+  }
+  if(newlyUnlocked.length) rsSaveState(s);
+  if(notify && newlyUnlocked.length){
+    // Show notifications one by one with delay
+    newlyUnlocked.forEach((def,i)=>{
+      setTimeout(()=>rsShowNotif(def), i*1600);
+    });
+  }
+  rsRenderAchievements();
+  return newlyUnlocked;
+}
+
+function rsTotalPoints(){
+  const s = rsGetState();
+  return RS_ACHIEVEMENTS_DEF.filter(d=>s.unlocked.includes(d.id)).reduce((a,d)=>a+d.pts,0);
+}
+
+function rsRank(pts){
+  if(pts>=5000) return {label:'Lenda Retro',icon:'👑'};
+  if(pts>=2500) return {label:'Mestre',icon:'💎'};
+  if(pts>=1000) return {label:'Veterano',icon:'🔥'};
+  if(pts>=400)  return {label:'Experiente',icon:'⭐'};
+  if(pts>=150)  return {label:'Jogador',icon:'🎮'};
+  return {label:'Iniciante',icon:'🏅'};
+}
+
+let rsActiveCat = 'all';
+function rsRenderAchievements(){
+  const s = rsGetState();
+  const pts = rsTotalPoints();
+  const rank = rsRank(pts);
+  const unlockedCount = s.unlocked.length;
+  const total = RS_ACHIEVEMENTS_DEF.length;
+
+  document.getElementById('rs-ach-points-val').innerHTML = `${pts.toLocaleString('pt-BR')} <span style="font-size:12px;font-weight:600;color:var(--text-muted)">pontos</span>`;
+  document.getElementById('rs-ach-rank-label').textContent = rank.label;
+  document.getElementById('rs-ach-rank-icon').textContent  = rank.icon;
+  document.getElementById('rs-ach-unlocked-count').innerHTML = `<div style="font-size:18px;font-weight:800;color:var(--text)">${unlockedCount}/<span>${total}</span></div><div style="font-size:10px;color:var(--text-muted);letter-spacing:.5px">DESBLOQUEADAS</div>`;
+  const pct = Math.round(unlockedCount/total*100);
+  document.getElementById('rs-ach-progress-fill').style.width = pct+'%';
+  document.getElementById('rs-ach-progress-label').textContent = pct+'%';
+
+  const grid = document.getElementById('rs-ach-grid');
+  grid.innerHTML='';
+  const list = rsActiveCat==='all' ? RS_ACHIEVEMENTS_DEF : RS_ACHIEVEMENTS_DEF.filter(d=>d.cat===rsActiveCat);
+  
+  // Sort: unlocked first (by date), then locked
+  const unlocked = list.filter(d=>s.unlocked.includes(d.id)).sort((a,b)=>(s.unlockedAt[b.id]||0)-(s.unlockedAt[a.id]||0));
+  const locked   = list.filter(d=>!s.unlocked.includes(d.id));
+  
+  [...unlocked,...locked].forEach(def=>{
+    const isUnlocked = s.unlocked.includes(def.id);
+    const dateStr = isUnlocked && s.unlockedAt[def.id] ? new Date(s.unlockedAt[def.id]).toLocaleDateString('pt-BR') : '';
+    const item = document.createElement('div');
+    item.className = 'rs-ach-item '+(isUnlocked?'unlocked':'locked');
+    item.innerHTML = `
+      <div class="rs-ach-icon">
+        <span>${def.icon}</span>
+        ${isUnlocked ? '<div class="rs-ach-unlock-badge">✓</div>' : '<div class="rs-ach-lock">🔒</div>'}
+      </div>
+      <div class="rs-ach-info">
+        <div class="rs-ach-title">${def.title}</div>
+        <div class="rs-ach-desc">${def.desc}</div>
+        <div class="rs-ach-meta">
+          <span class="rs-ach-pts-badge">⭐ ${def.pts} pts</span>
+          ${dateStr ? `<span class="rs-ach-date">✓ ${dateStr}</span>` : ''}
+        </div>
+      </div>
+    `;
+    grid.appendChild(item);
+  });
+}
+
+// Called when a game is added
+function rsOnGameAdded(gameName, consoleKey){
+  const s = rsGetState();
+  s.gamesAdded = (games ? games.length : s.gamesAdded+1);
+  const nameL = (gameName||'').toLowerCase();
+  if(!s.specialGames.includes(nameL)) s.specialGames.push(nameL);
+  if(!s.consolesSet.includes(consoleKey)) s.consolesSet.push(consoleKey);
+  s.consolesUsed = s.consolesSet.length;
+  rsSaveState(s);
+  rsRunChecks();
+}
+
+// Called when a game is launched
+function rsOnGamePlayed(gameName){
+  const s = rsGetState();
+  const nameL = (gameName||'').toLowerCase();
+  if(!s.gamesPlayedSet.includes(nameL)) s.gamesPlayedSet.push(nameL);
+  s.gamesPlayed = s.gamesPlayedSet.length;
+  rsSaveState(s);
+  rsRunChecks();
+}
+
+// Play time tracker
+let rsPlayStartTime = null;
+function rsStartPlayTimer(){
+  rsPlayStartTime = Date.now();
+}
+function rsStopPlayTimer(){
+  if(!rsPlayStartTime) return;
+  const elapsed = Date.now() - rsPlayStartTime;
+  rsPlayStartTime = null;
+  const s = rsGetState();
+  s.totalPlayMs = (s.totalPlayMs||0) + elapsed;
+  rsSaveState(s);
+  rsRunChecks();
+}
+
+// Category filter buttons
+function setupRsAchCategories(){
+  document.querySelectorAll('.rs-cat-btn').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      document.querySelectorAll('.rs-cat-btn').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      rsActiveCat = btn.dataset.cat;
+      rsRenderAchievements();
+    });
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   SIDE DRAWER
+═══════════════════════════════════════════════════════════════ */
+function openDrawer(tab='friends-tab'){
+  document.getElementById('side-drawer-backdrop').classList.add('open');
+  document.getElementById('side-drawer').classList.add('open');
+  switchDrawerTab(tab);
+}
+function closeDrawer(){
+  document.getElementById('side-drawer-backdrop').classList.remove('open');
+  document.getElementById('side-drawer').classList.remove('open');
+}
+function switchDrawerTab(tab){
+  document.querySelectorAll('.sd-tab').forEach(t=>t.classList.toggle('active', t.dataset.tab===tab));
+  document.querySelectorAll('.sd-tab-content').forEach(c=>c.classList.toggle('active', c.id===tab));
+  if(tab==='achievements-tab') rsRenderAchievements();
+  if(tab==='friends-tab') renderDrawerFriends();
+}
+function setupSideDrawer(){
+  document.getElementById('btn-hamburger').onclick=()=>openDrawer('friends-tab');
+  document.getElementById('side-drawer-close').onclick=closeDrawer;
+  document.getElementById('side-drawer-backdrop').onclick=closeDrawer;
+  document.querySelectorAll('.sd-tab').forEach(btn=>{
+    btn.onclick=()=>switchDrawerTab(btn.dataset.tab);
+  });
+  setupRsAchCategories();
+  // Friends in drawer
+  const doAdd=()=>{
+    const inp = document.getElementById('sd-friend-input');
+    const val = inp.value.trim();
+    const status = document.getElementById('sd-friend-status');
+    if(!val){status.style.display='block';status.style.color='#fca5a5';status.textContent='Digite um nome de usuário.';return}
+    if(val===myUsername){status.style.display='block';status.style.color='#fca5a5';status.textContent='Você não pode adicionar a si mesmo.';return}
+    if(friendsData.includes(val)){status.style.display='block';status.style.color='#fcd34d';status.textContent='Esse usuário já é seu amigo.';return}
+    friendsData.push(val); saveFriends();
+    inp.value='';
+    status.style.display='block';status.style.color='#6ee7b7';status.textContent=`✓ ${val} adicionado!`;
+    setTimeout(()=>{status.style.display='none'},2500);
+    renderDrawerFriends();
+  };
+  document.getElementById('sd-friend-add-btn').onclick = doAdd;
+  document.getElementById('sd-friend-input').onkeydown = e=>{if(e.key==='Enter')doAdd()};
+}
+
+async function renderDrawerFriends(){
+  const list  = document.getElementById('sd-friends-list');
+  const empty = document.getElementById('sd-friends-empty');
+  const myDisp= document.getElementById('sd-my-username');
+  if(myDisp) myDisp.textContent = myUsername || '(defina no chat)';
+
+  list.innerHTML='';
+  if(!friendsData.length){empty.style.display='block';return}
+  empty.style.display='none';
+
+  for(const uname of friendsData){
+    const card=document.createElement('div');
+    card.className='sd-friend-card';
+    const initial=uname[0].toUpperCase();
+    card.innerHTML=`
+      <div class="sd-friend-avatar">${initial}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:12.5px;font-weight:700;color:var(--text)">${uname}</div>
+        <div class="sd-friend-pts">⭐ <span class="friend-pts-val">—</span> pts</div>
+        <div class="friend-drawer-status" style="font-size:11px;color:var(--text-dim);margin-top:2px">Carregando...</div>
+      </div>
+      <div class="friend-drawer-actions" style="display:flex;gap:6px;flex-shrink:0;align-items:center"></div>
+      <button class="friend-remove-sd" title="Remover" style="width:22px;height:22px;border-radius:50%;background:transparent;border:1px solid rgba(239,68,68,.25);color:var(--red);font-size:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;opacity:.6;transition:opacity .15s">✕</button>
+    `;
+    card.querySelector('.friend-remove-sd').onclick=()=>{
+      friendsData=friendsData.filter(u=>u!==uname); saveFriends(); renderDrawerFriends();
+    };
+    list.appendChild(card);
+
+    fetchFriendPresence(uname).then(p=>{
+      const statusEl  = card.querySelector('.friend-drawer-status');
+      const actionsEl = card.querySelector('.friend-drawer-actions');
+      const ptsEl     = card.querySelector('.friend-pts-val');
+      // Try to get friend pts from Firebase (stored as rs_pts)
+      if(p && p.rs_pts) ptsEl.textContent = Number(p.rs_pts).toLocaleString('pt-BR');
+      else ptsEl.textContent = '—';
+      if(!p||!p.ts||(Date.now()-p.ts)>3600000){
+        statusEl.textContent='Offline';statusEl.style.color='var(--text-dim)';
+      } else if(p.live){
+        statusEl.innerHTML=`<span style="color:#f87171">🔴 AO VIVO</span> — ${p.game||'jogando'}`;
+        const watchBtn=document.createElement('button');
+        watchBtn.textContent='Assistir';
+        watchBtn.style.cssText='padding:4px 10px;border-radius:6px;background:rgba(239,68,68,.15);color:#f87171;border:1px solid rgba(239,68,68,.3);font-size:10px;font-weight:700;cursor:pointer;font-family:var(--font)';
+        watchBtn.onclick=()=>{const watchUrl=`${location.origin}${location.pathname}?watch=${p.live}`;window.open(watchUrl,'_blank')};
+        actionsEl.appendChild(watchBtn);
+      } else if(p.game){
+        statusEl.innerHTML=`<span style="color:var(--green)">🎮 Jogando</span> ${p.game}`;
+      } else {
+        statusEl.textContent='Online';statusEl.style.color='var(--green)';
+      }
+    });
+  }
+}
+
+// Publish RS points to Firebase so friends can see
+async function publishRsPoints(){
+  if(!myUsername) return;
+  const pts = rsTotalPoints();
+  try{
+    await loadFirebase();
+    const ref = fbDb.ref(`users/${myUsername.replace(/[^a-zA-Z0-9_]/g,'_')}`);
+    await ref.update({rs_pts: pts, username: myUsername, ts: Date.now()});
+  }catch(_){}
+}
+
+
 async function init(){
   await openDB();
   games=await dbGetAll();
@@ -2421,6 +3159,7 @@ async function init(){
   setupOverlayControls();bindOverlayEvents();setupKeyboard();updateRomAccept();
   setupSpectatorMode();
   setupFriends();
+  setupSideDrawer();
   // Sync myUsername from localStorage (set via chat username modal)
   myUsername = localStorage.getItem('rs_username')||'';
   const isMobile=/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
@@ -2431,6 +3170,17 @@ async function init(){
   }
   if(raCredentials.user&&raCredentials.key)
     games.forEach(g=>{if(!g.achievements)loadAchievementsForGame(g).then(renderLibrary)});
+  
+  // Sync RS state with current library
+  const rsS = rsGetState();
+  rsS.gamesAdded = games.length;
+  const consolesSet = [...new Set(games.map(g=>g.console).filter(Boolean))];
+  rsS.consolesSet = consolesSet;
+  rsS.consolesUsed = consolesSet.length;
+  const specials = games.map(g=>(g.name||'').toLowerCase());
+  rsS.specialGames = [...new Set([...(rsS.specialGames||[]), ...specials])];
+  rsSaveState(rsS);
+  rsRunChecks(false); // run without notify on init
 }
 init();
 </script>
