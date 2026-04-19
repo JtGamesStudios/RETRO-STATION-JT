@@ -1922,10 +1922,11 @@ function launchGame(game, netplayOpts){
 
 // ── Estado MP Netplay ────────────────────────────────────────
 let _mpNpRoomId=null, _mpNpRole=null;
-let _mpNpPc=null;          // RTCPeerConnection (ambos os lados)
-let _mpNpStream=null;      // MediaStream capturado (host)
-let _mpNpInputRef=null;    // Firebase ref para inputs do P2
-let _mpNpCleanups=[];      // lista de funções de limpeza
+let _mpNpPc=null;
+let _mpNpStream=null;
+let _mpNpInputRef=null;
+let _mpNpCleanups=[];
+let _mpNpOverlayPatch=null;
 
 // Mapa keyCode → teclas P2 padrão do EmulatorJS
 // EmulatorJS usa por padrão para P2: I(up) K(down) J(left) L(right) + outros
@@ -1947,152 +1948,175 @@ async function _mpNetplayStart(roomId, role){
   _mpNpRoomId = roomId;
   _mpNpRole   = role;
   if(!fbDb){ showToast('⚠️ Firebase não conectado — MP desativado',true); return; }
-
-  if(role === 'host'){
-    await _mpNpHostStart(roomId);
-  } else {
-    await _mpNpGuestStart(roomId);
-  }
+  // Limpa sinalização antiga da sala antes de começar
+  try{ await fbDb.ref('mp_rooms/'+roomId+'/rtc').remove(); }catch(_){}
+  if(role === 'host') await _mpNpHostStart(roomId);
+  else                await _mpNpGuestStart(roomId);
 }
 
-// ════════════════════════════════════════
-// HOST: captura canvas → WebRTC → P2
-//       recebe inputs P2 via Firebase → injeta no emulador
-// ════════════════════════════════════════
+// ════════════════════════════════════════════════════════════
+// HOST — captura canvas → WebRTC → P2
+//        fluxo correto:
+//   1. Prepara stream e PeerConnection
+//   2. Aguarda P2 sinalizar que está pronto (ready flag)
+//   3. SÓ ENTÃO cria e publica o offer
+//   4. Recebe answer + ICE do P2 (com buffer)
+//   5. Injeta inputs P2 recebidos via Firebase como Player 2
+// ════════════════════════════════════════════════════════════
 async function _mpNpHostStart(roomId){
   const sigRef = fbDb.ref('mp_rooms/'+roomId+'/rtc');
-  _mpNpInputRef = fbDb.ref('mp_rooms/'+roomId+'/p2_inputs');
 
-  // 1. Captura o canvas do emulador
+  // 1. Captura canvas
   const canvas = getEmulatorCanvas();
-  if(!canvas){ showToast('⚠️ Canvas não encontrado — tente novamente',true); return; }
-
+  if(!canvas){ showToast('⚠️ Canvas não encontrado — inicie o jogo primeiro',true); return; }
   try{
-    const vidStream = canvas.captureStream(30);
-    const tracks = [...vidStream.getVideoTracks()];
-    // Tenta capturar áudio também
+    const vs = canvas.captureStream(30);
+    const tracks = [...vs.getVideoTracks()];
     try{
-      const audioEl = document.querySelector('#emulator-container audio')
-                   || document.querySelector('#emulator-container video');
-      if(audioEl?.captureStream){
-        const as = audioEl.captureStream();
-        as.getAudioTracks().forEach(t=>tracks.push(t));
-      }
+      const aEl = document.querySelector('#emulator-container audio')||document.querySelector('#emulator-container video');
+      if(aEl?.captureStream){ aEl.captureStream().getAudioTracks().forEach(t=>tracks.push(t)); }
     }catch(_){}
     _mpNpStream = new MediaStream(tracks);
-  }catch(e){
-    showToast('⚠️ captureStream não suportado: '+e.message,true); return;
-  }
+  }catch(e){ showToast('⚠️ captureStream falhou: '+e.message,true); return; }
 
-  // 2. Cria RTCPeerConnection e adiciona as tracks
+  // 2. Cria PeerConnection
   _mpNpPc = new RTCPeerConnection({iceServers: ICE_SERVERS});
   _mpNpStream.getTracks().forEach(t=>_mpNpPc.addTrack(t, _mpNpStream));
 
-  // 3. ICE → Firebase
+  // Buffer ICE do P2 que chegam antes do answer ser aplicado
+  const iceGuestBuf = [];
+  let answerApplied = false;
+
   _mpNpPc.onicecandidate = e=>{
     if(e.candidate) sigRef.child('ice_h').push(e.candidate.toJSON()).catch(()=>{});
   };
 
-  // 4. Aguarda answer do P2
+  // Recebe answer do P2
   sigRef.child('answer').on('value', async snap=>{
     const ans = snap.val();
-    if(!ans || _mpNpPc.signalingState !== 'have-local-offer') return;
+    if(!ans || _mpNpPc.signalingState!=='have-local-offer') return;
     try{
       await _mpNpPc.setRemoteDescription(new RTCSessionDescription(ans));
+      answerApplied = true;
+      for(const c of iceGuestBuf){
+        try{ await _mpNpPc.addIceCandidate(new RTCIceCandidate(c)); }catch(_){}
+      }
+      iceGuestBuf.length = 0;
     }catch(_){}
   });
-  // ICE do P2 → adiciona ao host
+
+  // Recebe ICE do P2 (com buffer se answer ainda não chegou)
   sigRef.child('ice_g').on('child_added', async snap=>{
     const c = snap.val();
-    if(c?.candidate && _mpNpPc.remoteDescription){
+    if(!c?.candidate) return;
+    if(answerApplied && _mpNpPc.remoteDescription){
       try{ await _mpNpPc.addIceCandidate(new RTCIceCandidate(c)); }catch(_){}
-    }
-  });
-
-  // 5. Cria offer e publica
-  const offer = await _mpNpPc.createOffer();
-  await _mpNpPc.setLocalDescription(offer);
-  await sigRef.child('offer').set({type:offer.type, sdp:offer.sdp});
-
-  // 6. Escuta inputs do P2 e injeta no emulador local como Player 2
-  const joinTs = Date.now();
-  _mpNpInputRef.orderByChild('ts').startAt(joinTs).on('child_added', snap=>{
-    const d = snap.val();
-    if(!d) return;
-    _injectAsP2(d.kc, d.t===1); // kc=keyCode original do P2, t=1 down / 0 up
+    } else { iceGuestBuf.push(c); }
   });
 
   _mpNpPc.onconnectionstatechange = ()=>{
-    if(_mpNpPc.connectionState==='connected'){
-      showToast('🎮 P2 conectado! Jogando juntos agora 🎮');
-      // Mostra badge de netplay no header do emulador
-      _showNetplayBadge('HOST · P1');
-    }
+    const s = _mpNpPc.connectionState;
+    if(s==='connected'){ showToast('🎮 P2 conectado! Jogando juntos 🎮'); _showNetplayBadge('HOST · P1'); }
+    if(s==='failed'){ showToast('⚠️ Conexão WebRTC falhou — verifique a rede',true); }
   };
 
-  showToast('🎮 Aguardando P2 conectar... sala: '+roomId);
+  // 3. Aguarda P2 sinalizar que está ouvindo (evita race condition)
+  showToast('🎮 Sala aberta — aguardando P2... código: '+roomId);
+  sigRef.child('guest_ready').on('value', async snap=>{
+    if(!snap.val()) return;
+    sigRef.child('guest_ready').off(); // ouve só uma vez
+    // 4. Agora sim cria e publica o offer
+    try{
+      const offer = await _mpNpPc.createOffer();
+      await _mpNpPc.setLocalDescription(offer);
+      await sigRef.child('offer').set({type:offer.type, sdp:offer.sdp});
+    }catch(e){ showToast('⚠️ Erro ao criar offer: '+e.message,true); }
+  });
+
+  // 5. Injeta inputs P2 como Player 2 no emulador do host
+  _mpNpInputRef = fbDb.ref('mp_rooms/'+roomId+'/p2_inputs');
+  const joinTs = Date.now();
+  _mpNpInputRef.orderByChild('ts').startAt(joinTs).on('child_added', snap=>{
+    const d = snap.val(); if(!d) return;
+    _injectAsP2(d.kc, d.t===1);
+  });
 }
 
-// ════════════════════════════════════════
-// GUEST: recebe stream do P1 → exibe overlay
-//        envia seus inputs via Firebase → P1 injeta como P2
-// ════════════════════════════════════════
+// ════════════════════════════════════════════════════════════
+// GUEST — recebe stream do P1 via WebRTC, envia inputs
+//   1. Cria PeerConnection com ICE buffer
+//   2. Sinaliza "guest_ready" ao host
+//   3. Recebe offer, cria answer, troca ICE
+//   4. Exibe vídeo recebido no lugar do emulador local
+//   5. Captura inputs do overlay/teclado → Firebase
+// ════════════════════════════════════════════════════════════
 async function _mpNpGuestStart(roomId){
   const sigRef = fbDb.ref('mp_rooms/'+roomId+'/rtc');
-  _mpNpInputRef = fbDb.ref('mp_rooms/'+roomId+'/p2_inputs');
 
-  // 1. Cria peer connection
   _mpNpPc = new RTCPeerConnection({iceServers: ICE_SERVERS});
-  const remoteStream = new MediaStream();
 
-  // 2. Quando chegar track de vídeo, exibe sobre o emulador
+  // Buffer ICE do host que chegam antes do setRemoteDescription
+  const iceHostBuf = [];
+  let remoteSet = false;
+
+  // Quando chega vídeo do host, exibe na tela do P2
   _mpNpPc.ontrack = e=>{
-    e.streams[0].getTracks().forEach(t=>remoteStream.addTrack(t));
-    _showP2VideoOverlay(remoteStream);
+    // Pega o primeiro stream com tracks
+    const stream = e.streams && e.streams[0] ? e.streams[0] : new MediaStream([e.track]);
+    _showP2VideoOverlay(stream);
   };
 
-  // 3. ICE do guest → Firebase
   _mpNpPc.onicecandidate = e=>{
     if(e.candidate) sigRef.child('ice_g').push(e.candidate.toJSON()).catch(()=>{});
   };
 
-  // 4. Aguarda offer do host
+  _mpNpPc.onconnectionstatechange = ()=>{
+    const s = _mpNpPc.connectionState;
+    if(s==='connected'){ showToast('🎮 Tela do P1 ativa! Você é o Player 2 🎮'); _showNetplayBadge('GUEST · P2'); }
+    if(s==='failed'||s==='disconnected'){ showToast('⚠️ Conexão com P1 perdida',true); }
+  };
+
+  // ICE do host — buffer se remoteDescription ainda não está pronto
+  sigRef.child('ice_h').on('child_added', async snap=>{
+    const c = snap.val(); if(!c?.candidate) return;
+    if(remoteSet && _mpNpPc.remoteDescription){
+      try{ await _mpNpPc.addIceCandidate(new RTCIceCandidate(c)); }catch(_){}
+    } else { iceHostBuf.push(c); }
+  });
+
+  // Aguarda offer do host (depois que sinalizar ready)
   sigRef.child('offer').on('value', async snap=>{
     const offer = snap.val();
-    if(!offer || _mpNpPc.signalingState !== 'stable') return;
+    if(!offer) return;
+    if(_mpNpPc.signalingState !== 'stable') return;
     try{
       await _mpNpPc.setRemoteDescription(new RTCSessionDescription(offer));
+      remoteSet = true;
+      // Aplica ICE bufferizado
+      for(const c of iceHostBuf){
+        try{ await _mpNpPc.addIceCandidate(new RTCIceCandidate(c)); }catch(_){}
+      }
+      iceHostBuf.length = 0;
       const answer = await _mpNpPc.createAnswer();
       await _mpNpPc.setLocalDescription(answer);
       await sigRef.child('answer').set({type:answer.type, sdp:answer.sdp});
-    }catch(_){}
-  });
-  // ICE do host
-  sigRef.child('ice_h').on('child_added', async snap=>{
-    const c = snap.val();
-    if(c?.candidate && _mpNpPc.remoteDescription){
-      try{ await _mpNpPc.addIceCandidate(new RTCIceCandidate(c)); }catch(_){}
-    }
+    }catch(e){ showToast('⚠️ Erro WebRTC guest: '+e.message,true); }
   });
 
-  // 5. Captura inputs do P2 e envia ao Firebase
+  // Sinaliza ao host que estamos prontos para receber o offer
+  await sigRef.child('guest_ready').set(true);
+  showToast('🎮 Conectando ao P1... aguarde');
+
+  // Captura inputs do P2 e envia ao Firebase
   _setupP2InputCapture(roomId);
-
-  _mpNpPc.onconnectionstatechange = ()=>{
-    if(_mpNpPc.connectionState==='connected'){
-      showToast('🎮 Conectado ao P1! Seus inputs controlam o Player 2 🎮');
-      _showNetplayBadge('GUEST · P2');
-    }
-    if(_mpNpPc.connectionState==='failed'||_mpNpPc.connectionState==='disconnected'){
-      showToast('⚠️ Conexão com P1 perdida',true);
-    }
-  };
-
-  showToast('🎮 Conectando ao P1...');
 }
 
-// ── Exibe o vídeo do P1 sobre o emulador do P2 ──────────────────────────────
+// ── Exibe o vídeo do P1 no lugar do emulador do P2 ──────────────────────────
 function _showP2VideoOverlay(stream){
+  // Esconde o canvas/emulador local (P2 não precisa dele)
+  const emuCon = document.getElementById('emulator-container');
+  if(emuCon) emuCon.style.visibility = 'hidden';
+
   let vid = document.getElementById('mp-p1-video');
   if(!vid){
     vid = document.createElement('video');
@@ -2101,47 +2125,77 @@ function _showP2VideoOverlay(stream){
     vid.playsInline = true;
     vid.muted = false;
     Object.assign(vid.style,{
-      position:'absolute', inset:'0', width:'100%', height:'100%',
-      zIndex:'20', objectFit:'contain', background:'#000',
+      position:'absolute', top:'0', left:'0',
+      width:'100%', height:'100%',
+      zIndex:'10', objectFit:'contain',
+      background:'#000', display:'block',
       pointerEvents:'none'
     });
-    // Coloca sobre o canvas do emulador
     const wrap = document.getElementById('canvas-wrap');
     if(wrap) wrap.appendChild(vid);
   }
   vid.srcObject = stream;
-  vid.style.display = 'block';
+  // Garante que o overlay mobile fica visível acima do vídeo
+  const ov = document.getElementById('mobile-overlay');
+  if(ov){ ov.style.zIndex='20'; ov.style.pointerEvents='all'; }
   vid.play().catch(()=>{ vid.muted=true; vid.play().catch(()=>{}); });
 }
 
-// ── Captura inputs do P2 e publica no Firebase ──────────────────────────────
+// ── Captura inputs do P2 (teclado + overlay mobile) → Firebase ──────────────
 function _setupP2InputCapture(roomId){
   const ref = fbDb.ref('mp_rooms/'+roomId+'/p2_inputs');
   const VALID = new Set(Object.keys(_MP_P2_KEYS).map(Number));
 
+  // Teclado
   const onKey = e=>{
     const kc = e.keyCode||e.which;
     if(!VALID.has(kc)) return;
-    ref.push({kc, t: e.type==='keydown'?1:0, ts: Date.now()}).catch(()=>{});
+    e.stopPropagation(); // não deixa o evento chegar no emulador local do P2
+    ref.push({kc, t:e.type==='keydown'?1:0, ts:Date.now()}).catch(()=>{});
   };
   document.addEventListener('keydown', onKey, true);
   document.addEventListener('keyup',   onKey, true);
 
-  // Também captura os botões do overlay mobile (P2 usa os mesmos botões)
-  // mas envia ao Firebase em vez de despachar localmente
+  // Overlay mobile — intercepta os botões e redireciona ao Firebase
+  // em vez de despachá-los localmente
+  _mpNpOverlayPatch = _patchOverlayForP2(ref);
+
   _mpNpCleanups.push(()=>{
     document.removeEventListener('keydown', onKey, true);
     document.removeEventListener('keyup',   onKey, true);
+    if(_mpNpOverlayPatch){ _mpNpOverlayPatch(); _mpNpOverlayPatch=null; }
     ref.remove().catch(()=>{});
+    // Limpa inputs antigos
+    ref.orderByChild('ts').endAt(Date.now()).once('value',snap=>{ snap.forEach(c=>c.ref.remove()); }).catch(()=>{});
   });
+}
 
-  // Limpa inputs antigos a cada 10s
-  setInterval(()=>{
-    const cutoff = Date.now()-3000;
-    ref.orderByChild('ts').endAt(cutoff).once('value',snap=>{
-      snap.forEach(c=>c.ref.remove());
-    }).catch(()=>{});
-  }, 10000);
+// Patcha os botões do overlay mobile do P2 para enviarem ao Firebase
+function _patchOverlayForP2(ref){
+  const KEY_TO_KC = {
+    38:38,40:40,37:37,39:39, // dpad
+    90:90,88:88,83:83,65:65,67:67,68:68,13:13,16:16,81:81,69:69
+  };
+  const btns = document.querySelectorAll('#mobile-overlay [data-key]');
+  const origHandlers = [];
+  btns.forEach(btn=>{
+    const kStr = btn.getAttribute('data-key');
+    const kc = KEY_MAP[kStr];
+    if(!kc) return;
+    const cloned = btn.cloneNode(true);
+    btn.parentNode.replaceChild(cloned, btn);
+    const dn = e=>{ e.preventDefault(); e.stopPropagation(); cloned.classList.add('pressed'); ref.push({kc, t:1, ts:Date.now()}).catch(()=>{}); };
+    const up = e=>{ e.preventDefault(); e.stopPropagation(); cloned.classList.remove('pressed'); ref.push({kc, t:0, ts:Date.now()}).catch(()=>{}); };
+    cloned.addEventListener('touchstart',dn,{passive:false});
+    cloned.addEventListener('touchend',  up,{passive:false});
+    cloned.addEventListener('touchcancel',up,{passive:false});
+    cloned.addEventListener('pointerdown',dn,{passive:false});
+    cloned.addEventListener('pointerup',  up,{passive:false});
+    cloned.addEventListener('pointercancel',up,{passive:false});
+    origHandlers.push({btn:cloned,dn,up});
+  });
+  // Retorna função de cleanup
+  return ()=>{ origHandlers.forEach(({btn,dn,up})=>{ btn.removeEventListener('touchstart',dn); btn.removeEventListener('pointerdown',dn); }); };
 }
 
 // ── Injeta input do P2 no emulador do HOST ──────────────────────────────────
@@ -2183,7 +2237,6 @@ function _showNetplayBadge(label){
   badge.style.display = 'flex';
 }
 
-// ── Limpeza geral do netplay ─────────────────────────────────────────────────
 function _stopInputSync(){
   try{ _mpNpPc?.close(); }catch(_){}
   _mpNpPc = null;
@@ -2192,10 +2245,15 @@ function _stopInputSync(){
   if(_mpNpInputRef){ try{ _mpNpInputRef.off(); }catch(_){} _mpNpInputRef=null; }
   _mpNpCleanups.forEach(fn=>{ try{fn()}catch(_){} });
   _mpNpCleanups = [];
-  // Remove overlay de vídeo do P2
+  if(_mpNpOverlayPatch){ try{_mpNpOverlayPatch();}catch(_){} _mpNpOverlayPatch=null; }
+  // Remove overlay de vídeo e restaura visibilidade do emulador
   document.getElementById('mp-p1-video')?.remove();
   document.getElementById('mp-netplay-badge')?.remove();
-  // Limpa listeners Firebase de sinalização
+  const emuCon = document.getElementById('emulator-container');
+  if(emuCon) emuCon.style.visibility = '';
+  const ov = document.getElementById('mobile-overlay');
+  if(ov){ ov.style.zIndex=''; ov.style.pointerEvents=''; }
+  // Limpa Firebase
   if(fbDb && _mpNpRoomId){
     try{ fbDb.ref('mp_rooms/'+_mpNpRoomId+'/rtc').off(); }catch(_){}
     try{ fbDb.ref('mp_rooms/'+_mpNpRoomId+'/p2_inputs').off(); }catch(_){}
