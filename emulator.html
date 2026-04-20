@@ -1928,21 +1928,31 @@ let _mpNpInputRef=null;
 let _mpNpGuestInputRef=null; // ref de escrita do P2 guest → Firebase
 let _mpNpCleanups=[];
 let _mpNpOverlayPatch=null;
+// Gamepad virtual — injetado no HOST como Player 2 (Gamepad index 1)
+let _p2VirtualGamepad=null, _origGetGamepads=null;
 
-// Mapa keyCode → teclas P2 padrão do EmulatorJS
-// EmulatorJS usa por padrão para P2: I(up) K(down) J(left) L(right) + outros
+// Mapa keyCode → índice de botão no Standard Gamepad Mapping
+// EmulatorJS lê navigator.getGamepads() e usa standard mapping para P2
+const _KC_TO_GP_BTN = {
+  38:12, 40:13, 37:14, 39:15,  // D-pad ↑↓←→
+  90:0,  88:1,  83:2,  65:3,   // Z→A(Sul) X→B(Leste) S→X(Oeste) A→Y(Norte)
+  13:9,  16:8,                  // Enter→Start  Shift→Select
+  81:4,  69:5,  67:5,           // Q→L  E→R  C→R
+};
+
+// Mapa keyCode → teclas P2 padrão do EmulatorJS (fallback por teclado)
 const _MP_P2_KEYS = {
-  38: {code:'KeyI',   key:'i',   keyCode:73},  // ArrowUp   → I
-  40: {code:'KeyK',   key:'k',   keyCode:75},  // ArrowDown  → K
-  37: {code:'KeyJ',   key:'j',   keyCode:74},  // ArrowLeft  → J
-  39: {code:'KeyL',   key:'l',   keyCode:76},  // ArrowRight → L
-  90: {code:'KeyF',   key:'f',   keyCode:70},  // Z (A)      → F
-  88: {code:'KeyG',   key:'g',   keyCode:71},  // X (B)      → G
-  83: {code:'KeyH',   key:'h',   keyCode:72},  // S (X)      → H
-  65: {code:'KeyV',   key:'v',   keyCode:86},  // A (Y)      → V
-  67: {code:'KeyB',   key:'b',   keyCode:66},  // C          → B
-  13: {code:'Numpad3',key:'3',   keyCode:99},  // Enter=Start→ Numpad3
-  16: {code:'Numpad1',key:'1',   keyCode:97},  // Shift=Sel  → Numpad1
+  38: {code:'KeyI',   key:'i',   keyCode:73},
+  40: {code:'KeyK',   key:'k',   keyCode:75},
+  37: {code:'KeyJ',   key:'j',   keyCode:74},
+  39: {code:'KeyL',   key:'l',   keyCode:76},
+  90: {code:'KeyF',   key:'f',   keyCode:70},
+  88: {code:'KeyG',   key:'g',   keyCode:71},
+  83: {code:'KeyH',   key:'h',   keyCode:72},
+  65: {code:'KeyV',   key:'v',   keyCode:86},
+  67: {code:'KeyB',   key:'b',   keyCode:66},
+  13: {code:'Numpad3',key:'3',   keyCode:99},
+  16: {code:'Numpad1',key:'1',   keyCode:97},
 };
 
 async function _mpNetplayStart(roomId, role){
@@ -1966,6 +1976,9 @@ async function _mpNetplayStart(roomId, role){
 // ════════════════════════════════════════════════════════════
 async function _mpNpHostStart(roomId){
   const sigRef = fbDb.ref('mp_rooms/'+roomId+'/rtc');
+
+  // Cria o gamepad virtual P2 imediatamente — EJS precisa detectá-lo antes de começar
+  _ensureP2Gamepad();
 
   // 1. Captura canvas
   const canvas = getEmulatorCanvas();
@@ -2200,19 +2213,52 @@ function _patchOverlayForP2(ref){
   return ()=>{ origHandlers.forEach(({btn,dn,up})=>{ btn.removeEventListener('touchstart',dn); btn.removeEventListener('pointerdown',dn); }); };
 }
 
+// ── Garante que o gamepad virtual P2 existe e está registrado ───────────────
+function _ensureP2Gamepad(){
+  if(_p2VirtualGamepad) return;
+  const mkBtn = ()=>({pressed:false,touched:false,value:0});
+  _p2VirtualGamepad = {
+    id:'RetroStation P2',index:1,connected:true,
+    timestamp:performance.now(),mapping:'standard',
+    buttons:Array.from({length:17},mkBtn),
+    axes:[0,0,0,0]
+  };
+  // Sobrescreve navigator.getGamepads para incluir o gamepad virtual no slot 1
+  if(!_origGetGamepads){
+    _origGetGamepads = navigator.getGamepads.bind(navigator);
+    navigator.getGamepads = ()=>{
+      const pads = Array.from(_origGetGamepads()||[]);
+      while(pads.length<=1) pads.push(null);
+      pads[1] = _p2VirtualGamepad;
+      return pads;
+    };
+  }
+  // Dispara gamepadconnected para que EmulatorJS registre o controle
+  try{ window.dispatchEvent(new GamepadEvent('gamepadconnected',{gamepad:_p2VirtualGamepad})); }catch(_){}
+}
+
 // ── Injeta input do P2 no emulador do HOST ──────────────────────────────────
-// EmulatorJS usa teclas específicas para Player 2. Aqui mapeamos as teclas
-// P1 recebidas para o equivalente P2 do EJS e as despachamos no canvas.
-function _injectAsP2(originalKeyCode, pressed){
-  const map = _MP_P2_KEYS[originalKeyCode];
+function _injectAsP2(kc, pressed){
+  // Método principal: Virtual Gamepad (não depende de isTrusted)
+  _ensureP2Gamepad();
+  const gp = _p2VirtualGamepad;
+  const bi = _KC_TO_GP_BTN[kc];
+  if(bi !== undefined){
+    gp.buttons[bi].pressed = pressed;
+    gp.buttons[bi].touched = pressed;
+    gp.buttons[bi].value   = pressed ? 1 : 0;
+    gp.timestamp = performance.now();
+  }
+  // D-pad via axes também (alguns cores preferem eixos ao invés de botões)
+  if(kc===38||kc===40){ gp.axes[1]=pressed?(kc===38?-1:1):0; gp.timestamp=performance.now(); }
+  if(kc===37||kc===39){ gp.axes[0]=pressed?(kc===37?-1:1):0; gp.timestamp=performance.now(); }
+
+  // Fallback: keyboard injection (para cores que mapeiam teclado para P2)
+  const map = _MP_P2_KEYS[kc];
   if(!map) return;
   const type = pressed ? 'keydown' : 'keyup';
-  const opts = {
-    key: map.key, code: map.code,
-    keyCode: map.keyCode, which: map.keyCode,
-    bubbles:true, cancelable:true, composed:true
-  };
-  const ev = new KeyboardEvent(type, opts);
+  const opts = {key:map.key,code:map.code,keyCode:map.keyCode,which:map.keyCode,bubbles:true,cancelable:true,composed:true};
+  const ev = new KeyboardEvent(type,opts);
   const cvs = document.querySelector('#emulator-container canvas');
   if(cvs) cvs.dispatchEvent(ev);
   document.dispatchEvent(ev);
@@ -2243,6 +2289,12 @@ function _stopInputSync(){
   try{ _mpNpPc?.close(); }catch(_){}
   _mpNpPc = null;
   _mpNpGuestInputRef = null; // para interceptação do dispatchKey
+  // Restaura navigator.getGamepads e remove gamepad virtual do P2
+  if(_origGetGamepads){ navigator.getGamepads=_origGetGamepads; _origGetGamepads=null; }
+  if(_p2VirtualGamepad){
+    try{ window.dispatchEvent(new GamepadEvent('gamepaddisconnected',{gamepad:_p2VirtualGamepad})); }catch(_){}
+    _p2VirtualGamepad=null;
+  }
   _mpNpStream?.getTracks().forEach(t=>t.stop());
   _mpNpStream = null;
   if(_mpNpInputRef){ try{ _mpNpInputRef.off(); }catch(_){} _mpNpInputRef=null; }
