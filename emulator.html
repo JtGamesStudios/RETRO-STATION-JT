@@ -1887,6 +1887,7 @@ function launchGame(game, netplayOpts){
       loading.classList.add('hidden');URL.revokeObjectURL(romUrl);
       startAchPolling(game);publishPresence(game.name,null);
       rsOnGamePlayed(game.name,game.console);rsStartPlayTimer();publishRsPoints();
+      _ensureP2Gamepad(); // Fix: garante gamepad virtual P2 logo que o jogo inicia
       if(netplayOpts) _mpNetplayStart(netplayOpts.roomId, netplayOpts.role);
     }
   });
@@ -1953,6 +1954,8 @@ const _MP_P2_KEYS = {
   67: {code:'KeyB',   key:'b',   keyCode:66},
   13: {code:'Numpad3',key:'3',   keyCode:99},
   16: {code:'Numpad1',key:'1',   keyCode:97},
+  81: {code:'Numpad4',key:'4',   keyCode:100}, // Fix: Q = botão L
+  69: {code:'Numpad6',key:'6',   keyCode:102}, // Fix: E = botão R
 };
 
 async function _mpNetplayStart(roomId, role){
@@ -2185,32 +2188,11 @@ function _setupP2InputCapture(roomId){
   });
 }
 
-// Patcha os botões do overlay mobile do P2 para enviarem ao Firebase
+// Fix: não clona mais os botões do overlay (o que quebrava o overlay ao sair da sala).
+// Os handlers do bindOverlayEvents já chamam dispatchKey(), que redireciona
+// automaticamente ao Firebase quando _mpNpRole==='guest' && _mpNpGuestInputRef está definido.
 function _patchOverlayForP2(ref){
-  const KEY_TO_KC = {
-    38:38,40:40,37:37,39:39, // dpad
-    90:90,88:88,83:83,65:65,67:67,68:68,13:13,16:16,81:81,69:69
-  };
-  const btns = document.querySelectorAll('#mobile-overlay [data-key]');
-  const origHandlers = [];
-  btns.forEach(btn=>{
-    const kStr = btn.getAttribute('data-key');
-    const kc = KEY_MAP[kStr];
-    if(!kc) return;
-    const cloned = btn.cloneNode(true);
-    btn.parentNode.replaceChild(cloned, btn);
-    const dn = e=>{ e.preventDefault(); e.stopPropagation(); cloned.classList.add('pressed'); ref.push({kc, t:1, ts:Date.now()}).catch(()=>{}); };
-    const up = e=>{ e.preventDefault(); e.stopPropagation(); cloned.classList.remove('pressed'); ref.push({kc, t:0, ts:Date.now()}).catch(()=>{}); };
-    cloned.addEventListener('touchstart',dn,{passive:false});
-    cloned.addEventListener('touchend',  up,{passive:false});
-    cloned.addEventListener('touchcancel',up,{passive:false});
-    cloned.addEventListener('pointerdown',dn,{passive:false});
-    cloned.addEventListener('pointerup',  up,{passive:false});
-    cloned.addEventListener('pointercancel',up,{passive:false});
-    origHandlers.push({btn:cloned,dn,up});
-  });
-  // Retorna função de cleanup
-  return ()=>{ origHandlers.forEach(({btn,dn,up})=>{ btn.removeEventListener('touchstart',dn); btn.removeEventListener('pointerdown',dn); }); };
+  return ()=>{}; // cleanup vazio — nada foi alterado, nada precisa ser restaurado
 }
 
 // ── Garante que o gamepad virtual P2 existe e está registrado ───────────────
