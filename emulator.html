@@ -1949,7 +1949,624 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
 .theme-locked .theme-option-label { color: var(--text-muted) !important; }
 .theme-locked .theme-option-sub { color: var(--text-dim) !important; }
 
+/* ═══════════════════════════════════════
+   COIN BALANCE — HEADER
+═══════════════════════════════════════ */
+#coin-balance {
+  display:flex;align-items:center;gap:5px;
+  padding:5px 12px 5px 9px;border-radius:99px;
+  background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.25);
+  font-size:12px;font-weight:800;color:var(--gold);
+  cursor:pointer;transition:all .2s;white-space:nowrap;flex-shrink:0;
+  position:relative;
+}
+#coin-balance:hover{background:rgba(245,158,11,.2);border-color:rgba(245,158,11,.5);transform:translateY(-1px)}
+#coin-balance .coin-icon{font-size:15px;line-height:1}
+#coin-amount{font-size:12px;font-weight:800;min-width:20px;text-align:right}
+@keyframes coinBounce{0%,100%{transform:scale(1)}50%{transform:scale(1.22)}}
+.coin-icon-anim .coin-icon{animation:coinBounce .4s ease}
+
+/* Shop + Profile icon buttons */
+#btn-shop, #btn-profile {
+  width:34px;height:34px;border-radius:9px;
+  background:var(--surface2);border:1px solid var(--border);
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  font-size:17px;flex-shrink:0;transition:all .15s;color:var(--text-muted);
+}
+#btn-shop:hover, #btn-profile:hover{background:var(--surface3);border-color:var(--border-accent);color:var(--text)}
+
+/* Mobile header responsive fixes */
+@media(max-width:580px){
+  #game-count-badge{display:none}
+  #header{gap:6px}
+}
+@media(max-width:440px){
+  #coin-balance{padding:4px 8px;gap:3px}
+  #coin-amount{display:none}
+  #btn-shop,#btn-profile,#theme-btn,#btn-hamburger{width:30px;height:30px;font-size:15px}
+  #header{padding:0 10px;gap:5px}
+  .btn-add-label{display:none}
+  #btn-add{padding:8px 10px}
+}
+@media(max-width:360px){
+  .logo-word{display:none}
+  #btn-profile{display:none}
+}
+
+/* ═══════════════════════════════════════
+   SHOP MODAL
+═══════════════════════════════════════ */
+/* ══════════════════════════════════════════════════
+   🛒 RETROLOJA — REDESIGN COMPACTO HORIZONTAL
+══════════════════════════════════════════════════ */
+#shop-backdrop{
+  display:none;position:fixed;inset:0;z-index:500;
+  background:rgba(0,0,0,.88);backdrop-filter:blur(20px);
+  align-items:center;justify-content:center;padding:12px;
+}
+#shop-backdrop.open{display:flex}
+
+#shop-modal{
+  background:var(--surface);border:1px solid var(--border-accent);
+  border-radius:20px;width:min(640px,100%);max-height:88vh;
+  display:flex;flex-direction:column;overflow:hidden;
+  box-shadow:0 0 0 1px rgba(255,255,255,.03),0 32px 100px rgba(0,0,0,.85);
+  animation:shopIn .28s cubic-bezier(.34,1.4,.64,1);
+}
+@keyframes shopIn{from{opacity:0;transform:scale(.93) translateY(20px)}}
+
+/* ── HEADER ── */
+#shop-header{
+  flex-shrink:0;background:linear-gradient(160deg,var(--surface2),var(--surface));
+  border-bottom:1px solid var(--border);
+}
+#shop-header-top{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:16px 20px 12px;gap:10px;
+}
+#shop-title-area{display:flex;align-items:center;gap:10px}
+#shop-logo-badge{
+  width:38px;height:38px;border-radius:12px;flex-shrink:0;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  display:flex;align-items:center;justify-content:center;font-size:18px;
+  box-shadow:0 0 16px var(--accent-glow);
+}
+#shop-title-text{display:flex;flex-direction:column;gap:0}
+#shop-title{font-size:16px;font-weight:900;color:var(--text);line-height:1.1}
+#shop-subtitle{font-size:9px;color:var(--text-muted);font-weight:600;letter-spacing:1.4px;text-transform:uppercase}
+#shop-header-right{display:flex;align-items:center;gap:8px;flex-shrink:0}
+#shop-coins-header{
+  display:flex;align-items:center;gap:6px;
+  padding:6px 13px;border-radius:10px;
+  background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.25);
+  font-size:15px;font-weight:900;color:var(--gold);
+  box-shadow:0 0 10px rgba(245,158,11,.08);white-space:nowrap;
+}
+#shop-coins-header span{font-size:9px;font-weight:600;color:rgba(245,158,11,.5);letter-spacing:1px;text-transform:uppercase;margin-left:1px}
+#shop-close{
+  width:32px;height:32px;border-radius:9px;background:var(--surface3);
+  border:1px solid var(--border);color:var(--text-muted);cursor:pointer;
+  font-size:14px;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0;
+}
+#shop-close:hover{background:rgba(239,68,68,.16);border-color:rgba(239,68,68,.35);color:#f87171}
+
+/* stats strip */
+#shop-stats-bar{display:flex;border-top:1px solid var(--border)}
+.shop-stat-pill{
+  flex:1;display:flex;flex-direction:column;align-items:center;padding:6px 8px;gap:0;
+  border-right:1px solid var(--border);font-family:var(--font);
+}
+.shop-stat-pill:last-child{border-right:none}
+.shop-stat-val{font-size:13px;font-weight:900;color:var(--accent2);line-height:1.3}
+.shop-stat-lbl{font-size:8px;font-weight:600;color:var(--text-dim);letter-spacing:.8px;text-transform:uppercase}
+
+/* ── CATEGORIAS ── */
+#shop-cats{
+  display:flex;padding:10px 16px;gap:6px;overflow-x:auto;flex-shrink:0;
+  scrollbar-width:none;background:var(--surface);border-bottom:1px solid var(--border);
+}
+#shop-cats::-webkit-scrollbar{display:none}
+.shop-cat-btn{
+  display:flex;align-items:center;gap:5px;
+  padding:5px 13px;border-radius:8px;font-size:11px;font-weight:700;
+  cursor:pointer;white-space:nowrap;border:1px solid var(--border);
+  background:var(--surface2);color:var(--text-muted);
+  transition:all .16s;flex-shrink:0;font-family:var(--font);
+}
+.shop-cat-btn:hover{color:var(--text);border-color:var(--border-accent);background:var(--surface3)}
+.shop-cat-btn.active{
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  color:#fff;border-color:transparent;
+  box-shadow:0 0 14px var(--accent-glow);
+}
+.shop-cat-count{
+  font-size:9px;font-weight:800;padding:1px 5px;border-radius:99px;
+  background:rgba(255,255,255,.14);color:inherit;
+}
+.shop-cat-btn:not(.active) .shop-cat-count{background:var(--surface4);color:var(--text-dim)}
+
+/* ── LISTA DE ITENS — layout horizontal ── */
+#shop-items{
+  flex:1;overflow-y:auto;padding:12px 14px;
+  display:flex;flex-direction:column;gap:8px;
+  background:var(--bg);
+}
+#shop-items::-webkit-scrollbar{width:3px}
+#shop-items::-webkit-scrollbar-thumb{background:var(--surface4);border-radius:99px}
+
+/* ── CARD HORIZONTAL ── */
+.shop-item{
+  background:var(--surface2);border:1px solid var(--border);border-radius:14px;
+  display:flex;align-items:center;gap:0;
+  transition:all .2s cubic-bezier(.34,1.2,.64,1);
+  position:relative;overflow:hidden;min-height:72px;
+}
+.shop-item:hover{
+  border-color:var(--border-accent);background:var(--surface3);
+  box-shadow:0 4px 24px rgba(0,0,0,.4),0 0 0 1px var(--border-accent);
+  transform:translateX(3px);
+}
+.shop-item.owned{border-color:rgba(16,185,129,.3);background:rgba(16,185,129,.03)}
+.shop-item.owned:hover{border-color:rgba(16,185,129,.5)}
+
+/* faixa lateral colorida baseada na raridade */
+.shop-item-stripe{
+  width:4px;height:100%;flex-shrink:0;align-self:stretch;
+  background:linear-gradient(180deg,var(--accent),var(--accent2));
+  border-radius:14px 0 0 14px;
+}
+.shop-item.rarity-rare   .shop-item-stripe{background:linear-gradient(180deg,#3b82f6,#06b6d4)}
+.shop-item.rarity-epic   .shop-item-stripe{background:linear-gradient(180deg,#a855f7,#ec4899)}
+.shop-item.rarity-legend .shop-item-stripe{background:linear-gradient(180deg,#f59e0b,#ef4444)}
+.shop-item.owned .shop-item-stripe{background:linear-gradient(180deg,#10b981,#059669)}
+
+/* ícone */
+.shop-item-icon-wrap{
+  width:46px;height:46px;border-radius:12px;flex-shrink:0;margin:0 12px;
+  background:var(--surface3);border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;font-size:22px;
+  transition:transform .2s cubic-bezier(.34,1.4,.64,1);
+}
+.shop-item:hover .shop-item-icon-wrap{transform:scale(1.12) rotate(-4deg)}
+
+/* info central */
+.shop-item-info{flex:1;min-width:0;padding:10px 0}
+.shop-item-top-row{display:flex;align-items:center;gap:6px;margin-bottom:2px}
+.shop-item-name{font-size:13px;font-weight:800;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.shop-rarity-badge{
+  font-size:8px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;
+  padding:2px 6px;border-radius:5px;flex-shrink:0;
+}
+.rarity-common  .shop-rarity-badge{background:rgba(156,163,175,.15);color:#9ca3af;border:1px solid rgba(156,163,175,.2)}
+.rarity-rare    .shop-rarity-badge{background:rgba(59,130,246,.15);color:#60a5fa;border:1px solid rgba(59,130,246,.25)}
+.rarity-epic    .shop-rarity-badge{background:rgba(168,85,247,.15);color:#c084fc;border:1px solid rgba(168,85,247,.25)}
+.rarity-legend  .shop-rarity-badge{background:rgba(245,158,11,.18);color:#fbbf24;border:1px solid rgba(245,158,11,.3)}
+.shop-item-desc{font-size:10px;color:var(--text-muted);line-height:1.45;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:280px}
+
+/* lado direito: preço + botão */
+.shop-item-right{
+  display:flex;flex-direction:column;align-items:flex-end;gap:6px;
+  padding:10px 14px;flex-shrink:0;
+}
+.shop-item-price{
+  display:flex;align-items:baseline;gap:3px;
+  font-size:15px;font-weight:900;color:var(--gold);
+  white-space:nowrap;
+}
+.shop-item-price .price-rc{font-size:9px;font-weight:700;color:rgba(245,158,11,.5);letter-spacing:.8px}
+
+/* badges */
+.shop-owned-badge{
+  font-size:8px;font-weight:900;letter-spacing:.6px;text-transform:uppercase;
+  padding:2px 7px;border-radius:6px;
+  background:rgba(16,185,129,.16);border:1px solid rgba(16,185,129,.35);color:#6ee7b7;
+}
+.shop-equipped-badge{
+  font-size:8px;font-weight:900;letter-spacing:.6px;text-transform:uppercase;
+  padding:2px 7px;border-radius:6px;
+  background:rgba(109,86,245,.18);border:1px solid rgba(109,86,245,.4);color:var(--accent3);
+}
+
+/* botões */
+.shop-btn-buy{
+  padding:6px 14px;border-radius:8px;white-space:nowrap;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  color:#fff;border:none;font-size:10px;font-weight:800;letter-spacing:.4px;
+  cursor:pointer;font-family:var(--font);transition:all .15s;
+  box-shadow:0 0 12px var(--accent-glow);text-transform:uppercase;
+}
+.shop-btn-buy:hover{filter:brightness(1.15);transform:translateY(-1px)}
+.shop-btn-buy:disabled{
+  opacity:.28;cursor:not-allowed;transform:none;
+  filter:none;box-shadow:none;background:var(--surface4);color:var(--text-dim);
+}
+.shop-btn-equip{
+  padding:6px 12px;border-radius:8px;white-space:nowrap;
+  background:rgba(16,185,129,.1);color:var(--green);
+  border:1px solid rgba(16,185,129,.25);
+  font-size:10px;font-weight:800;letter-spacing:.4px;
+  cursor:pointer;font-family:var(--font);transition:all .15s;text-transform:uppercase;
+}
+.shop-btn-equip:hover{background:rgba(16,185,129,.2)}
+.shop-btn-equip.equipped{
+  background:rgba(16,185,129,.22);border-color:rgba(16,185,129,.5);
+  box-shadow:0 0 8px rgba(16,185,129,.2);color:#6ee7b7;
+}
+
+/* compra animação */
+@keyframes shopBuyPop{
+  0%{transform:translateX(3px)}30%{transform:translateX(8px) scale(1.02)}100%{transform:translateX(3px)}
+}
+.shop-item.buy-pop{animation:shopBuyPop .4s cubic-bezier(.34,1.56,.64,1)}
+
+/* rodapé */
+#shop-footer{
+  padding:9px 20px;border-top:1px solid var(--border);flex-shrink:0;
+  font-size:10px;color:var(--text-dim);text-align:center;
+  background:var(--surface);letter-spacing:.2px;
+}
+#shop-footer::before{content:'🪙 ';}
+/* Coin earn popup */
+@keyframes coinEarn{
+  0%{opacity:0;transform:translateY(0) scale(.8)}
+  30%{opacity:1;transform:translateY(-12px) scale(1.1)}
+  100%{opacity:0;transform:translateY(-50px) scale(.9)}
+}
+.coin-earn-popup{
+  position:fixed;z-index:9999;font-size:14px;font-weight:900;
+  color:var(--gold);pointer-events:none;
+  animation:coinEarn 1.6s ease forwards;
+  text-shadow:0 0 14px rgba(245,158,11,.6);
+}
+
+/* ═══════════════════════════════════════
+   PROFILE MODAL
+═══════════════════════════════════════ */
+#profile-backdrop{
+  display:none;position:fixed;inset:0;z-index:500;
+  background:rgba(0,0,0,.88);backdrop-filter:blur(18px);
+  align-items:flex-start;justify-content:center;padding:12px;
+  overflow-y:auto;
+}
+#profile-backdrop.open{display:flex}
+#profile-modal{
+  background:var(--surface);border:1px solid var(--border-accent);
+  border-radius:20px;width:min(640px,100%);margin:auto;
+  box-shadow:0 28px 90px rgba(0,0,0,.75);overflow:hidden;
+  position:relative;
+  animation:modalIn .28s cubic-bezier(.34,1.56,.64,1);
+}
+#profile-banner{
+  height:110px;position:relative;overflow:hidden;
+  background:linear-gradient(135deg,var(--surface3),var(--surface2));
+}
+#profile-banner-gradient{
+  position:absolute;inset:0;
+  background:linear-gradient(135deg,var(--accent-glow) 0%,transparent 55%,var(--accent-glow2) 100%);
+}
+#profile-banner-noise{
+  position:absolute;inset:0;opacity:.04;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+}
+#profile-close{
+  position:absolute;top:10px;right:10px;
+  width:28px;height:28px;border-radius:8px;
+  background:rgba(0,0,0,.5);border:1px solid rgba(255,255,255,.12);
+  color:rgba(255,255,255,.8);cursor:pointer;font-size:13px;
+  display:flex;align-items:center;justify-content:center;transition:all .15s;z-index:2;
+}
+#profile-close:hover{background:rgba(0,0,0,.7)}
+#profile-avatar-wrap{
+  position:absolute;bottom:-28px;left:20px;z-index:2;
+}
+#profile-avatar{
+  width:70px;height:70px;border-radius:50%;
+  background:linear-gradient(135deg,var(--accent),#9b59d6);
+  border:3px solid var(--surface);
+  display:flex;align-items:center;justify-content:center;
+  font-size:28px;font-weight:900;color:#fff;
+  box-shadow:0 4px 20px rgba(0,0,0,.5);
+  transition:box-shadow .3s,transform .2s;cursor:pointer;
+  overflow:hidden;position:relative;
+}
+#profile-avatar:hover{transform:scale(1.06)}
+#profile-avatar[data-effect="glow"]{box-shadow:0 0 0 3px var(--accent2),0 0 25px var(--accent-glow),0 0 50px var(--accent-glow2)}
+#profile-avatar[data-effect="neon"]{box-shadow:0 0 0 2px #00ccff,0 0 18px rgba(0,204,255,.5),0 0 40px rgba(0,204,255,.2)}
+@keyframes borderPulse{0%,100%{box-shadow:0 0 0 3px var(--accent),0 0 20px var(--accent-glow)}50%{box-shadow:0 0 0 3px var(--accent2),0 0 30px var(--accent-glow)}}
+#profile-avatar[data-effect="border-anim"]{animation:borderPulse 1.8s ease infinite}
+#profile-body{padding:36px 20px 20px}
+#profile-top-row{
+  display:flex;align-items:flex-start;justify-content:space-between;
+  gap:10px;margin-bottom:8px;flex-wrap:wrap;
+}
+#profile-username{font-size:20px;font-weight:900;color:var(--text);line-height:1.2}
+#profile-username.effect-neon{text-shadow:0 0 8px var(--accent),0 0 20px var(--accent2)}
+#profile-title-badge{
+  padding:3px 12px;border-radius:99px;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  font-size:10px;font-weight:800;color:#fff;letter-spacing:.5px;
+  white-space:nowrap;align-self:center;
+}
+#profile-tags-row{
+  display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px;
+}
+.profile-tag-pill{
+  padding:3px 10px;border-radius:99px;
+  font-size:10px;font-weight:800;
+  background:var(--surface3);border:1px solid var(--border-accent);
+  color:var(--accent3);
+}
+#profile-level-row{
+  display:flex;align-items:center;gap:8px;margin-bottom:12px;
+}
+#profile-level-badge{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:4px 12px;border-radius:99px;font-size:11px;font-weight:800;
+  background:rgba(109,86,245,.15);border:1px solid rgba(109,86,245,.35);color:var(--accent2);
+  flex-shrink:0;
+}
+#profile-xp-wrap{flex:1;min-width:0}
+#profile-xp-bar{height:7px;background:var(--surface4);border-radius:99px;overflow:hidden;margin-bottom:3px}
+#profile-xp-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:99px;transition:width .7s ease}
+#profile-xp-label{font-size:10px;color:var(--text-muted)}
+#profile-stats{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px;
+}
+.profile-stat{
+  background:var(--surface2);border:1px solid var(--border);border-radius:12px;
+  padding:12px 8px;text-align:center;
+}
+.profile-stat-val{font-size:18px;font-weight:900;color:var(--text);margin-bottom:2px;line-height:1.2}
+.profile-stat-lbl{font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px}
+#profile-tabs{
+  display:flex;gap:5px;margin-bottom:14px;border-bottom:1px solid var(--border);padding-bottom:10px;
+  overflow-x:auto;scrollbar-width:none;
+}
+#profile-tabs::-webkit-scrollbar{display:none}
+.ptab-btn{
+  padding:5px 14px;border-radius:8px;font-size:11px;font-weight:700;
+  cursor:pointer;border:1px solid transparent;
+  background:transparent;color:var(--text-muted);transition:all .15s;
+  font-family:var(--font);white-space:nowrap;flex-shrink:0;
+}
+.ptab-btn:hover{color:var(--text)}
+.ptab-btn.active{background:var(--surface3);border-color:var(--border-accent);color:var(--accent2)}
+.ptab-content{display:none}
+.ptab-content.active{display:block}
+#profile-lib-grid{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(76px,1fr));gap:7px;
+}
+.profile-lib-card{
+  border-radius:8px;overflow:hidden;border:1px solid var(--border);
+  background:var(--surface2);aspect-ratio:.73;
+  cursor:pointer;transition:transform .15s;
+  display:flex;flex-direction:column;
+}
+.profile-lib-card:hover{transform:scale(1.05);border-color:var(--border-accent)}
+.profile-lib-cover{
+  flex:1;background:var(--surface3);overflow:hidden;
+  display:flex;align-items:center;justify-content:center;font-size:22px;
+}
+.profile-lib-cover img{width:100%;height:100%;object-fit:cover;display:block}
+.profile-lib-name{
+  padding:3px 4px;font-size:8px;font-weight:700;color:var(--text-muted);
+  background:var(--surface2);white-space:nowrap;overflow:hidden;
+  text-overflow:ellipsis;text-align:center;
+}
+#profile-ach-list{display:flex;flex-direction:column;gap:7px;max-height:340px;overflow-y:auto}
+#profile-ach-list::-webkit-scrollbar{width:3px}
+#profile-ach-list::-webkit-scrollbar-thumb{background:var(--surface4);border-radius:99px}
+.pac-item{
+  display:flex;align-items:center;gap:10px;
+  background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px 12px;
+}
+.pac-item.locked{opacity:.4;filter:grayscale(.5)}
+.pac-icon{font-size:20px;width:28px;text-align:center;flex-shrink:0}
+.pac-name{font-size:12px;font-weight:700;color:var(--text);margin-bottom:2px}
+.pac-pts{font-size:10px;color:var(--gold);font-weight:700}
+#profile-equipped-grid{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;
+}
+.peq-item{
+  background:var(--surface2);border:1px solid var(--border-accent);
+  border-radius:10px;padding:11px 12px;
+  display:flex;align-items:center;gap:9px;
+}
+.peq-icon{font-size:20px;flex-shrink:0}
+.peq-name{font-size:12px;font-weight:700;color:var(--accent2);margin-bottom:1px}
+.peq-type{font-size:10px;color:var(--text-muted)}
+.profile-empty{
+  text-align:center;padding:24px 0;color:var(--text-dim);font-size:12px;line-height:2;
+}
+#profile-edit-row{
+  display:flex;align-items:center;gap:8px;margin-bottom:12px;
+}
+#profile-edit-input{
+  flex:1;padding:7px 11px;background:var(--surface2);border:1px solid var(--border);
+  border-radius:var(--r-sm);color:var(--text);font-size:13px;font-family:var(--font);
+  outline:none;transition:border-color .15s;
+}
+#profile-edit-input:focus{border-color:var(--border-accent)}
+#profile-edit-save{
+  padding:7px 16px;border-radius:var(--r-sm);
+  background:var(--accent);color:#fff;border:none;
+  font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);transition:filter .15s;
+}
+#profile-edit-save:hover{filter:brightness(1.12)}
+
+/* ── Shop Theme Body Effects ── */
+body.shop-crt::after{
+  content:'';pointer-events:none;position:fixed;inset:0;z-index:9998;
+  background:repeating-linear-gradient(0deg,rgba(0,0,0,0.09) 0px,rgba(0,0,0,0.09) 1px,transparent 1px,transparent 4px);
+}
+body.shop-pixel{
+  background-size:40px 40px, 8px 8px;
+}
+body.shop-hologram #header,body.shop-hologram #filter-bar{
+  backdrop-filter:blur(28px) saturate(1.8) hue-rotate(8deg);
+}
+body.shop-vhs .game-card:hover{
+  filter:contrast(1.08) saturate(1.15) hue-rotate(3deg);
+}
+.effect-neon{
+  text-shadow:0 0 8px var(--accent),0 0 22px var(--accent2) !important;
+}
+
+/* ══════════════════════════════════════════════════
+   🎨 NOVOS TEMAS
+══════════════════════════════════════════════════ */
+
+/* Dark Mode Ultra */
+body.shop-theme_darkmode{
+  --bg:#000000 !important; --surface:#080808 !important; --surface2:#111 !important;
+  --surface3:#1a1a1a !important; --surface4:#222 !important;
+  --text:#ffffff !important; --text-muted:#aaa !important;
+}
+
+/* GameBoy Classic */
+body.shop-theme_gameboy{
+  filter:sepia(.4) hue-rotate(60deg) saturate(.5);
+}
+body.shop-theme_gameboy::after{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:9000;
+  background:repeating-linear-gradient(0deg,rgba(0,0,0,.08) 0px,rgba(0,0,0,.08) 1px,transparent 1px,transparent 4px);
+}
+
+/* Windows 98 */
+body.shop-win98{
+  --bg:#008080 !important;--surface:#c0c0c0 !important;--surface2:#d4d4d4 !important;
+  --surface3:#e0e0e0 !important;--surface4:#bbb !important;
+  --text:#000000 !important;--text-muted:#444 !important;--text-dim:#666 !important;
+  --border:rgba(0,0,0,.5) !important;--accent:#000080 !important;--accent2:#0000aa !important;
+}
+body.shop-win98 #header{
+  background:#c0c0c0 !important;border-bottom:2px solid #fff;
+  border-right:2px solid #fff;border-top:2px solid #fff;border-left:2px solid #fff;
+}
+body.shop-win98 .game-card{
+  border:2px solid;border-color:#fff #888 #888 #fff !important;
+  border-radius:0 !important;background:#c0c0c0 !important;
+}
+body.shop-win98 .btn-primary,.shop-win98 .btn{
+  border:2px solid;border-color:#fff #888 #888 #fff !important;
+  border-radius:0 !important;background:#c0c0c0 !important;color:#000 !important;
+}
+
+/* Cyber Wave UI */
+body.shop-cyberwave{
+  --bg:#0d001a !important;--surface:#110022 !important;--surface2:#1a0035 !important;
+  --surface3:#220044 !important;--surface4:#2a0055 !important;
+  --accent:#ff2d78 !important;--accent2:#00e5ff !important;--accent3:#ff80c0 !important;
+  --accent-glow:rgba(255,45,120,.3) !important;
+  --text:#ffe8ff !important;--text-muted:#cc88cc !important;
+}
+body.shop-cyberwave{
+  background:linear-gradient(180deg,#0d001a 0%,#001a2e 100%) !important;
+  background-image:
+    linear-gradient(rgba(255,45,120,.04) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(0,229,255,.04) 1px,transparent 1px) !important;
+  background-size:100%,40px 40px !important;
+}
+body.shop-cyberwave #header{
+  background:linear-gradient(90deg,rgba(255,45,120,.15),rgba(0,229,255,.15)) !important;
+  border-bottom:1px solid rgba(255,45,120,.4) !important;
+  box-shadow:0 0 20px rgba(255,45,120,.2) !important;
+}
+body.shop-cyberwave .game-card:hover{
+  box-shadow:0 0 20px rgba(255,45,120,.5),0 0 40px rgba(0,229,255,.2) !important;
+  border-color:#ff2d78 !important;
+}
+@keyframes cyberScanline{0%{top:-100%}100%{top:100%}}
+body.shop-cyberwave::before{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:9000;
+  background:linear-gradient(transparent 50%,rgba(0,229,255,.015) 50%);
+  background-size:100% 4px;
+}
+
+/* ══════════════════════════════════════════════════
+   ✨ NOVOS EFEITOS — KEYFRAMES
+══════════════════════════════════════════════════ */
+@keyframes rsGlowPulse{
+  0%,100%{box-shadow:0 0 18px var(--accent),0 0 40px var(--accent-glow)}
+  50%{box-shadow:0 0 30px var(--accent),0 0 70px var(--accent-glow),0 0 100px var(--accent-glow)}
+}
+@keyframes rsShadowPulse{
+  0%,100%{box-shadow:0 0 20px #000,0 0 50px rgba(0,0,0,.9),0 0 80px rgba(30,0,60,.6)}
+  50%{box-shadow:0 0 35px #000,0 0 80px rgba(0,0,0,1),0 0 120px rgba(60,0,100,.8)}
+}
+@keyframes rsCrownFloat{
+  0%,100%{transform:translateX(-50%) translateY(0) rotate(-5deg)}
+  50%{transform:translateX(-50%) translateY(-6px) rotate(5deg)}
+}
+@keyframes rsPixelExplode{
+  0%{transform:translate(0,0) rotate(0deg);opacity:1}
+  100%{transform:translate(var(--dx),var(--dy)) rotate(360deg);opacity:0}
+}
+
+/* Efeito Ghost no nome */
+.effect-ghost{
+  opacity:.55 !important;
+  animation:rsGhostFloat 3s ease-in-out infinite !important;
+  filter:blur(.3px) !important;
+}
+@keyframes rsGhostFloat{
+  0%,100%{opacity:.55;transform:translateY(0)}
+  50%{opacity:.3;transform:translateY(-3px)}
+}
+
+/* Efeito Glitch no nome */
+.effect-glitch{
+  position:relative;
+  animation:rsGlitchShake .8s steps(2) infinite !important;
+}
+.effect-glitch::before,.effect-glitch::after{
+  content:attr(data-text);position:absolute;top:0;left:0;width:100%;overflow:hidden;
+}
+.effect-glitch::before{
+  left:2px;text-shadow:-1px 0 #ff2d78;
+  animation:rsGlitchA 1.2s steps(2) infinite;clip-path:polygon(0 20%,100% 20%,100% 40%,0 40%);
+}
+.effect-glitch::after{
+  left:-2px;text-shadow:1px 0 #00e5ff;
+  animation:rsGlitchB 1.5s steps(2) infinite;clip-path:polygon(0 60%,100% 60%,100% 80%,0 80%);
+}
+@keyframes rsGlitchShake{0%,100%{transform:translate(0)}50%{transform:translate(2px,-1px)}}
+@keyframes rsGlitchA{0%,100%{clip-path:polygon(0 20%,100% 20%,100% 40%,0 40%)}50%{clip-path:polygon(0 55%,100% 55%,100% 75%,0 75%)}}
+@keyframes rsGlitchB{0%,100%{clip-path:polygon(0 60%,100% 60%,100% 80%,0 80%)}50%{clip-path:polygon(0 10%,100% 10%,100% 30%,0 30%)}}
+
+/* Rainbow avatar */
+[data-effect="rainbow"]{
+  animation:rsRainbowSpin 2s linear infinite !important;
+  border:3px solid transparent !important;
+  background-clip:padding-box !important;
+  box-shadow:0 0 0 3px transparent !important;
+}
+@keyframes rsRainbowSpin{
+  0%{box-shadow:0 0 0 3px #ff0000,0 0 15px #ff0000}
+  16%{box-shadow:0 0 0 3px #ff8800,0 0 15px #ff8800}
+  33%{box-shadow:0 0 0 3px #ffff00,0 0 15px #ffff00}
+  50%{box-shadow:0 0 0 3px #00ff00,0 0 15px #00ff00}
+  66%{box-shadow:0 0 0 3px #0088ff,0 0 15px #0088ff}
+  83%{box-shadow:0 0 0 3px #8800ff,0 0 15px #8800ff}
+  100%{box-shadow:0 0 0 3px #ff0000,0 0 15px #ff0000}
+}
+
+/* Border anim avatar */
+[data-effect="border-anim"]{
+  animation:rsBorderPulse 1.8s ease-in-out infinite !important;
+}
+@keyframes rsBorderPulse{
+  0%,100%{box-shadow:0 0 0 2px var(--accent),0 0 10px var(--accent-glow)}
+  50%{box-shadow:0 0 0 5px var(--accent2),0 0 25px var(--accent-glow)}
+}
+
+/* Sons — visual feedback ao equipar */
+body.sound-victory-active #rs-ach-points-header{
+  animation:rsGlowPulse .5s ease 3;
+}
 </style>
+
 </head>
 <body>
 
@@ -1961,6 +2578,15 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
   </div>
   <div class="header-right">
     <span id="game-count-badge">0 jogos</span>
+    <!-- Coin Balance -->
+    <div id="coin-balance" title="RetroCoins — Clique para a Loja">
+      <span class="coin-icon">🪙</span>
+      <span id="coin-amount">0</span>
+    </div>
+    <!-- Shop Button -->
+    <button id="btn-shop" title="Loja RetroStation">🛒</button>
+    <!-- Profile Button -->
+    <button id="btn-profile" title="Meu Perfil">👤</button>
     <!-- Theme Selector -->
     <div id="theme-selector">
       <button id="theme-btn" title="Trocar Tema">🎨</button>
@@ -1986,10 +2612,11 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
           <div class="theme-option-swatch" style="background:linear-gradient(135deg,#006699,#00ccff);border-radius:4px"></div>
           <div><div class="theme-option-label">Portable Neon</div><div class="theme-option-sub">PSP — ciano neon</div></div>
         </div>
+        <div style="font-size:9px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-muted);padding:6px 4px 4px;border-top:1px solid var(--border);margin-top:2px">Nova Geração</div>
         <div class="theme-option" data-theme="ps1">
           <div class="theme-option-swatch" style="background:linear-gradient(135deg,#1a56c4,#5a99f7);border-radius:4px"></div>
           <div><div class="theme-option-label">Gray Zone</div><div class="theme-option-sub">PlayStation 1 — azul clássico</div></div>
-        </div>      
+        </div>
         <div class="theme-option" data-theme="ps2">
           <div class="theme-option-swatch" style="background:linear-gradient(135deg,#1e3a8a,#60a5fa);border-radius:0"></div>
           <div><div class="theme-option-label">Blue Matrix</div><div class="theme-option-sub">PlayStation 2 — matrix azul</div></div>
@@ -2616,6 +3243,131 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
       <button id="mp-chat-send">➤</button>
     </div>
     <button id="mp-leave-btn" style="padding:5px 12px;border-radius:7px;background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.28);color:var(--red);font-size:10px;font-weight:700;cursor:pointer;font-family:var(--font);white-space:nowrap">Sair</button>
+  </div>
+</div>
+
+<!-- ════ SHOP MODAL ════ -->
+<div id="shop-backdrop">
+  <div id="shop-modal">
+    <div id="shop-header">
+      <div id="shop-header-top">
+        <div id="shop-title-area">
+          <div id="shop-logo-badge">🛒</div>
+          <div id="shop-title-text">
+            <div id="shop-title">RetroLoja</div>
+            <div id="shop-subtitle">Loja de itens</div>
+          </div>
+        </div>
+        <div id="shop-header-right">
+          <div id="shop-coins-header">
+            <span class="coin-icon">🪙</span>
+            <div>
+              <span class="coin-label">RC</span>
+              <span class="coin-val" id="shop-coin-display">0</span>
+            </div>
+          </div>
+          <button id="shop-close">✕</button>
+        </div>
+      </div>
+      <div id="shop-stats-bar">
+        <div class="shop-stat-pill">
+          <span class="shop-stat-val" id="shop-stat-total">0</span>
+          <span class="shop-stat-lbl">Itens</span>
+        </div>
+        <div class="shop-stat-pill">
+          <span class="shop-stat-val" id="shop-stat-owned">0</span>
+          <span class="shop-stat-lbl">Possuídos</span>
+        </div>
+        <div class="shop-stat-pill">
+          <span class="shop-stat-val" id="shop-stat-equipped">0</span>
+          <span class="shop-stat-lbl">Equipados</span>
+        </div>
+        <div class="shop-stat-pill">
+          <span class="shop-stat-val" id="shop-stat-available">0</span>
+          <span class="shop-stat-lbl">Disponíveis</span>
+        </div>
+      </div>
+    </div>
+    <div id="shop-cats">
+      <button class="shop-cat-btn active" data-cat="all"><span class="shop-cat-icon">🌟</span> Tudo <span class="shop-cat-count" id="cnt-all">0</span></button>
+      <button class="shop-cat-btn" data-cat="temas"><span class="shop-cat-icon">🎨</span> Temas <span class="shop-cat-count" id="cnt-temas">0</span></button>
+      <button class="shop-cat-btn" data-cat="efeitos"><span class="shop-cat-icon">✨</span> Efeitos <span class="shop-cat-count" id="cnt-efeitos">0</span></button>
+      <button class="shop-cat-btn" data-cat="tags"><span class="shop-cat-icon">🏷️</span> Tags <span class="shop-cat-count" id="cnt-tags">0</span></button>
+      <button class="shop-cat-btn" data-cat="sons"><span class="shop-cat-icon">🎵</span> Sons <span class="shop-cat-count" id="cnt-sons">0</span></button>
+    </div>
+    <div id="shop-items"></div>
+    <div id="shop-footer">Ganhe RetroCoins jogando, desbloqueando conquistas e subindo de nível!</div>
+  </div>
+</div>
+
+<!-- ════ PROFILE MODAL ════ -->
+<div id="profile-backdrop">
+  <div id="profile-modal">
+    <div id="profile-banner">
+      <div id="profile-banner-gradient"></div>
+      <div id="profile-banner-noise"></div>
+      <button id="profile-close">✕</button>
+      <div id="profile-avatar-wrap">
+        <div id="profile-avatar">🕹</div>
+      </div>
+    </div>
+    <div id="profile-body">
+      <!-- Edit username row -->
+      <div id="profile-edit-row">
+        <input type="text" id="profile-edit-input" placeholder="Seu nome de usuário..." maxlength="24">
+        <button id="profile-edit-save">Salvar</button>
+      </div>
+      <!-- Name + title -->
+      <div id="profile-top-row">
+        <div id="profile-username">Jogador Anônimo</div>
+        <div id="profile-title-badge">Novato Retro</div>
+      </div>
+      <!-- Equipped tags -->
+      <div id="profile-tags-row"></div>
+      <!-- Level + XP bar -->
+      <div id="profile-level-row">
+        <div id="profile-level-badge">⭐ Nv. 1 — Bronze</div>
+        <div id="profile-xp-wrap">
+          <div id="profile-xp-bar"><div id="profile-xp-fill" style="width:0%"></div></div>
+          <div id="profile-xp-label">0 / 100 XP</div>
+        </div>
+      </div>
+      <!-- Stats -->
+      <div id="profile-stats">
+        <div class="profile-stat">
+          <div class="profile-stat-val" id="pstat-played">0</div>
+          <div class="profile-stat-lbl">Jogados</div>
+        </div>
+        <div class="profile-stat">
+          <div class="profile-stat-val" id="pstat-ach">0</div>
+          <div class="profile-stat-lbl">Conquistas</div>
+        </div>
+        <div class="profile-stat">
+          <div class="profile-stat-val" id="pstat-time">0h</div>
+          <div class="profile-stat-lbl">Horas</div>
+        </div>
+      </div>
+      <!-- Tabs -->
+      <div id="profile-tabs">
+        <button class="ptab-btn active" data-ptab="biblioteca">🎮 Biblioteca</button>
+        <button class="ptab-btn" data-ptab="conquistas">🏆 Conquistas</button>
+        <button class="ptab-btn" data-ptab="equipado">✨ Itens Equipados</button>
+      </div>
+      <!-- Tab: Library -->
+      <div class="ptab-content active" id="ptab-biblioteca">
+        <div id="profile-lib-grid"></div>
+        <div class="profile-empty" id="profile-lib-empty" style="display:none">📦 Biblioteca vazia.<br>Adicione jogos para ver aqui!</div>
+      </div>
+      <!-- Tab: Achievements -->
+      <div class="ptab-content" id="ptab-conquistas">
+        <div id="profile-ach-list"></div>
+      </div>
+      <!-- Tab: Equipped items -->
+      <div class="ptab-content" id="ptab-equipado">
+        <div id="profile-equipped-grid"></div>
+        <div class="profile-empty" id="profile-equip-empty" style="display:none">🛒 Nenhum item equipado.<br>Compre na loja e equipe seus favoritos!</div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -5342,6 +6094,10 @@ function rsRunChecks(notify=true){
     newlyUnlocked.forEach((def,i)=>{
       setTimeout(()=>rsShowNotif(def), i*1600);
     });
+    // Tocar som de vitória se equipado
+    const eq = shopGetEquipped();
+    if(eq['sons']==='sound_victory') playSoundEffect('victory');
+    else if(eq['sons']==='sound_boss') playSoundEffect('boss');
     publishRsPoints(); // update Firebase so friends see the new score
   }
   rsRenderAchievements();
@@ -5471,9 +6227,11 @@ function rsOnGamePlayed(gameName, consoleKey){
 let rsPlayStartTime = null;
 function rsStartPlayTimer(){
   rsPlayStartTime = Date.now();
+  startCoinTimer();
 }
 function rsStopPlayTimer(){
   if(!rsPlayStartTime) return;
+  stopCoinTimer();
   const elapsed = Date.now() - rsPlayStartTime;
   rsPlayStartTime = null;
   const s = rsGetState();
@@ -5834,6 +6592,1037 @@ function setupMpButton(){
   if(btn)btn.onclick=openMpModal;
 }
 
+/* ═══════════════════════════════════════════════════════════════
+   💰 SISTEMA DE RETROCOINS (Moeda Virtual)
+═══════════════════════════════════════════════════════════════ */
+
+const COIN_KEY = 'rs_retrocoins';
+
+function getCoins(){
+  return parseInt(localStorage.getItem(COIN_KEY)||'0',10);
+}
+function saveCoins(v){
+  localStorage.setItem(COIN_KEY, Math.max(0,v));
+  atualizarUI();
+}
+function ganharMoeda(valor, label=''){
+  const prev = getCoins();
+  saveCoins(prev + valor);
+  // Popup visual
+  try{
+    const el = document.createElement('div');
+    el.className = 'coin-earn-popup';
+    el.textContent = `+${valor} 🪙${label?' '+label:''}`;
+    el.style.left = (window.innerWidth/2 - 40) + 'px';
+    el.style.top  = '80px';
+    document.body.appendChild(el);
+    setTimeout(()=>el.remove(), 1700);
+    // Som de moeda
+    try{
+      const ctx = new(window.AudioContext||window.webkitAudioContext)();
+      [[880,.0],[1047,.1],[1318,.2]].forEach(([f,t])=>{
+        const o=ctx.createOscillator(),g=ctx.createGain();
+        o.connect(g);g.connect(ctx.destination);o.type='sine';o.frequency.value=f;
+        const T=ctx.currentTime+t;
+        g.gain.setValueAtTime(0,T);g.gain.linearRampToValueAtTime(.06,T+.02);
+        g.gain.exponentialRampToValueAtTime(.001,T+.18);
+        o.start(T);o.stop(T+.2);
+      });
+    }catch(_){}
+  }catch(_){}
+  // Anima ícone no header
+  const cb = document.getElementById('coin-balance');
+  if(cb){ cb.classList.add('coin-icon-anim'); setTimeout(()=>cb.classList.remove('coin-icon-anim'),500); }
+}
+function gastarMoeda(valor){
+  const prev = getCoins();
+  if(prev < valor) return false;
+  saveCoins(prev - valor);
+  return true;
+}
+function atualizarUI(){
+  const v = getCoins();
+  const el = document.getElementById('coin-amount');
+  if(el) el.textContent = v.toLocaleString('pt-BR');
+  const sh = document.getElementById('shop-coin-display');
+  if(sh) sh.textContent = v.toLocaleString('pt-BR');
+}
+
+// Ganhar moedas ao desbloquear conquistas
+const _origRsRunChecks = rsRunChecks;
+rsRunChecks = function(notify=true){
+  const before = rsGetState().unlocked.length;
+  const result = _origRsRunChecks(notify);
+  const after  = rsGetState().unlocked.length;
+  const newCount = after - before;
+  if(newCount > 0 && notify){
+    ganharMoeda(newCount * 15, 'por conquista');
+  }
+  return result;
+};
+
+// Ganhar moedas ao subir de nível
+const _origShowLevelUp = showLevelUpNotif;
+showLevelUpNotif = function(lv, rank){
+  _origShowLevelUp(lv, rank);
+  ganharMoeda(lv * 25, `Nível ${lv}!`);
+};
+
+// Timer de moedas por tempo desativado
+function startCoinTimer(){}
+function stopCoinTimer(){}
+
+/* ═══════════════════════════════════════════════════════════════
+   🛒 LOJA — SHOP SYSTEM
+═══════════════════════════════════════════════════════════════ */
+
+const SHOP_KEY = 'rs_shop_owned';
+const SHOP_EQUIP_KEY = 'rs_shop_equipped';
+
+// Catálogo de itens da loja
+const SHOP_CATALOG = [
+  // ══ 🎨 TEMAS ══
+  {id:'theme_crt',      cat:'temas', rarity:'common', icon:'📺', name:'CRT Scanlines',
+   desc:'Linhas de scanline clássicas em toda a tela. Vintage garantido.',
+   price:300, effect:'theme_crt'},
+  {id:'theme_darkmode', cat:'temas', rarity:'common', icon:'🌑', name:'Dark Mode Ultra',
+   desc:'Interface completamente preta com contraste máximo. Zero distração.',
+   price:350, effect:'theme_darkmode'},
+  {id:'theme_gameboy',  cat:'temas', rarity:'rare',   icon:'🟢', name:'GameBoy Classic',
+   desc:'Paleta verde monocromática com scanlines leves. Direto de 1989.',
+   price:800, effect:'theme_gameboy'},
+  {id:'theme_vhs',      cat:'temas', rarity:'rare',   icon:'📼', name:'VHS Glitch',
+   desc:'Efeito glitch de fita VHS nos cards ao passar o mouse.',
+   price:750, effect:'theme_vhs'},
+  {id:'theme_pixel',    cat:'temas', rarity:'rare',   icon:'👾', name:'Pixel Storm',
+   desc:'Chuva de pixels coloridos animada no fundo da tela.',
+   price:900, effect:'theme_pixel'},
+  {id:'theme_win98',    cat:'temas', rarity:'epic',   icon:'🖥️', name:'Windows 98',
+   desc:'Interface estilo Windows 98 clássico. Botões cinza, borda dupla, tudo.',
+   price:2000, effect:'theme_win98'},
+  {id:'theme_cyberwave',cat:'temas', rarity:'epic',   icon:'💎', name:'Cyber Wave UI',
+   desc:'UI synthwave anos 80 com gradientes neon rosa/azul pulsantes.',
+   price:2500, effect:'theme_cyberwave'},
+  {id:'theme_hologram', cat:'temas', rarity:'epic',   icon:'🔮', name:'Holo Interface',
+   desc:'UI com camadas translúcidas holográficas pulsantes.',
+   price:1800, effect:'theme_hologram'},
+  {id:'theme_arcade',   cat:'temas', rarity:'legend', icon:'🕹️', name:'Arcade Cabinet',
+   desc:'Transforma a interface numa cabine de arcade retrô completa.',
+   price:5000, effect:'theme_arcade'},
+
+  // ══ ✨ EFEITOS ══
+  {id:'effect_glow',    cat:'efeitos', rarity:'common', icon:'🌟', name:'Glow Avatar',
+   desc:'Aura colorida pulsante ao redor do seu avatar.',
+   price:400, effect:'glow', type:'avatar'},
+  {id:'effect_neon',    cat:'efeitos', rarity:'common', icon:'💡', name:'Nome Neon',
+   desc:'Seu nome brilha com efeito neon do tema ativo.',
+   price:500, effect:'neon', type:'name'},
+  {id:'effect_shadow',  cat:'efeitos', rarity:'rare',   icon:'🌑', name:'Aura Sombria',
+   desc:'Aura preta pulsante intensa ao redor do avatar. Mistério total.',
+   price:900, effect:'shadow-aura', type:'avatar'},
+  {id:'effect_border',  cat:'efeitos', rarity:'rare',   icon:'💫', name:'Borda Pulsante',
+   desc:'Borda animada com pulso colorido ao redor do avatar.',
+   price:800, effect:'border-anim', type:'avatar'},
+  {id:'effect_ghost',   cat:'efeitos', rarity:'rare',   icon:'👻', name:'Nome Fantasma',
+   desc:'Seu nome fica translúcido e flutua suavemente no perfil.',
+   price:1100, effect:'ghost', type:'name'},
+  {id:'effect_lightning',cat:'efeitos',rarity:'rare',   icon:'⚡', name:'Raio Azul',
+   desc:'Descargas elétricas azuis faíscam ao redor do avatar.',
+   price:1200, effect:'lightning', type:'avatar'},
+  {id:'effect_fire',    cat:'efeitos', rarity:'epic',   icon:'🔥', name:'Partículas de Fogo',
+   desc:'Chamas animadas sobem do avatar. Temperatura máxima.',
+   price:1700, effect:'fire', type:'avatar'},
+  {id:'effect_pixelburst',cat:'efeitos',rarity:'epic',  icon:'💥', name:'Explosão Pixel',
+   desc:'Pixels explodem em partículas coloridas ao clicar nos cards.',
+   price:2100, effect:'pixel-burst', type:'ui'},
+  {id:'effect_rainbow', cat:'efeitos', rarity:'epic',   icon:'🌈', name:'Rainbow Aura',
+   desc:'Halo arco-íris rotativo ao redor do avatar.',
+   price:1500, effect:'rainbow', type:'avatar'},
+  {id:'effect_glitch',  cat:'efeitos', rarity:'epic',   icon:'📡', name:'Nome Glitch',
+   desc:'Seu nome treme com efeito glitch digital no perfil.',
+   price:2000, effect:'glitch', type:'name'},
+  {id:'effect_diamond', cat:'efeitos', rarity:'legend', icon:'💎', name:'Aura Diamante',
+   desc:'Brilho raro com partículas cristalinas girando. Status máximo.',
+   price:7000, effect:'diamond', type:'avatar'},
+  {id:'effect_crown',   cat:'efeitos', rarity:'legend', icon:'👑', name:'Coroa Dourada',
+   desc:'Coroa animada exclusiva acima do avatar.',
+   price:6000, effect:'crown', type:'avatar'},
+
+  // ══ 🏷️ TAGS ══
+  {id:'tag_console',    cat:'tags', rarity:'common', icon:'🎮', name:'Console Lover',
+   desc:'Ama consoles clássicos. De todos os tipos.',
+   price:250, tagText:'Console Lover'},
+  {id:'tag_retro',      cat:'tags', rarity:'common', icon:'🕹', name:'Retro Master',
+   desc:'Para os verdadeiros fãs de jogos clássicos.',
+   price:200, tagText:'Retro Master'},
+  {id:'tag_pixelart',   cat:'tags', rarity:'rare',   icon:'🎨', name:'Pixel Artist',
+   desc:'Criador de pixel art. Cada pixel importa.',
+   price:550, tagText:'Pixel Artist'},
+  {id:'tag_glitch',     cat:'tags', rarity:'rare',   icon:'🧠', name:'Glitch Hunter',
+   desc:'Especialista em encontrar bugs e exploits.',
+   price:600, tagText:'Glitch Hunter'},
+  {id:'tag_speed',      cat:'tags', rarity:'rare',   icon:'⚡', name:'Speedrunner',
+   desc:'Você não desperdiça um segundo sequer.',
+   price:500, tagText:'Speedrunner'},
+  {id:'tag_nocturno',   cat:'tags', rarity:'rare',   icon:'🌙', name:'Jogador Noturno',
+   desc:'Joga quando o mundo dorme. Respeito.',
+   price:700, tagText:'Jogador Noturno'},
+  {id:'tag_collector',  cat:'tags', rarity:'rare',   icon:'📦', name:'Colecionador',
+   desc:'Tem todos os jogos. Todos mesmo.',
+   price:600, tagText:'Colecionador'},
+  {id:'tag_fps',        cat:'tags', rarity:'epic',   icon:'🔫', name:'FPS Master',
+   desc:'Mestre dos shooters. Headshot ou nada.',
+   price:1400, tagText:'FPS Master'},
+  {id:'tag_hardcore',   cat:'tags', rarity:'epic',   icon:'💀', name:'Hardcore Gamer',
+   desc:'Joga no máximo de dificuldade. Sempre.',
+   price:1600, tagText:'Hardcore Gamer'},
+  {id:'tag_pro',        cat:'tags', rarity:'epic',   icon:'🎯', name:'Pro Player',
+   desc:'Reconhecimento de habilidade acima da média.',
+   price:1200, tagText:'Pro Player'},
+  {id:'tag_legend',     cat:'tags', rarity:'legend', icon:'💎', name:'Lenda Retro',
+   desc:'A tag mais rara da RetroStation. Intransferível.',
+   price:8000, tagText:'Lenda Retro'},
+  {id:'tag_hacker',     cat:'tags', rarity:'legend', icon:'💻', name:'Retro Hacker',
+   desc:'Mestre da tecnologia retro. Poucos chegam aqui.',
+   price:9000, tagText:'Retro Hacker'},
+
+  // ══ 🎵 SONS ══
+  {id:'sound_8bit',     cat:'sons', rarity:'common', icon:'🔊', name:'8-Bit Click',
+   desc:'Cliques com som de chip 8-bit autêntico.',
+   price:200, soundId:'8bit'},
+  {id:'sound_coin',     cat:'sons', rarity:'common', icon:'🪙', name:'Coin Coletor',
+   desc:'Som de moeda ao ganhar pontos e conquistas.',
+   price:250, soundId:'coin'},
+  {id:'sound_snes',     cat:'sons', rarity:'common', icon:'🎮', name:'Menu SNES',
+   desc:'Som clássico de navegação de menu Super Nintendo.',
+   price:300, soundId:'snes'},
+  {id:'sound_gameover', cat:'sons', rarity:'rare',   icon:'🕹️', name:'Game Over Arcade',
+   desc:'Som icônico de derrota dos arcades dos anos 90.',
+   price:700, soundId:'gameover'},
+  {id:'sound_select',   cat:'sons', rarity:'rare',   icon:'📻', name:'Console Select',
+   desc:'Som de seleção de console clássico ao navegar.',
+   price:600, soundId:'select'},
+  {id:'sound_power',    cat:'sons', rarity:'rare',   icon:'⚡', name:'Power-Up Jingle',
+   desc:'Jingle de power-up retro ao abrir o site.',
+   price:800, soundId:'power'},
+  {id:'sound_victory',  cat:'sons', rarity:'epic',   icon:'🏆', name:'Victory Fanfare',
+   desc:'Música de vitória épica ao desbloquear conquistas.',
+   price:1800, soundId:'victory'},
+  {id:'sound_ps2',      cat:'sons', rarity:'epic',   icon:'🖥️', name:'Startup PS2',
+   desc:'O som icônico de inicialização do PlayStation 2.',
+   price:2000, soundId:'ps2'},
+  {id:'sound_boss',     cat:'sons', rarity:'epic',   icon:'🎵', name:'Boss Theme',
+   desc:'Trilha sonora de boss fight toca ao equipar itens raros.',
+   price:2500, soundId:'boss'},
+];
+
+function shopGetOwned(){
+  try{ return JSON.parse(localStorage.getItem(SHOP_KEY)||'[]'); }catch{return [];}
+}
+function shopSaveOwned(arr){ localStorage.setItem(SHOP_KEY, JSON.stringify(arr)); }
+function shopGetEquipped(){
+  try{ return JSON.parse(localStorage.getItem(SHOP_EQUIP_KEY)||'{}'); }catch{return {};}
+}
+function shopSaveEquipped(obj){ localStorage.setItem(SHOP_EQUIP_KEY, JSON.stringify(obj)); }
+
+function shopIsOwned(id){ return shopGetOwned().includes(id); }
+function shopIsEquipped(id){
+  const eq = shopGetEquipped();
+  return Object.values(eq).includes(id);
+}
+
+function shopBuyItem(item){
+  if(shopIsOwned(item.id)){ showToast('Você já possui este item!'); return; }
+  if(!gastarMoeda(item.price)){
+    showToast(`❌ RetroCoins insuficientes! Precisa de ${item.price} 🪙`, true);
+    playSoundEffect('error'); return;
+  }
+  const owned = shopGetOwned();
+  owned.push(item.id);
+  shopSaveOwned(owned);
+  showToast(`✅ "${item.name}" comprado! Agora equipe no seu perfil.`);
+  playSoundEffect('buy');
+  renderShop();
+  atualizarUI();
+  // Anima o item
+  setTimeout(()=>{
+    const el = document.querySelector(`.shop-item[data-id="${item.id}"]`);
+    if(el){ el.classList.add('buy-pop'); setTimeout(()=>el.classList.remove('buy-pop'),400); }
+  },50);
+}
+
+function shopToggleEquip(item){
+  const eq = shopGetEquipped();
+  const slot = item.type || item.cat;
+  if(eq[slot] === item.id){
+    delete eq[slot];
+    shopSaveEquipped(eq);
+    applyShopEffects();
+    renderShop();
+    showToast(`"${item.name}" desequipado.`);
+  } else {
+    eq[slot] = item.id;
+    shopSaveEquipped(eq);
+    applyShopEffects();
+    renderShop();
+    showToast(`✨ "${item.name}" equipado!`);
+    playSoundEffect('equip');
+  }
+}
+
+// Aplica todos os efeitos dos itens equipados ao DOM
+function applyShopEffects(){
+  const eq = shopGetEquipped();
+
+  // ── Limpar temas antigos ──
+  document.body.classList.remove(
+    'shop-crt','shop-pixel','shop-hologram','shop-vhs',
+    'shop-darkmode','shop-gameboy','shop-win98','shop-cyberwave','shop-arcade'
+  );
+
+  // ── Limpar canvas de efeitos ──
+  ['rs-fire-canvas','rs-lightning-canvas','rs-diamond-canvas','rs-pixelburst-overlay'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el){ cancelAnimationFrame(el._raf); el.remove(); }
+  });
+
+  // ── Limpar efeitos de avatar/nome ──
+  const avatar   = document.getElementById('profile-avatar');
+  const username = document.getElementById('profile-username');
+  const profileBx= document.querySelector('.profile-avatar-wrap') || avatar?.parentElement;
+  if(avatar){
+    avatar.removeAttribute('data-effect');
+    avatar.style.animation='';
+    avatar.style.boxShadow='';
+    avatar.style.filter='';
+  }
+  if(username){
+    username.className = username.className
+      .replace(/\beffect-\S+/g,'')
+      .replace(/\s+/g,' ').trim();
+    username.style.animation='';
+    username.style.opacity='';
+    username.style.filter='';
+  }
+  // Remove crown/particles wrappers
+  document.querySelectorAll('.rs-effect-crown,.rs-effect-fire-wrap,.rs-effect-lightning-wrap,.rs-effect-diamond-wrap').forEach(e=>e.remove());
+
+  // ── Aplicar itens equipados ──
+  Object.values(eq).forEach(itemId=>{
+    const item = SHOP_CATALOG.find(i=>i.id===itemId);
+    if(!item) return;
+
+    // ─── TEMAS ───
+    if(item.cat==='temas') document.body.classList.add('shop-'+item.effect);
+
+    // ─── EFEITOS DE AVATAR ───
+    if(item.cat==='efeitos' && item.type==='avatar'){
+      if(!avatar) return;
+      switch(item.effect){
+        case 'glow':
+          avatar.style.boxShadow='0 0 18px var(--accent),0 0 40px var(--accent-glow)';
+          avatar.style.animation='rsGlowPulse 2s ease-in-out infinite';
+          break;
+        case 'shadow-aura':
+          avatar.style.boxShadow='0 0 20px #000,0 0 50px rgba(0,0,0,.9),0 0 80px rgba(30,0,60,.6)';
+          avatar.style.animation='rsShadowPulse 2.5s ease-in-out infinite';
+          break;
+        case 'border-anim':
+          avatar.setAttribute('data-effect','border-anim');
+          break;
+        case 'rainbow':
+          avatar.setAttribute('data-effect','rainbow');
+          break;
+        case 'lightning':
+          _rsSpawnLightning(avatar);
+          break;
+        case 'fire':
+          _rsSpawnFire(avatar);
+          break;
+        case 'diamond':
+          _rsSpawnDiamond(avatar);
+          break;
+        case 'crown':
+          _rsSpawnCrown(avatar);
+          break;
+      }
+    }
+
+    // ─── EFEITOS DE NOME ───
+    if(item.cat==='efeitos' && item.type==='name'){
+      if(!username) return;
+      switch(item.effect){
+        case 'neon':
+          username.classList.add('effect-neon');
+          break;
+        case 'glitch':
+          username.classList.add('effect-glitch');
+          break;
+        case 'ghost':
+          username.classList.add('effect-ghost');
+          break;
+      }
+    }
+
+    // ─── EFEITOS DE UI ───
+    if(item.cat==='efeitos' && item.type==='ui'){
+      if(item.effect==='pixel-burst') _rsEnablePixelBurst();
+    }
+  });
+
+  // Aplicar sons equipados
+  apply8BitClicks();
+}
+
+/* ══════════════════════════════════════════════════
+   🎆 IMPLEMENTAÇÕES DE EFEITOS REAIS
+══════════════════════════════════════════════════ */
+
+// ── Fogo animado (canvas) ──
+function _rsSpawnFire(target){
+  const wrap = document.createElement('div');
+  wrap.className = 'rs-effect-fire-wrap';
+  wrap.style.cssText = 'position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:80px;height:90px;pointer-events:none;z-index:10;overflow:visible';
+  const cv = document.createElement('canvas');
+  cv.id='rs-fire-canvas';
+  cv.width=80;cv.height=90;
+  cv.style.cssText='position:absolute;bottom:0;left:0';
+  wrap.appendChild(cv);
+
+  const parent = target.parentElement;
+  if(parent){ parent.style.position='relative'; parent.appendChild(wrap); }
+
+  const ctx=cv.getContext('2d');
+  const particles=[];
+  function spawnP(){
+    particles.push({x:40+Math.random()*20-10,y:90,vx:(Math.random()-.5)*1.2,vy:-(Math.random()*2+1.5),life:1,size:Math.random()*8+4});
+  }
+  function frame(){
+    cv._raf=requestAnimationFrame(frame);
+    ctx.clearRect(0,0,80,90);
+    if(Math.random()<.6) spawnP();
+    for(let i=particles.length-1;i>=0;i--){
+      const p=particles[i];
+      p.x+=p.vx;p.y+=p.vy;p.life-=.025;p.size*=.97;
+      if(p.life<=0){particles.splice(i,1);continue;}
+      const g=ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,p.size);
+      const alpha=p.life;
+      if(p.life>.6){g.addColorStop(0,`rgba(255,240,100,${alpha})`);g.addColorStop(.5,`rgba(255,100,0,${alpha*.8})`);g.addColorStop(1,'rgba(255,0,0,0)');}
+      else{g.addColorStop(0,`rgba(200,50,0,${alpha})`);g.addColorStop(1,'rgba(100,0,0,0)');}
+      ctx.fillStyle=g;
+      ctx.beginPath();ctx.arc(p.x,p.y,p.size,0,Math.PI*2);ctx.fill();
+    }
+  }
+  frame();
+}
+
+// ── Raios elétricos (canvas) ──
+function _rsSpawnLightning(target){
+  const wrap = document.createElement('div');
+  wrap.className = 'rs-effect-lightning-wrap';
+  wrap.style.cssText = 'position:absolute;inset:-20px;pointer-events:none;z-index:10;overflow:visible';
+  const cv = document.createElement('canvas');
+  cv.id='rs-lightning-canvas';
+  cv.width=100;cv.height=100;
+  cv.style.cssText='position:absolute;top:-10px;left:-10px;width:100px;height:100px';
+  wrap.appendChild(cv);
+  const parent = target.parentElement;
+  if(parent){ parent.style.position='relative'; parent.appendChild(wrap); }
+  const ctx=cv.getContext('2d');
+  function bolt(x1,y1,x2,y2,depth){
+    if(depth===0){ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);return;}
+    const mx=(x1+x2)/2+(Math.random()-.5)*18;
+    const my=(y1+y2)/2+(Math.random()-.5)*18;
+    bolt(x1,y1,mx,my,depth-1);
+    bolt(mx,my,x2,y2,depth-1);
+  }
+  function frame(){
+    cv._raf=requestAnimationFrame(frame);
+    ctx.clearRect(0,0,100,100);
+    if(Math.random()<.15){
+      const cx=50,cy=50,r=32;
+      const a1=Math.random()*Math.PI*2,a2=a1+Math.PI*(Math.random()*.8+.3);
+      ctx.strokeStyle=`rgba(100,180,255,${Math.random()*.9+.1})`;
+      ctx.lineWidth=Math.random()*1.5+.5;
+      ctx.shadowColor='#4af';ctx.shadowBlur=8;
+      ctx.beginPath();
+      bolt(cx+Math.cos(a1)*r,cy+Math.sin(a1)*r,cx+Math.cos(a2)*r,cy+Math.sin(a2)*r,3);
+      ctx.stroke();ctx.shadowBlur=0;
+    }
+  }
+  frame();
+}
+
+// ── Aura Diamante (partículas cintilantes) ──
+function _rsSpawnDiamond(target){
+  const wrap = document.createElement('div');
+  wrap.className = 'rs-effect-diamond-wrap';
+  wrap.style.cssText = 'position:absolute;inset:-24px;pointer-events:none;z-index:10;overflow:visible';
+  const cv = document.createElement('canvas');
+  cv.id='rs-diamond-canvas';
+  cv.width=120;cv.height=120;
+  cv.style.cssText='position:absolute;top:0;left:0';
+  wrap.appendChild(cv);
+  const parent = target.parentElement;
+  if(parent){ parent.style.position='relative'; parent.appendChild(wrap); }
+  const ctx=cv.getContext('2d');
+  const particles=Array.from({length:18},(_,i)=>({
+    angle:i*(Math.PI*2/18),r:40+Math.random()*12,speed:.012+Math.random()*.01,
+    size:Math.random()*3+1.5,alpha:Math.random(),alphaDir:Math.random()>.5?1:-1,
+    hue:180+Math.random()*120
+  }));
+  function frame(){
+    cv._raf=requestAnimationFrame(frame);
+    ctx.clearRect(0,0,120,120);
+    particles.forEach(p=>{
+      p.angle+=p.speed;
+      p.alpha+=p.alphaDir*.02;
+      if(p.alpha>=1||p.alpha<=0) p.alphaDir*=-1;
+      const x=60+Math.cos(p.angle)*p.r;
+      const y=60+Math.sin(p.angle)*p.r;
+      ctx.save();
+      ctx.translate(x,y);ctx.rotate(p.angle);
+      ctx.fillStyle=`hsla(${p.hue},100%,80%,${p.alpha})`;
+      const s=p.size;
+      ctx.beginPath();ctx.moveTo(0,-s);ctx.lineTo(s*.6,0);ctx.lineTo(0,s);ctx.lineTo(-s*.6,0);ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+    });
+  }
+  frame();
+}
+
+// ── Coroa flutuante ──
+function _rsSpawnCrown(target){
+  const crown = document.createElement('div');
+  crown.className='rs-effect-crown';
+  crown.textContent='👑';
+  crown.style.cssText='position:absolute;top:-28px;left:50%;transform:translateX(-50%);font-size:22px;animation:rsCrownFloat 2s ease-in-out infinite;filter:drop-shadow(0 0 6px #f59e0b);pointer-events:none;z-index:20';
+  const parent = target.parentElement;
+  if(parent){ parent.style.position='relative'; parent.appendChild(crown); }
+}
+
+// ── Explosão de pixels ao clicar nos cards ──
+function _rsEnablePixelBurst(){
+  if(document._rsPixelBurst) return;
+  document._rsPixelBurst = true;
+  document.addEventListener('click', e=>{
+    const card = e.target.closest('.game-card,.shop-item');
+    if(!card) return;
+    const rect = card.getBoundingClientRect();
+    const colors=['#6d56f5','#9b87fa','#f59e0b','#10b981','#ef4444','#06b6d4','#ec4899'];
+    for(let i=0;i<16;i++){
+      const px = document.createElement('div');
+      const size = Math.random()*8+4;
+      px.style.cssText = `position:fixed;left:${rect.left+rect.width/2}px;top:${rect.top+rect.height/2}px;
+        width:${size}px;height:${size}px;background:${colors[Math.floor(Math.random()*colors.length)]};
+        border-radius:2px;pointer-events:none;z-index:9999;
+        animation:rsPixelExplode .7s cubic-bezier(.25,.46,.45,.94) forwards`;
+      px.style.setProperty('--dx',(Math.random()*200-100)+'px');
+      px.style.setProperty('--dy',(Math.random()*200-100)+'px');
+      document.body.appendChild(px);
+      setTimeout(()=>px.remove(),750);
+    }
+  });
+}
+
+let _shopActiveCat = 'all';
+
+function _shopUpdateStats(){
+  const owned  = shopGetOwned();
+  const eq     = shopGetEquipped();
+  const total  = SHOP_CATALOG.length;
+  const ownedN = owned.length;
+  const equipN = Object.keys(eq).length;
+  const avail  = total - ownedN;
+  const cats   = {temas:0,efeitos:0,tags:0,sons:0};
+  SHOP_CATALOG.forEach(i=>{if(cats[i.cat]!==undefined) cats[i.cat]++;});
+  const el = id=>document.getElementById(id);
+  if(el('shop-stat-total'))     el('shop-stat-total').textContent     = total;
+  if(el('shop-stat-owned'))     el('shop-stat-owned').textContent     = ownedN;
+  if(el('shop-stat-equipped'))  el('shop-stat-equipped').textContent  = equipN;
+  if(el('shop-stat-available')) el('shop-stat-available').textContent = avail;
+  if(el('cnt-all'))     el('cnt-all').textContent     = total;
+  if(el('cnt-temas'))   el('cnt-temas').textContent   = cats.temas;
+  if(el('cnt-efeitos')) el('cnt-efeitos').textContent = cats.efeitos;
+  if(el('cnt-tags'))    el('cnt-tags').textContent    = cats.tags;
+  if(el('cnt-sons'))    el('cnt-sons').textContent    = cats.sons;
+}
+
+const CAT_LABEL   = {temas:'Tema', efeitos:'Efeito', tags:'Tag', sons:'Som'};
+const RARITY_LABEL = {common:'Comum', rare:'Raro', epic:'Épico', legend:'Lendário'};
+
+function renderShop(){
+  const grid = document.getElementById('shop-items');
+  if(!grid) return;
+  const owned = shopGetOwned();
+  const eq    = shopGetEquipped();
+  const coins = getCoins();
+
+  const list = _shopActiveCat === 'all'
+    ? SHOP_CATALOG
+    : SHOP_CATALOG.filter(i => i.cat === _shopActiveCat);
+
+  _shopUpdateStats();
+  grid.innerHTML = '';
+
+  list.forEach(item=>{
+    const isOwned  = owned.includes(item.id);
+    const slot     = item.type || item.cat;
+    const isEquip  = eq[slot] === item.id;
+    const canBuy   = coins >= item.price;
+    const rarity   = item.rarity || 'common';
+    const rarityLbl= RARITY_LABEL[rarity] || rarity;
+
+    const el = document.createElement('div');
+    el.className = `shop-item rarity-${rarity}` + (isOwned ? ' owned' : '');
+    el.dataset.id = item.id;
+    el.innerHTML = `
+      <div class="shop-item-stripe"></div>
+      <div class="shop-item-icon-wrap">${item.icon}</div>
+      <div class="shop-item-info">
+        <div class="shop-item-top-row">
+          <div class="shop-item-name">${item.name}</div>
+          <span class="shop-rarity-badge">${rarityLbl}</span>
+        </div>
+        <div class="shop-item-desc">${item.desc}</div>
+      </div>
+      <div class="shop-item-right">
+        ${isOwned
+          ? `<span class="${isEquip?'shop-equipped-badge':'shop-owned-badge'}">${isEquip?'⚡ Equipado':'✓ Possuído'}</span>`
+          : `<div class="shop-item-price">🪙 ${item.price.toLocaleString('pt-BR')}<span class="price-rc">RC</span></div>`
+        }
+        ${isOwned
+          ? `<button class="shop-btn-equip${isEquip?' equipped':''}">${isEquip?'Desequipar':'Equipar'}</button>`
+          : `<button class="shop-btn-buy"${!canBuy?' disabled':''}>Comprar</button>`
+        }
+      </div>
+    `;
+
+    if(isOwned){
+      el.querySelector('.shop-btn-equip').onclick = ()=> shopToggleEquip(item);
+    } else {
+      const btn = el.querySelector('.shop-btn-buy');
+      if(btn && !btn.disabled) btn.onclick = ()=> shopBuyItem(item);
+    }
+    grid.appendChild(el);
+  });
+}
+
+function openShop(){
+  const bd = document.getElementById('shop-backdrop');
+  if(!bd) return;
+  atualizarUI();
+  renderShop();
+  bd.classList.add('open');
+}
+function closeShop(){
+  const bd = document.getElementById('shop-backdrop');
+  if(bd) bd.classList.remove('open');
+}
+
+function setupShop(){
+  document.getElementById('btn-shop').onclick = openShop;
+  document.getElementById('coin-balance').onclick = openShop;
+  document.getElementById('shop-close').onclick   = closeShop;
+  document.getElementById('shop-backdrop').onclick = e=>{
+    if(e.target===document.getElementById('shop-backdrop')) closeShop();
+  };
+  document.querySelectorAll('.shop-cat-btn').forEach(btn=>{
+    btn.onclick = ()=>{
+      document.querySelectorAll('.shop-cat-btn').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      _shopActiveCat = btn.dataset.cat;
+      renderShop();
+    };
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   🎵 SONS DE UI
+═══════════════════════════════════════════════════════════════ */
+function playSoundEffect(type){
+  try{
+    const ctx = new(window.AudioContext||window.webkitAudioContext)();
+    const T = ctx.currentTime;
+
+    if(type==='buy'){
+      [[440,0],[660,.1],[880,.2],[1047,.32]].forEach(([f,t])=>{
+        const o=ctx.createOscillator(),g=ctx.createGain();
+        o.connect(g);g.connect(ctx.destination);o.type='square';o.frequency.value=f;
+        g.gain.setValueAtTime(0,T+t);g.gain.linearRampToValueAtTime(.05,T+t+.02);
+        g.gain.exponentialRampToValueAtTime(.001,T+t+.22);
+        o.start(T+t);o.stop(T+t+.24);
+      });
+    }
+    else if(type==='equip'){
+      [[523,0],[784,.1],[1047,.2]].forEach(([f,t])=>{
+        const o=ctx.createOscillator(),g=ctx.createGain();
+        o.connect(g);g.connect(ctx.destination);o.type='sine';o.frequency.value=f;
+        g.gain.setValueAtTime(0,T+t);g.gain.linearRampToValueAtTime(.06,T+t+.015);
+        g.gain.exponentialRampToValueAtTime(.001,T+t+.25);
+        o.start(T+t);o.stop(T+t+.27);
+      });
+    }
+    else if(type==='error'){
+      const o=ctx.createOscillator(),g=ctx.createGain();
+      o.connect(g);g.connect(ctx.destination);o.type='sawtooth';o.frequency.value=180;
+      g.gain.setValueAtTime(.05,T);g.gain.exponentialRampToValueAtTime(.001,T+.28);
+      o.start(T);o.stop(T+.3);
+    }
+    else if(type==='8bit'){
+      const o=ctx.createOscillator(),g=ctx.createGain();
+      o.connect(g);g.connect(ctx.destination);o.type='square';o.frequency.value=660;
+      g.gain.setValueAtTime(.04,T);g.gain.exponentialRampToValueAtTime(.001,T+.09);
+      o.start(T);o.stop(T+.11);
+    }
+    else if(type==='coin'){
+      [[1047,.0],[1319,.06],[1568,.12]].forEach(([f,t])=>{
+        const o=ctx.createOscillator(),g=ctx.createGain();
+        o.connect(g);g.connect(ctx.destination);o.type='sine';o.frequency.value=f;
+        g.gain.setValueAtTime(0,T+t);g.gain.linearRampToValueAtTime(.07,T+t+.01);
+        g.gain.exponentialRampToValueAtTime(.001,T+t+.18);
+        o.start(T+t);o.stop(T+t+.2);
+      });
+    }
+    else if(type==='snes'){
+      // Navegação SNES — bip limpo e curto
+      const o=ctx.createOscillator(),g=ctx.createGain();
+      o.connect(g);g.connect(ctx.destination);o.type='sine';o.frequency.value=880;
+      g.gain.setValueAtTime(.05,T);g.gain.linearRampToValueAtTime(.0,T+.07);
+      o.start(T);o.stop(T+.08);
+    }
+    else if(type==='select'){
+      [[440,.0],[554,.05],[659,.1]].forEach(([f,t])=>{
+        const o=ctx.createOscillator(),g=ctx.createGain();
+        o.connect(g);g.connect(ctx.destination);o.type='triangle';o.frequency.value=f;
+        g.gain.setValueAtTime(0,T+t);g.gain.linearRampToValueAtTime(.05,T+t+.01);
+        g.gain.exponentialRampToValueAtTime(.001,T+t+.12);
+        o.start(T+t);o.stop(T+t+.14);
+      });
+    }
+    else if(type==='power'){
+      const o=ctx.createOscillator(),g=ctx.createGain();
+      o.connect(g);g.connect(ctx.destination);o.type='square';
+      o.frequency.setValueAtTime(220,T);o.frequency.exponentialRampToValueAtTime(880,T+.3);
+      g.gain.setValueAtTime(.06,T);g.gain.exponentialRampToValueAtTime(.001,T+.35);
+      o.start(T);o.stop(T+.38);
+    }
+    else if(type==='gameover'){
+      // Game Over arcade — 3 notas descendentes dramáticas
+      [[494,.0],[392,.2],[330,.4],[262,.65]].forEach(([f,t])=>{
+        const o=ctx.createOscillator(),g=ctx.createGain();
+        o.connect(g);g.connect(ctx.destination);o.type='square';o.frequency.value=f;
+        g.gain.setValueAtTime(.07,T+t);g.gain.exponentialRampToValueAtTime(.001,T+t+.2);
+        o.start(T+t);o.stop(T+t+.22);
+      });
+    }
+    else if(type==='victory'){
+      // Fanfarra vitória — melodia ascendente épica
+      [[523,.0],[659,.12],[784,.24],[1047,.36],[784,.52],[880,.62],[1047,.74]].forEach(([f,t])=>{
+        const o=ctx.createOscillator(),g=ctx.createGain();
+        o.connect(g);g.connect(ctx.destination);o.type='square';o.frequency.value=f;
+        g.gain.setValueAtTime(0,T+t);g.gain.linearRampToValueAtTime(.06,T+t+.02);
+        g.gain.exponentialRampToValueAtTime(.001,T+t+.14);
+        o.start(T+t);o.stop(T+t+.16);
+      });
+    }
+    else if(type==='ps2'){
+      // Startup PS2 — nota grave longa + harmônicos
+      const oBase=ctx.createOscillator(),gBase=ctx.createGain();
+      oBase.connect(gBase);gBase.connect(ctx.destination);
+      oBase.type='sine';oBase.frequency.value=110;
+      gBase.gain.setValueAtTime(0,T);gBase.gain.linearRampToValueAtTime(.1,T+.3);
+      gBase.gain.linearRampToValueAtTime(.08,T+1);gBase.gain.exponentialRampToValueAtTime(.001,T+2.5);
+      oBase.start(T);oBase.stop(T+2.6);
+      [[220,.4,.04],[330,.7,.025],[440,1,.015]].forEach(([f,t,v])=>{
+        const o=ctx.createOscillator(),g=ctx.createGain();
+        o.connect(g);g.connect(ctx.destination);o.type='sine';o.frequency.value=f;
+        g.gain.setValueAtTime(0,T+t);g.gain.linearRampToValueAtTime(v,T+t+.25);
+        g.gain.exponentialRampToValueAtTime(.001,T+2.4);
+        o.start(T+t);o.stop(T+2.5);
+      });
+    }
+    else if(type==='boss'){
+      // Boss Theme — sequência intensa
+      [[196,.0],[220,.12],[196,.24],[165,.38],[196,.5],[220,.62],[247,.76],[262,.92]].forEach(([f,t])=>{
+        const o=ctx.createOscillator(),g=ctx.createGain();
+        o.connect(g);g.connect(ctx.destination);o.type='sawtooth';o.frequency.value=f;
+        g.gain.setValueAtTime(0,T+t);g.gain.linearRampToValueAtTime(.05,T+t+.02);
+        g.gain.exponentialRampToValueAtTime(.001,T+t+.1);
+        o.start(T+t);o.stop(T+t+.12);
+      });
+    }
+  }catch(_){}
+}
+
+// Aplicar sons de UI equipados nos cliques e eventos
+function apply8BitClicks(){
+  const eq = shopGetEquipped();
+  const soundItem = SHOP_CATALOG.find(i=>i.cat==='sons' && i.id===eq['sons']);
+  if(!soundItem) return;
+  const sid = soundItem.soundId;
+  document.querySelectorAll('.btn,.filter-chip,.shop-cat-btn,.ptab-btn,.sd-tab,.game-card').forEach(btn=>{
+    if(!btn._rsSound){
+      btn._rsSound = true;
+      btn.addEventListener('click',()=>playSoundEffect(sid),{passive:true});
+    }
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   👤 PERFIL PÚBLICO (STEAM-STYLE)
+═══════════════════════════════════════════════════════════════ */
+
+// Sistema de Títulos por nível
+function getRsTitle(level){
+  if(level >= 31) return 'Lenda Retro';
+  if(level >= 16) return 'Caçador de Conquistas';
+  if(level >= 6)  return 'Jogador Clássico';
+  return 'Novato Retro';
+}
+
+function renderProfile(){
+  const state   = rsGetState();
+  const pts     = rsTotalPoints();
+  const lv      = rsGetXpLevel(pts);
+  const rank    = rsGetRankFromLevel(lv);
+  const title   = getRsTitle(lv);
+  const eq      = shopGetEquipped();
+  const owned   = shopGetOwned();
+
+  // Username
+  const uname = myUsername || localStorage.getItem('rs_username') || 'Jogador Anônimo';
+  const inp   = document.getElementById('profile-edit-input');
+  if(inp && !inp.value) inp.value = uname !== 'Jogador Anônimo' ? uname : '';
+
+  // Avatar initial
+  const av = document.getElementById('profile-avatar');
+  if(av){
+    av.textContent = uname && uname !== 'Jogador Anônimo' ? uname[0].toUpperCase() : '🕹';
+    av.removeAttribute('data-effect');
+    // Avatar effect
+    const avItem = SHOP_CATALOG.find(i=>i.id===eq['avatar']||i.id===eq['efeitos']);
+    if(avItem && avItem.type==='avatar') av.setAttribute('data-effect', avItem.effect);
+  }
+
+  // Username + efeitos de nome
+  const unEl = document.getElementById('profile-username');
+  if(unEl){
+    unEl.textContent = uname;
+    unEl.dataset.text = uname; // para o efeito glitch (CSS attr())
+    unEl.classList.toggle('effect-neon', eq['name']==='effect_neon' || !!SHOP_CATALOG.find(i=>i.id===eq['efeitos']&&i.type==='name'));
+  }
+
+  document.getElementById('profile-title-badge').textContent = title;
+
+  // Tags row
+  const tagsRow = document.getElementById('profile-tags-row');
+  if(tagsRow){
+    tagsRow.innerHTML = '';
+    // Show equipped tags
+    Object.values(eq).forEach(itemId=>{
+      const item = SHOP_CATALOG.find(i=>i.id===itemId && i.tagText);
+      if(item){
+        const pill = document.createElement('div');
+        pill.className = 'profile-tag-pill';
+        pill.textContent = item.tagText;
+        tagsRow.appendChild(pill);
+      }
+    });
+  }
+
+  // Level badge
+  const lvBadge = document.getElementById('profile-level-badge');
+  if(lvBadge) lvBadge.innerHTML = `${rank.icon} Nv. ${lv} — ${rank.label}`;
+  const xpFill = document.getElementById('profile-xp-fill');
+  const xpLabel = document.getElementById('profile-xp-label');
+  if(xpFill && xpLabel){
+    const xpThis = rsXpForLevel(lv), xpNext = rsXpForLevel(lv+1);
+    const pct = Math.min(100, Math.round((pts-xpThis)/(xpNext-xpThis)*100));
+    xpFill.style.width = pct+'%';
+    xpLabel.textContent = `${pts.toLocaleString('pt-BR')} / ${xpNext.toLocaleString('pt-BR')} XP`;
+  }
+
+  // Stats
+  const ms = state.totalPlayMs || 0;
+  document.getElementById('pstat-played').textContent = state.gamesPlayed || 0;
+  document.getElementById('pstat-ach').textContent    = state.unlocked ? state.unlocked.length : 0;
+  document.getElementById('pstat-time').textContent   = ms >= 3600000
+    ? (ms/3600000).toFixed(1)+'h'
+    : Math.round(ms/60000)+'min';
+
+  // Library tab
+  const libGrid = document.getElementById('profile-lib-grid');
+  const libEmpty= document.getElementById('profile-lib-empty');
+  if(libGrid){
+    libGrid.innerHTML = '';
+    if(!games || !games.length){ libEmpty.style.display='block'; }
+    else{
+      libEmpty.style.display = 'none';
+      games.slice(0,30).forEach(g=>{
+        const card = document.createElement('div');
+        card.className = 'profile-lib-card';
+        const fallback = `data:image/svg+xml,${encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' width='80' height='100'><rect fill='#1e1e2e' width='80' height='100'/><text x='40' y='56' text-anchor='middle' fill='#444' font-size='28'>🎮</text></svg>`)}`;
+        card.innerHTML = `
+          <div class="profile-lib-cover">
+            <img src="${g.cover||fallback}" alt="${g.name}" onerror="this.src='${fallback}'">
+          </div>
+          <div class="profile-lib-name">${g.name}</div>
+        `;
+        card.onclick = ()=>{ closeProfile(); launchGame(g); };
+        libGrid.appendChild(card);
+      });
+    }
+  }
+
+  // Achievements tab
+  const achList = document.getElementById('profile-ach-list');
+  if(achList){
+    achList.innerHTML = '';
+    const unlocked = RS_ACHIEVEMENTS_DEF.filter(d=>state.unlocked&&state.unlocked.includes(d.id));
+    const locked   = RS_ACHIEVEMENTS_DEF.filter(d=>!state.unlocked||!state.unlocked.includes(d.id));
+    [...unlocked.slice(0,20), ...locked.slice(0,10)].forEach(def=>{
+      const isU = state.unlocked && state.unlocked.includes(def.id);
+      const el = document.createElement('div');
+      el.className = 'pac-item' + (isU ? '' : ' locked');
+      el.innerHTML = `
+        <div class="pac-icon">${def.icon}</div>
+        <div>
+          <div class="pac-name">${def.title}</div>
+          <div class="pac-pts">⭐ ${def.pts} pts${isU?' · Desbloqueada':' · Bloqueada'}</div>
+        </div>
+        ${isU?'<span style="margin-left:auto;font-size:18px">✅</span>':''}
+      `;
+      achList.appendChild(el);
+    });
+  }
+
+  // Equipped items tab
+  const eqGrid  = document.getElementById('profile-equipped-grid');
+  const eqEmpty = document.getElementById('profile-equip-empty');
+  if(eqGrid){
+    eqGrid.innerHTML = '';
+    const equippedItems = Object.values(eq).map(id=>SHOP_CATALOG.find(i=>i.id===id)).filter(Boolean);
+    if(!equippedItems.length){
+      eqEmpty.style.display = 'block';
+    } else {
+      eqEmpty.style.display = 'none';
+      equippedItems.forEach(item=>{
+        const el = document.createElement('div');
+        el.className = 'peq-item';
+        const catLabels = {temas:'Tema',efeitos:'Efeito',tags:'Tag',sons:'Som'};
+        el.innerHTML = `
+          <div class="peq-icon">${item.icon}</div>
+          <div>
+            <div class="peq-name">${item.name}</div>
+            <div class="peq-type">${catLabels[item.cat]||item.cat}</div>
+          </div>
+        `;
+        eqGrid.appendChild(el);
+      });
+    }
+  }
+}
+
+function openProfile(){
+  renderProfile();
+  document.getElementById('profile-backdrop').classList.add('open');
+}
+function closeProfile(){
+  document.getElementById('profile-backdrop').classList.remove('open');
+}
+
+function setupProfile(){
+  document.getElementById('btn-profile').onclick = openProfile;
+  document.getElementById('profile-close').onclick = closeProfile;
+  document.getElementById('profile-backdrop').onclick = e=>{
+    if(e.target===document.getElementById('profile-backdrop')) closeProfile();
+  };
+
+  // Save username
+  document.getElementById('profile-edit-save').onclick = ()=>{
+    const val = document.getElementById('profile-edit-input').value.trim();
+    if(!val){ showToast('Digite um nome de usuário!',true); return; }
+    const oldName = localStorage.getItem('rs_username') || '';
+    const isChange = oldName && oldName !== val;
+
+    const doSave = ()=>{
+      myUsername = val;
+      localStorage.setItem('rs_username', val);
+      const s = rsGetState();
+      if(!s.usernameSet){ s.usernameSet=true; rsSaveState(s); rsRunChecks(); }
+      renderProfile();
+      showToast(`✅ Perfil atualizado: ${val}`);
+      publishRsPoints();
+    };
+
+    if(isChange){
+      // Show confirmation modal
+      const backdrop = document.createElement('div');
+      backdrop.id = 'rs-rename-confirm-backdrop';
+      backdrop.style.cssText = `position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:99999;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px)`;
+
+      backdrop.innerHTML = `
+        <div style="background:var(--surface2);border:1px solid var(--border-accent);border-radius:var(--r);padding:28px 26px;max-width:340px;width:90%;box-shadow:0 8px 40px rgba(0,0,0,0.6);text-align:center">
+          <div style="font-size:28px;margin-bottom:12px">⚠️</div>
+          <div style="font-size:15px;font-weight:800;color:var(--text);margin-bottom:10px">Mudar nome de usuário?</div>
+          <div style="font-size:12px;color:var(--text-muted);line-height:1.7;margin-bottom:18px">
+            Você está trocando <strong style="color:var(--accent3)">${oldName}</strong> por <strong style="color:var(--accent2)">${val}</strong>.<br><br>
+            <span style="color:#fcd34d;font-weight:600">⚠️ Atenção:</span> qualquer amigo que tenha te adicionado com o nome antigo precisará te adicionar novamente com o novo nome para continuar te vendo online.
+          </div>
+          <div style="display:flex;gap:10px;justify-content:center">
+            <button id="rs-rename-cancel" style="padding:9px 20px;border-radius:var(--r-sm);border:1px solid var(--border);background:transparent;color:var(--text-muted);font-size:12px;font-weight:600;cursor:pointer;font-family:var(--font)">Cancelar</button>
+            <button id="rs-rename-confirm" style="padding:9px 20px;border-radius:var(--r-sm);border:none;background:var(--accent);color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);box-shadow:0 0 12px var(--accent-glow)">Confirmar mudança</button>
+          </div>
+        </div>`;
+
+      document.body.appendChild(backdrop);
+
+      document.getElementById('rs-rename-confirm').onclick = ()=>{
+        backdrop.remove();
+        doSave();
+      };
+      document.getElementById('rs-rename-cancel').onclick = ()=>{ backdrop.remove(); };
+      backdrop.addEventListener('click', e=>{ if(e.target===backdrop) backdrop.remove(); });
+    } else {
+      doSave();
+    }
+  };
+  document.getElementById('profile-edit-input').onkeydown = e=>{
+    if(e.key==='Enter') document.getElementById('profile-edit-save').click();
+  };
+
+  // Profile tabs
+  document.querySelectorAll('.ptab-btn').forEach(btn=>{
+    btn.onclick = ()=>{
+      document.querySelectorAll('.ptab-btn').forEach(b=>b.classList.remove('active'));
+      document.querySelectorAll('.ptab-content').forEach(c=>c.classList.remove('active'));
+      btn.classList.add('active');
+      const tabEl = document.getElementById('ptab-'+btn.dataset.ptab);
+      if(tabEl) tabEl.classList.add('active');
+    };
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   🎮 GANHO AUTOMÁTICO DE MOEDAS NA JOGABILIDADE
+═══════════════════════════════════════════════════════════════ */
+
+// Hook: ganhar moedas ao adicionar jogo
+const _origRsOnGameAdded = rsOnGameAdded;
+rsOnGameAdded = function(gameName, consoleKey){
+  _origRsOnGameAdded(gameName, consoleKey);
+  ganharMoeda(10, '📦 jogo adicionado');
+};
+
+// Hook: ganhar moedas ao jogar
+const _origRsOnGamePlayed = rsOnGamePlayed;
+rsOnGamePlayed = function(gameName, consoleKey){
+  _origRsOnGamePlayed(gameName, consoleKey);
+  ganharMoeda(5, '🎮 sessão iniciada');
+};
+
 async function init(){
   await openDB();
   games=await dbGetAll();
@@ -5849,6 +7638,10 @@ async function init(){
   setupSideDrawer();
   setupMpButton();
   setupThemeSelector(); // ← Sistema de temas
+  setupShop();          // ← RetroLoja
+  setupProfile();       // ← Perfil público
+  atualizarUI();        // ← Saldo de moedas
+  applyShopEffects();   // ← Efeitos equipados
   // Sync myUsername from localStorage (set via chat username modal)
   myUsername = localStorage.getItem('rs_username')||'';
   if(myUsername){
